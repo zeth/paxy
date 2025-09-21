@@ -4,6 +4,8 @@ from token import tok_name
 from bytecode import Instr
 import ast
 import dis
+from .basic import is_basic_op, basic_op
+
 
 VALID_OPS = set(dis.opmap)  # CPython 3.13 opcode names
 
@@ -72,7 +74,7 @@ class Parser:
         # Opcode at line start
         if self.current_op is None:
             op = s.upper()
-            if op not in VALID_OPS:
+            if op not in VALID_OPS and not is_basic_op(op):
                 raise SyntaxError(f"Unknown opcode '{s}' at line {tok_info.start[0]}")
             self.current_op = op
             self.current_op_lineno = tok_info.start[0]
@@ -162,6 +164,11 @@ class Parser:
         self.pending_sign = 1
 
         if op is None:
+            return
+
+        if is_basic_op(op):
+            instructions = basic_op(op, arg, lineno)
+            self.instructions.extend(instructions)
             return
 
         if isinstance(arg, ExplicitNone):

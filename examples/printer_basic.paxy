@@ -1,0 +1,3 @@
+RESUME 0
+PRINT 'hello'
+RETURN_CONST None
