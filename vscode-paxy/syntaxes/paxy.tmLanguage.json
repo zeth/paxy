@@ -1,0 +1,58 @@
+{
+  "scopeName": "source.paxy",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#opcode" },
+    { "include": "#string" },
+    { "include": "#number" },
+    { "include": "#builtin" }
+  ],
+  "repository": {
+    "comment": {
+      "patterns": [
+        {
+          "name": "comment.line.semicolon.paxy",
+          "match": ";.*$"
+        }
+      ]
+    },
+    "opcode": {
+      "patterns": [
+        {
+          "name": "keyword.other.opcode.paxy",
+          "match": "^\\s*([A-Z_]+)\\b"
+        }
+      ]
+    },
+    "string": {
+      "patterns": [
+        {
+          "name": "string.quoted.single.paxy",
+          "begin": "'",
+          "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.paxy" } },
+          "end": "'",
+          "endCaptures": { "0": { "name": "punctuation.definition.string.end.paxy" } },
+          "patterns": [
+            { "name": "constant.character.escape.paxy", "match": "\\\\." }
+          ]
+        }
+      ]
+    },
+    "number": {
+      "patterns": [
+        {
+          "name": "constant.numeric.paxy",
+          "match": "\\b\\d+\\b"
+        }
+      ]
+    },
+    "builtin": {
+      "patterns": [
+        {
+          "name": "constant.language.paxy",
+          "match": "\\b(None|True|False)\\b"
+        }
+      ]
+    }
+  }
+}

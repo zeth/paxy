@@ -1,0 +1,27 @@
+{
+  "name": "paxy",
+  "displayName": "Paxy",
+  "description": "Syntax highlighting for the Paxy bytecode language",
+  "version": "0.0.1",
+  "publisher": "your-name",
+  "engines": { "vscode": "^1.80.0" },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "paxy",
+        "aliases": ["Paxy", "paxy"],
+        "extensions": [".paxy"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "paxy",
+        "scopeName": "source.paxy",
+        "path": "./syntaxes/paxy.tmLanguage.json"
+      }
+    ]
+  }
+}
+
