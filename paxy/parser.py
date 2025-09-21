@@ -180,19 +180,22 @@ class Parser:
         if self.current_op is None:
             raise SyntaxError("Argument encountered before opcode")
 
-        # LET packs (name, value)
         if self.current_op == "LET":
             if self.pending_let_name is None:
                 raise SyntaxError("LET expects an identifier before the value")
             if self.current_arg is not None:
                 raise SyntaxError("LET takes exactly two arguments: name and literal")
-            self.current_arg = (self.pending_let_name, None if isinstance(value, ExplicitNone) else value)
+            # For LET only, collapse ExplicitNone -> None inside the tuple
+            self.current_arg = (self.pending_let_name,
+                                None if isinstance(value, ExplicitNone) else value)
             return
 
-        # non-LET: single argument max
+        # Non-LET: keep the ExplicitNone sentinel so store_instruction can
+        # distinguish “explicit None” from “no argument provided”.
         if self.current_arg is not None:
             raise SyntaxError(f"Unexpected extra argument on line {self.current_op_lineno}")
-        self.current_arg = None if isinstance(value, ExplicitNone) else value
+        self.current_arg = value  # <— keep ExplicitNone here
+
 
     def store_instruction(self):
         op = self.current_op
