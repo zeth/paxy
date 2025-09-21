@@ -1,13 +1,16 @@
+# paxy/parser.py
 from pathlib import Path
 from tokenize import tokenize, TokenInfo
 from token import tok_name
 from bytecode import Instr
 import ast
 import dis
+import re
+
 from .basic import is_basic_op, basic_op
 
-
-VALID_OPS = set(dis.opmap)  # CPython 3.13 opcode names
+VALID_OPS = set(dis.opmap)
+IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
 class ExplicitNone:
     """Sentinel to mean the literal word 'None' in source, as an argument."""
@@ -19,19 +22,19 @@ class Parser:
         self.current_arg = None
         self.current_op = None
         self.current_op_lineno = None
-        self.pending_sign = 1     # handles unary minus for numbers
+        self.pending_sign = 1
         self.instructions = []
+        self.pending_let_name: str | None = None  # <- NEW
 
-        # Map token names to handlers
         self.handlers = {
             "ENCODING": self.handle_encoding,
             "NAME": self.handle_name,
             "STRING": self.handle_string,
             "NUMBER": self.handle_number,
-            "OP": self.handle_op,           # for unary '-' before NUMBER
+            "OP": self.handle_op,
             "NEWLINE": self.handle_newline,
-            "NL": self.handle_nl,           # ignore soft newlines
-            "COMMENT": self.handle_comment, # tokenizer gives this only for '#'
+            "NL": self.handle_nl,
+            "COMMENT": self.handle_comment,
             "ENDMARKER": self.handle_endmarker,
         }
 
@@ -42,59 +45,51 @@ class Parser:
         self.current_arg = None
         self.current_op_lineno = None
         self.pending_sign = 1
+        self.pending_let_name = None
 
         with src_path.open("rb") as f:
             for tok_info in tokenize(f.readline):
                 self.process_token(tok_info)
 
-        # If the file didn't end with a newline, you may still have a pending op:
+        # if file lacks trailing newline
         if self.current_op is not None:
             self.store_instruction()
 
-        # One-shot framing on the final list
+        # one-shot framing at the end
         self.check_start()
         self.check_end()
         return self.instructions
 
+    # --- end framing ---
+
     def _iname(self, ins) -> str:
-        """Opcode name as plain string."""
         return str(ins.name)
 
     def check_start(self) -> None:
-        """Ensure first instruction is RESUME 0; insert if missing."""
         instrs = self.instructions
         if not instrs:
-            # empty program → minimal frame at line 1
             instrs.append(Instr("RESUME", 0, lineno=1))
             return
-
-        first = instrs[0]
-        if self._iname(first) != "RESUME":
-            lineno = getattr(first, "lineno", 1) or 1
-            instrs.insert(0, Instr("RESUME", 0, lineno=lineno))
+        if self._iname(instrs[0]) != "RESUME":
+            ln = getattr(instrs[0], "lineno", 1) or 1
+            instrs.insert(0, Instr("RESUME", 0, lineno=ln))
 
     def check_end(self) -> None:
-        """Ensure last instruction is a return; use RETURN_CONST None if missing."""
         instrs = self.instructions
         if not instrs:
-            # if still empty (shouldn't happen after check_start), create minimal frame
-            instrs.append(Instr("RESUME", 0, lineno=1))
-            instrs.append(Instr("RETURN_CONST", None, lineno=1))
+            instrs.extend([Instr("RESUME", 0, lineno=1), Instr("RETURN_CONST", None, lineno=1)])
             return
+        if self._iname(instrs[-1]) not in {"RETURN_CONST", "RETURN_VALUE"}:
+            ln = getattr(instrs[-1], "lineno", 1) or 1
+            instrs.append(Instr("RETURN_CONST", None, lineno=ln))
 
-        last = instrs[-1]
-        if self._iname(last) not in {"RETURN_CONST", "RETURN_VALUE"}:
-            lineno = getattr(last, "lineno", None) or 1
-            instrs.append(Instr("RETURN_CONST", None, lineno=lineno))
+    # --- token handlers ---
 
     def process_token(self, tok_info: TokenInfo):
         token_type_name = tok_name.get(tok_info.type, None)
         handler = self.handlers.get(token_type_name)
         if handler is not None:
             handler(tok_info)
-        # else: ignore token kinds we don’t care about
-
-    # --- Handlers ---
 
     def handle_encoding(self, tok_info: TokenInfo):
         self.encoding = tok_info.string
@@ -102,7 +97,7 @@ class Parser:
     def handle_name(self, tok_info: TokenInfo):
         s = tok_info.string
 
-        # Booleans and None as literal arguments
+        # literals
         if s == "None":
             return self.handle_none(tok_info)
         if s == "True":
@@ -110,19 +105,29 @@ class Parser:
         if s == "False":
             return self._set_arg(False)
 
-        # Opcode at line start
+        # opcode at line start
         if self.current_op is None:
             op = s.upper()
-            if op not in VALID_OPS and not is_basic_op(op):
+            if is_basic_op(op):
+                self.current_op = op
+                self.current_op_lineno = tok_info.start[0]
+                return
+            if op not in VALID_OPS:
                 raise SyntaxError(f"Unknown opcode '{s}' at line {tok_info.start[0]}")
             self.current_op = op
             self.current_op_lineno = tok_info.start[0]
             return
 
-        # If we ever decide NAME can be an arg, handle here.
+        # special case: LET expects an identifier name here
+        if self.current_op == "LET" and self.pending_let_name is None:
+            if not IDENT_RE.fullmatch(s):
+                raise SyntaxError(f"LET expects an identifier, got '{s}' (line {tok_info.start[0]})")
+            self.pending_let_name = s
+            return
+
+        # otherwise, NAME where a value should be is invalid (we only allow literals)
         raise SyntaxError(
-            f"Unexpected NAME '{s}' where an argument or newline was expected "
-            f"(line {tok_info.start[0]})"
+            f"Unexpected NAME '{s}' where an argument or newline was expected (line {tok_info.start[0]})"
         )
 
     def handle_string(self, tok_info: TokenInfo):
@@ -133,43 +138,30 @@ class Parser:
         self._set_arg(val)
 
     def handle_number(self, tok_info: TokenInfo):
-        text = tok_info.string.replace("_", "_")  # allow underscores (int/float accept them)
+        text = tok_info.string
         sign = self.pending_sign
-        self.pending_sign = 1  # consume sign
-
-        # Try int with auto base (0x, 0o, 0b supported)
+        self.pending_sign = 1
         try:
             val = int(text, 0)
-            self._set_arg(sign * val)
-            return
+            return self._set_arg(sign * val)
         except ValueError:
             pass
-
-        # Try float
         try:
             val = float(text)
-            self._set_arg(sign * val)
-            return
+            return self._set_arg(sign * val)
         except ValueError:
             pass
-
-        # Fallback: keep raw string
         self._set_arg(text if sign == 1 else f"-{text}")
 
     def handle_op(self, tok_info: TokenInfo):
-        # Only unary minus supported for numbers: e.g. "LOAD_CONST -5"
         if tok_info.string == "-" and self.current_op is not None and self.current_arg is None:
             self.pending_sign = -1
-            return
-        # Ignore other operators silently; we can tighten this later.
-        # If you want to forbid them:
-        # raise SyntaxError(f"Unexpected operator '{tok_info.string}' at line {tok_info.start[0]}")
 
     def handle_nl(self, tok_info: TokenInfo):
-        pass  # soft newline inside logical line
+        pass
 
     def handle_comment(self, tok_info: TokenInfo):
-        pass  # tokenizer only marks '#' comments; ';' is not recognized here
+        pass
 
     def handle_newline(self, tok_info: TokenInfo):
         if self.current_op is not None:
@@ -187,42 +179,52 @@ class Parser:
     def _set_arg(self, value):
         if self.current_op is None:
             raise SyntaxError("Argument encountered before opcode")
+
+        # LET packs (name, value)
+        if self.current_op == "LET":
+            if self.pending_let_name is None:
+                raise SyntaxError("LET expects an identifier before the value")
+            if self.current_arg is not None:
+                raise SyntaxError("LET takes exactly two arguments: name and literal")
+            self.current_arg = (self.pending_let_name, None if isinstance(value, ExplicitNone) else value)
+            return
+
+        # non-LET: single argument max
         if self.current_arg is not None:
             raise SyntaxError(f"Unexpected extra argument on line {self.current_op_lineno}")
-        self.current_arg = value
+        self.current_arg = None if isinstance(value, ExplicitNone) else value
 
     def store_instruction(self):
         op = self.current_op
         arg = self.current_arg
         lineno = self.current_op_lineno
 
-        # reset for next line
+        # reset state for next line
         self.current_op = None
         self.current_arg = None
         self.current_op_lineno = None
         self.pending_sign = 1
+        self.pending_let_name = None
 
         if op is None:
             return
 
+        # BASIC macro lowering
         if is_basic_op(op):
-            instructions = basic_op(op, arg, lineno)
-            self.instructions.extend(instructions)
+            # Special-case: LET must have exactly two parts (name + value)
+            if op == "LET":
+                if not (isinstance(arg, tuple) and len(arg) == 2 and isinstance(arg[0], str)):
+                    raise SyntaxError("LET takes exactly two arguments: name and literal")
+            lowered = basic_op(op, arg, lineno)
+            self.instructions.extend(lowered)
             return
 
+        # native opcode
         if isinstance(arg, ExplicitNone):
-            instr = Instr(op, None)
+            instr = Instr(op, None, lineno=lineno)
         elif arg is not None:
-            instr = Instr(op, arg)
+            instr = Instr(op, arg, lineno=lineno)
         else:
-            instr = Instr(op)
+            instr = Instr(op, lineno=lineno)
 
-        # attach source line number for nicer diagnostics later
-        instr.lineno = lineno
         self.instructions.append(instr)
-
-if __name__ == "__main__":
-    path = Path("examples/printer.paxy")
-    parser = Parser()
-    instrs = parser.parse_file(path)
-    print(instrs)
