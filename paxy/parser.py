@@ -46,7 +46,46 @@ class Parser:
         with src_path.open("rb") as f:
             for tok_info in tokenize(f.readline):
                 self.process_token(tok_info)
+
+        # If the file didn't end with a newline, you may still have a pending op:
+        if self.current_op is not None:
+            self.store_instruction()
+
+        # One-shot framing on the final list
+        self.check_start()
+        self.check_end()
         return self.instructions
+
+    def _iname(self, ins) -> str:
+        """Opcode name as plain string."""
+        return str(ins.name)
+
+    def check_start(self) -> None:
+        """Ensure first instruction is RESUME 0; insert if missing."""
+        instrs = self.instructions
+        if not instrs:
+            # empty program → minimal frame at line 1
+            instrs.append(Instr("RESUME", 0, lineno=1))
+            return
+
+        first = instrs[0]
+        if self._iname(first) != "RESUME":
+            lineno = getattr(first, "lineno", 1) or 1
+            instrs.insert(0, Instr("RESUME", 0, lineno=lineno))
+
+    def check_end(self) -> None:
+        """Ensure last instruction is a return; use RETURN_CONST None if missing."""
+        instrs = self.instructions
+        if not instrs:
+            # if still empty (shouldn't happen after check_start), create minimal frame
+            instrs.append(Instr("RESUME", 0, lineno=1))
+            instrs.append(Instr("RETURN_CONST", None, lineno=1))
+            return
+
+        last = instrs[-1]
+        if self._iname(last) not in {"RETURN_CONST", "RETURN_VALUE"}:
+            lineno = getattr(last, "lineno", None) or 1
+            instrs.append(Instr("RETURN_CONST", None, lineno=lineno))
 
     def process_token(self, tok_info: TokenInfo):
         token_type_name = tok_name.get(tok_info.type, None)

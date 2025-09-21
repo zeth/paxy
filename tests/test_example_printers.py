@@ -1,10 +1,14 @@
 # tests/test_examples_printers.py
 from pathlib import Path
 import dis
+import bytecode
 import pytest
 
 from paxy.parser import Parser
 from paxy.assembler import assemble_file
+
+UNSET = bytecode.instr._UNSET()
+
 
 
 EXPLICIT = """\
@@ -75,10 +79,10 @@ def test_basic_and_explicit_parse_to_same_lowered_sequence(tmp_path: Path):
     assert got_basic == got_explicit == [
         ("RESUME", 0),
         ("LOAD_NAME", "print"),
-        ("PUSH_NULL", 0),
+        ("PUSH_NULL", UNSET),
         ("LOAD_CONST", "hello"),
         ("CALL", 1),
-        ("POP_TOP", 0),
+        ("POP_TOP", UNSET),
         ("RETURN_CONST", None),
     ]
 
