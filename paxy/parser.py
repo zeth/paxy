@@ -3,15 +3,35 @@ from __future__ import annotations
 from pathlib import Path
 from tokenize import tokenize, TokenInfo
 from token import tok_name
-from bytecode import Instr
+from bytecode import Instr, BinaryOp
 import ast
 import dis
 import re
+
+from paxy.constants import COND_JUMP_OPS, UNCOND_JUMP_FIXED
 from .ident import Ident
 from paxy.basic import is_basic_op, basic_op
+from paxy.labels import NamedJump
+
 
 VALID_OPS = set(dis.opmap)
 IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+
+BINARY_SYMBOL_MAP = {
+    "+": "ADD",
+    "-": "SUBTRACT",
+    "*": "MULTIPLY",
+    "/": "TRUE_DIVIDE",
+    "//": "FLOOR_DIVIDE",
+    "%": "MODULO",
+    "**": "POWER",
+    "<<": "LSHIFT",
+    ">>": "RSHIFT",
+    "|": "OR",
+    "&": "AND",
+    "^": "XOR",
+    "@": "MATRIX_MULTIPLY",
+}
 
 
 class Parser:
@@ -164,6 +184,23 @@ class Parser:
         if self.current_op is not None:
             self.store_instruction()
 
+    def _coerce_native_arg(self, op: str, arg):
+        """Normalize native-op arguments to the shapes bytecode expects."""
+        if op == "BINARY_OP":
+            # Accept symbol ('-'), enum name ('SUBTRACT'), or int code
+            if isinstance(arg, str):
+                name = BINARY_SYMBOL_MAP.get(arg, arg).upper()
+                try:
+                    return BinaryOp[name]
+                except KeyError as e:
+                    raise SyntaxError(f"Unknown BINARY_OP argument '{arg}'") from e
+            if isinstance(arg, int):
+                try:
+                    return BinaryOp(arg)
+                except Exception as e:
+                    raise SyntaxError(f"Invalid BINARY_OP code {arg}") from e
+        return arg
+
     # ---- emit ----
 
     def store_instruction(self):
@@ -186,11 +223,19 @@ class Parser:
             self.instructions.extend(lowered)
             return
 
-        # native opcode: allow 0 or 1 argument
+        # native opcode
         if len(args) == 0:
             instr = Instr(op, lineno=lineno)
         elif len(args) == 1:
-            instr = Instr(op, args[0], lineno=lineno)
+            # If this is a native jump that names a label, emit a placeholder
+            if op in COND_JUMP_OPS or op in UNCOND_JUMP_FIXED:
+                arg0 = args[0]
+                if isinstance(arg0, (Ident, str)):
+                    self.instructions.append(NamedJump(opcode=op, target=str(arg0), lineno=lineno))
+                    return
+
+            coerced = self._coerce_native_arg(op, args[0])
+            instr = Instr(op, coerced, lineno=lineno)
         else:
             raise SyntaxError(f"{op} takes at most one argument (got {len(args)})")
 

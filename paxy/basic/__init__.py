@@ -6,6 +6,7 @@ from paxy.basic.print import Print
 from paxy.basic.input import Input
 from paxy.basic.importer import ImportSimple
 from paxy.basic.callfn import CallFn
+from paxy.basic.label import LabelOp, GotoOp
 
 BASIC_OPS = {
     "PRINT": Print,
@@ -13,6 +14,8 @@ BASIC_OPS = {
     "INPUT": Input,
     "IMPORT": ImportSimple,   # NEW
     "CALLFN": CallFn,         # NEW (avoid clash with native CALL opcode)
+    "LABEL": LabelOp,
+    "GOTO": GotoOp,
 }
 
 def is_basic_op(op_name: str) -> bool:
