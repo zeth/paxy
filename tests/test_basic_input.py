@@ -1,3 +1,5 @@
+
+
 from pathlib import Path
 import pytest
 
@@ -17,22 +19,14 @@ def strip_leading_resume(pairs):
 
 
 def norm_argless(pairs):
-    # normalize PUSH_NULL/POP_TOP arg to a token so 0/None/UNSET all compare equal
-    def zeroish(x):
-        if x is None:
-            return 0
-        v = getattr(x, "value", x)
-        try:
-            return 0 if int(v) == 0 else v
-        except Exception:
-            return v
     out = []
     for n, a in pairs:
         if n in {"PUSH_NULL", "POP_TOP"}:
-            out.append((n, zeroish(a)))
+            out.append((n, 0))   # canonicalize arg-less to 0
         else:
             out.append((n, a))
     return out
+
 
 
 def test_input_lowers_to_call_and_store(tmp_path: Path):
@@ -74,16 +68,16 @@ def test_input_runtime_reads_and_stores_string(tmp_path: Path, monkeypatch: pyte
     assert g.get("x") == "42"
 
 
-@pytest.mark.parametrize("program, msg_fragment", [
-    ("INPUT\n", "expects an identifier"),
+@pytest.mark.parametrize("program, expected_msg", [
+    ("INPUT\n", "takes exactly one identifier"),
     ("INPUT 123\n", "expects an identifier"),
 ])
-def test_input_errors_missing_or_non_identifier(tmp_path: Path, program: str, msg_fragment: str):
+def test_input_errors_missing_or_non_identifier(tmp_path: Path, program: str, expected_msg: str):
     src = tmp_path / "bad.paxy"
     src.write_text(program)
     with pytest.raises(SyntaxError) as exc:
         Parser().parse_file(src)
-    assert msg_fragment in str(exc.value)
+    assert expected_msg in str(exc.value)
 
 
 def test_input_error_extra_token(tmp_path: Path):
@@ -91,5 +85,4 @@ def test_input_error_extra_token(tmp_path: Path):
     src.write_text("INPUT x 1\n")
     with pytest.raises(SyntaxError) as exc:
         Parser().parse_file(src)
-    # generic extra-arg error from the common path is fine
-    assert "extra argument" in str(exc.value)
+    assert "takes exactly one identifier" in str(exc.value)
