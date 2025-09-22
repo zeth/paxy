@@ -3,6 +3,7 @@
 from __future__ import annotations
 from typing import Any, Tuple
 
+from paxy.basic.input import Input
 from paxy.basic.let import Let
 from paxy.basic.print import Print
 
@@ -10,6 +11,7 @@ from paxy.basic.print import Print
 BASIC_OPS = {
     "PRINT": Print,
     "LET": Let,
+    "INPUT": Input,
 }
 
 def is_basic_op(op_name: str) -> bool:
