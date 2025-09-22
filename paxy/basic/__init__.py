@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Any
 
+from paxy.basic.dec import Dec
 from paxy.basic.let import Let
 from paxy.basic.print import Print
 from paxy.basic.input import Input
@@ -16,6 +17,7 @@ BASIC_OPS = {
     "CALLFN": CallFn,         # NEW (avoid clash with native CALL opcode)
     "LABEL": LabelOp,
     "GOTO": GotoOp,
+    "DEC": Dec, 
 }
 
 def is_basic_op(op_name: str) -> bool:
