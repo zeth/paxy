@@ -7,7 +7,7 @@ from bytecode import Instr
 import ast
 import dis
 import re
-
+from .ident import Ident
 from paxy.basic import is_basic_op, basic_op
 
 VALID_OPS = set(dis.opmap)
@@ -114,7 +114,7 @@ class Parser:
             return
 
         # identifier string (store raw; BASIC/native will validate if needed)
-        self.current_args.append(s)
+        self.current_args.append(Ident(s))
 
     def handle_string(self, tok_info: TokenInfo):
         try:
