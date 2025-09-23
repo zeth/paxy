@@ -1,12 +1,18 @@
-from bytecode import BinaryOp, Compare
+# paxy/opcoerce.py
+from __future__ import annotations
 
+from bytecode import BinaryOp
+from bytecode.instr import Compare
+
+
+# Maps text symbols to BinaryOp enum names (3.13)
 BINARY_SYMBOL_MAP = {
     "+": "ADD",
     "-": "SUBTRACT",
     "*": "MULTIPLY",
     "/": "TRUE_DIVIDE",
     "//": "FLOOR_DIVIDE",
-    "%": "MODULO",
+    "%": "REMAINDER",  # 3.13 enum name
     "**": "POWER",
     "<<": "LSHIFT",
     ">>": "RSHIFT",
@@ -16,6 +22,7 @@ BINARY_SYMBOL_MAP = {
     "@": "MATRIX_MULTIPLY",
 }
 
+# Maps textual compare operators to Compare enum names (3.13)
 COMPARE_SYMBOL_MAP = {
     "==": "EQ",
     "!=": "NE",
@@ -23,80 +30,68 @@ COMPARE_SYMBOL_MAP = {
     "<=": "LE",
     ">": "GT",
     ">=": "GE",
-    "in": "IN",
-    "not in": "NOT_IN",
-    "is": "IS",
-    "is not": "IS_NOT",
+    "in": "IN_OP",
+    "not in": "NOT_IN_OP",
+    "is": "IS_OP",
+    "is not": "IS_NOT_OP",
     "exception match": "EXC_MATCH",
-    "contains": "CONTAINS",
+    "contains": "CONTAINS_OP",
 }
-
-
-def _bad_type(expected: str, got: object) -> SyntaxError:
-    return SyntaxError(f"{expected}, got {type(got).__name__}: {got!r}")
 
 
 def coerce_binary_op(arg):
     """
-    Accepts:
-      - symbol: "+", "-", "*", ...
-      - enum name (case-insensitive): "ADD", "subtract", ...
-      - int code
-      - BinaryOp (pass-through)
-
-    Raises SyntaxError with a clear message otherwise.
+    Accept:
+      - BinaryOp member -> pass through
+      - str: symbol or name (case-insensitive) -> BinaryOp[name]
+      - int: underlying enum value -> BinaryOp(value)
+    Raise SyntaxError with helpful messages otherwise.
     """
     if isinstance(arg, BinaryOp):
         return arg
 
     if isinstance(arg, str):
-        # map common symbols to enum names first
         name = BINARY_SYMBOL_MAP.get(arg, arg).upper()
         try:
             return BinaryOp[name]
-        except KeyError:
+        except Exception as e:
             raise SyntaxError(
-                f"Unknown BINARY_OP name/symbol {arg!r} "
-                f"(after normalization: {name!r})"
-            )
+                f"Unknown BINARY_OP name/symbol {name!r} (from {arg!r})"
+            ) from e
 
     if isinstance(arg, int):
         try:
             return BinaryOp(arg)
-        except Exception:
-            raise SyntaxError(f"Invalid BINARY_OP code {arg}")
+        except Exception as e:
+            raise SyntaxError(f"Invalid BINARY_OP code {arg}") from e
 
-    raise _bad_type("BINARY_OP expects a symbol/name or int", arg)
+    raise SyntaxError("BINARY_OP expects a symbol/name or int")
 
 
 def coerce_compare_op(arg):
     """
-    Accepts:
-      - symbol/phrase: '==', '!=', '<=', 'in', 'not in', 'is', 'is not', ...
-      - enum name (case-insensitive): 'EQ', 'NOT_IN', ...
-      - int code
-      - Compare (pass-through)
-
-    Raises SyntaxError with a clear message otherwise.
+    Accept:
+      - Compare member -> pass through
+      - str: symbol or name (case-insensitive) -> Compare[name]
+      - int: underlying enum value -> Compare(value)
+    Raise SyntaxError with helpful messages otherwise.
     """
     if isinstance(arg, Compare):
         return arg
 
     if isinstance(arg, str):
-        # normalize phrases like "not in" -> "NOT_IN"
-        name = COMPARE_SYMBOL_MAP.get(arg, arg).upper().replace(" ", "_")
+        name = COMPARE_SYMBOL_MAP.get(arg, arg).upper()
         try:
             return Compare[name]
-        except KeyError:
+        except Exception as e:
             raise SyntaxError(
-                f"Unknown COMPARE_OP name/symbol {arg!r} "
-                f"(after normalization: {name!r})"
-            )
+                f"Unknown COMPARE_OP name/symbol {name!r} (from {arg!r})"
+            ) from e
 
     if isinstance(arg, int):
         try:
             return Compare(arg)
-        except Exception:
-            raise SyntaxError(f"Invalid COMPARE_OP code {arg}")
+        except Exception as e:
+            raise SyntaxError(f"Invalid COMPARE_OP code {arg}") from e
 
-    raise _bad_type("COMPARE_OP expects a symbol/name or int", arg)
+    raise SyntaxError("COMPARE_OP expects a symbol/name or int")
