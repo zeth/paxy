@@ -12,7 +12,12 @@ from paxy.constants import COND_JUMP_OPS, UNCOND_JUMP_FIXED
 from .ident import Ident
 from paxy.basic import is_basic_op, basic_op
 from paxy.labels import NamedJump
-from paxy.opcoerce import coerce_binary_op, coerce_compare_op
+from paxy.opcoerce import (
+    coerce_binary_op,
+    coerce_compare_op,
+    coerce_contains_op,
+    coerce_is_op,
+)
 
 
 VALID_OPS = set(dis.opmap)
@@ -33,7 +38,7 @@ class Parser:
             "NAME": self.handle_name,
             "STRING": self.handle_string,
             "NUMBER": self.handle_number,
-            "OP": self.handle_op,            # unary '-'
+            "OP": self.handle_op,  # unary '-'
             "NEWLINE": self.handle_newline,
             "NL": self.handle_nl,
             "COMMENT": self.handle_comment,
@@ -78,7 +83,9 @@ class Parser:
     def check_end(self) -> None:
         instrs = self.instructions
         if not instrs:
-            instrs.extend([Instr("RESUME", 0, lineno=1), Instr("RETURN_CONST", None, lineno=1)])
+            instrs.extend(
+                [Instr("RESUME", 0, lineno=1), Instr("RETURN_CONST", None, lineno=1)]
+            )
             return
         if self._iname(instrs[-1]) not in {"RETURN_CONST", "RETURN_VALUE"}:
             ln = getattr(instrs[-1], "lineno", 1) or 1
@@ -170,10 +177,25 @@ class Parser:
             self.store_instruction()
 
     def _coerce_native_arg(self, op: str, arg):
+        # Normalize once in case you ever pass in lowercase opnames
+        op = op.upper()
+
         if op == "BINARY_OP":
             return coerce_binary_op(arg)
+
         if op == "COMPARE_OP":
+            # Only EQ/NE/LT/LE/GT/GE in 3.13
             return coerce_compare_op(arg)
+
+        if op == "IS_OP":
+            # identity: 0 -> IS, 1 -> IS_NOT
+            return coerce_is_op(arg)
+
+        if op == "CONTAINS_OP":
+            # membership: 0 -> IN, 1 -> NOT_IN
+            return coerce_contains_op(arg)
+
+        # anything else: pass through unchanged
         return arg
 
     # ---- emit ----
@@ -206,7 +228,9 @@ class Parser:
             if op in COND_JUMP_OPS or op in UNCOND_JUMP_FIXED:
                 arg0 = args[0]
                 if isinstance(arg0, (Ident, str)):
-                    self.instructions.append(NamedJump(opcode=op, target=str(arg0), lineno=lineno))
+                    self.instructions.append(
+                        NamedJump(opcode=op, target=str(arg0), lineno=lineno)
+                    )
                     return
 
             coerced = self._coerce_native_arg(op, args[0])

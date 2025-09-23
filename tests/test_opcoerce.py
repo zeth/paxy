@@ -1,9 +1,17 @@
-# tests/test_opcoerce.py
 import pytest
 from bytecode import BinaryOp
 from bytecode.instr import Compare
 
-from paxy.opcoerce import coerce_binary_op, coerce_compare_op
+# Import identity/membership enums from our module so tests don't depend on
+# whether the bytecode package exposes them.
+from paxy.opcoerce import (
+    coerce_binary_op,
+    coerce_compare_op,
+    coerce_is_op,
+    coerce_contains_op,
+    IsOp,
+    ContainsOp,
+)
 
 
 # -----------------------------
@@ -105,15 +113,6 @@ def test_compare_name_case_insensitive():
     assert coerce_compare_op("Ge") is Compare.GE
 
 
-def test_compare_membership_and_identity_symbols():
-    assert coerce_compare_op("in") is Compare.IN_OP
-    assert coerce_compare_op("not in") is Compare.NOT_IN_OP
-    assert coerce_compare_op("is") is Compare.IS_OP
-    assert coerce_compare_op("is not") is Compare.IS_NOT_OP
-    assert coerce_compare_op("contains") is Compare.CONTAINS_OP
-    assert coerce_compare_op("exception match") is Compare.EXC_MATCH
-
-
 def test_compare_int_code_valid():
     code = Compare.EQ.value
     assert coerce_compare_op(code) is Compare.EQ
@@ -137,3 +136,17 @@ def test_compare_bad_type():
     with pytest.raises(SyntaxError) as exc:
         coerce_compare_op(3.14)
     assert "COMPARE_OP expects a symbol/name or int" in str(exc.value)
+
+
+# -----------------------------
+# Identity / Membership (3.13 split)
+# -----------------------------
+
+
+def test_compare_membership_and_identity_symbols():
+    # membership
+    assert coerce_contains_op("in") is ContainsOp.IN
+    assert coerce_contains_op("not in") is ContainsOp.NOT_IN
+    # identity
+    assert coerce_is_op("is") is IsOp.IS
+    assert coerce_is_op("is not") is IsOp.IS_NOT

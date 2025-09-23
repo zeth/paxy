@@ -1,18 +1,28 @@
-# paxy/opcoerce.py
 from __future__ import annotations
 
+from enum import IntEnum
 from bytecode import BinaryOp
 from bytecode.instr import Compare
 
 
-# Maps text symbols to BinaryOp enum names (3.13)
+class IsOp(IntEnum):
+    IS = 0
+    IS_NOT = 1
+
+
+class ContainsOp(IntEnum):
+    IN = 0
+    NOT_IN = 1
+
+
+# Maps text symbols to BinaryOp enum names (Python 3.13)
 BINARY_SYMBOL_MAP = {
     "+": "ADD",
     "-": "SUBTRACT",
     "*": "MULTIPLY",
     "/": "TRUE_DIVIDE",
     "//": "FLOOR_DIVIDE",
-    "%": "REMAINDER",  # 3.13 enum name
+    "%": "REMAINDER",
     "**": "POWER",
     "<<": "LSHIFT",
     ">>": "RSHIFT",
@@ -22,7 +32,7 @@ BINARY_SYMBOL_MAP = {
     "@": "MATRIX_MULTIPLY",
 }
 
-# Maps textual compare operators to Compare enum names (3.13)
+# Only equality/ordering live in Compare on 3.13
 COMPARE_SYMBOL_MAP = {
     "==": "EQ",
     "!=": "NE",
@@ -30,12 +40,16 @@ COMPARE_SYMBOL_MAP = {
     "<=": "LE",
     ">": "GT",
     ">=": "GE",
-    "in": "IN_OP",
-    "not in": "NOT_IN_OP",
-    "is": "IS_OP",
-    "is not": "IS_NOT_OP",
-    "exception match": "EXC_MATCH",
-    "contains": "CONTAINS_OP",
+}
+
+IS_SYMBOL_MAP = {
+    "is": "IS",
+    "is not": "IS_NOT",
+}
+
+CONTAINS_SYMBOL_MAP = {
+    "in": "IN",
+    "not in": "NOT_IN",
 }
 
 
@@ -45,7 +59,6 @@ def coerce_binary_op(arg):
       - BinaryOp member -> pass through
       - str: symbol or name (case-insensitive) -> BinaryOp[name]
       - int: underlying enum value -> BinaryOp(value)
-    Raise SyntaxError with helpful messages otherwise.
     """
     if isinstance(arg, BinaryOp):
         return arg
@@ -74,7 +87,9 @@ def coerce_compare_op(arg):
       - Compare member -> pass through
       - str: symbol or name (case-insensitive) -> Compare[name]
       - int: underlying enum value -> Compare(value)
-    Raise SyntaxError with helpful messages otherwise.
+
+    NOTE: Only EQ/NE/LT/LE/GT/GE belong here in Python 3.13.
+          Use coerce_is_op / coerce_contains_op for identity/membership.
     """
     if isinstance(arg, Compare):
         return arg
@@ -95,3 +110,63 @@ def coerce_compare_op(arg):
             raise SyntaxError(f"Invalid COMPARE_OP code {arg}") from e
 
     raise SyntaxError("COMPARE_OP expects a symbol/name or int")
+
+
+def coerce_is_op(arg):
+    """
+    Coerce identity operators ('is', 'is not') to IsOp.
+
+    Accept:
+      - IsOp member -> pass through
+      - str: symbol or name (case-insensitive) -> IsOp[name]
+      - int: underlying enum value -> IsOp(value)
+    """
+    if isinstance(arg, IsOp):
+        return arg
+
+    if isinstance(arg, str):
+        name = IS_SYMBOL_MAP.get(arg, arg).upper()
+        try:
+            return IsOp[name]
+        except Exception as e:
+            raise SyntaxError(
+                f"Unknown IS_OP name/symbol {name!r} (from {arg!r})"
+            ) from e
+
+    if isinstance(arg, int):
+        try:
+            return IsOp(arg)
+        except Exception as e:
+            raise SyntaxError(f"Invalid IS_OP code {arg}") from e
+
+    raise SyntaxError("IS_OP expects a symbol/name or int")
+
+
+def coerce_contains_op(arg):
+    """
+    Coerce membership operators ('in', 'not in') to ContainsOp.
+
+    Accept:
+      - ContainsOp member -> pass through
+      - str: symbol or name (case-insensitive) -> ContainsOp[name]
+      - int: underlying enum value -> ContainsOp(value)
+    """
+    if isinstance(arg, ContainsOp):
+        return arg
+
+    if isinstance(arg, str):
+        name = CONTAINS_SYMBOL_MAP.get(arg, arg).upper()
+        try:
+            return ContainsOp[name]
+        except Exception as e:
+            raise SyntaxError(
+                f"Unknown CONTAINS_OP name/symbol {name!r} (from {arg!r})"
+            ) from e
+
+    if isinstance(arg, int):
+        try:
+            return ContainsOp(arg)
+        except Exception as e:
+            raise SyntaxError(f"Invalid CONTAINS_OP code {arg}") from e
+
+    raise SyntaxError("CONTAINS_OP expects a symbol/name or int")
