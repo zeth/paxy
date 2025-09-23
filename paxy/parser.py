@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from tokenize import tokenize, TokenInfo
 from token import tok_name
-from bytecode import Instr, BinaryOp, Compare
+from bytecode import Instr
 import ast
 import dis
 import re
