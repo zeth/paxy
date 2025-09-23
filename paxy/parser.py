@@ -1,6 +1,7 @@
 # paxy/parser.py
 from __future__ import annotations
 
+from typing import Any, Callable, Protocol, runtime_checkable
 from pathlib import Path
 from tokenize import tokenize, TokenInfo
 from token import tok_name
@@ -26,7 +27,7 @@ IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
 class Parser:
     # table-driven native arg coercers
-    _NATIVE_COERCERS = {
+    _NATIVE_COERCERS: dict[str, Callable[[Any], Any]] = {
         "BINARY_OP": coerce_binary_op,
         "COMPARE_OP": coerce_compare_op,  # EQ/NE/LT/LE/GT/GE in 3.13
         "IS_OP": coerce_is_op,  # 0 -> IS, 1 -> IS_NOT
@@ -150,7 +151,7 @@ class Parser:
             return
 
         if len(args) == 1:
-            coerced = self._coerce_native_arg(op, args[0])
+            coerced: Any = self._coerce_native_arg(op, args[0])
             self._emit_jump_or_instr(op, coerced, lineno)
             return
 
@@ -180,7 +181,7 @@ class Parser:
         instrs = self.instructions
         if not instrs:
             instrs.extend(
-                [Instr("RESUME", 0, lineno=1), Instr("RETURN_CONST", None, lineno=1)]
+                [Instr("RESUME", 0, lineno=1), Instr("RETURN_CONST", 0, lineno=1)]
             )
             return
 
@@ -195,7 +196,7 @@ class Parser:
         # ensure RETURN_* at end
         if _iname(instrs[-1]) not in {"RETURN_CONST", "RETURN_VALUE"}:
             ln = getattr(instrs[-1], "lineno", 1) or 1
-            instrs.append(Instr("RETURN_CONST", None, lineno=ln))
+            instrs.append(Instr("RETURN_CONST", 0, lineno=ln))
 
     # ---- helpers: classification & literals ----
 
@@ -235,7 +236,7 @@ class Parser:
         lowered = basic_op(op, args, lineno)
         self.instructions.extend(lowered)
 
-    def _emit_jump_or_instr(self, op: str, arg0: object, lineno: int) -> None:
+    def _emit_jump_or_instr(self, op: str, arg0: Any, lineno: int) -> None:
         if op in COND_JUMP_OPS or op in UNCOND_JUMP_FIXED:
             if isinstance(arg0, (Ident, str)):
                 self.instructions.append(
@@ -244,6 +245,6 @@ class Parser:
                 return
         self.instructions.append(Instr(op, arg0, lineno=lineno))
 
-    def _coerce_native_arg(self, op: str, arg):
+    def _coerce_native_arg(self, op: str, arg: Any) -> Any:
         fn = self._NATIVE_COERCERS.get(op.upper())
         return fn(arg) if fn else arg
