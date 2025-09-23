@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from tokenize import tokenize, TokenInfo
 from token import tok_name
-from bytecode import Instr, BinaryOp
+from bytecode import Instr, BinaryOp, Compare
 import ast
 import dis
 import re
@@ -12,26 +12,11 @@ from paxy.constants import COND_JUMP_OPS, UNCOND_JUMP_FIXED
 from .ident import Ident
 from paxy.basic import is_basic_op, basic_op
 from paxy.labels import NamedJump
+from paxy.opcoerce import coerce_binary_op, coerce_compare_op
 
 
 VALID_OPS = set(dis.opmap)
 IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
-
-BINARY_SYMBOL_MAP = {
-    "+": "ADD",
-    "-": "SUBTRACT",
-    "*": "MULTIPLY",
-    "/": "TRUE_DIVIDE",
-    "//": "FLOOR_DIVIDE",
-    "%": "MODULO",
-    "**": "POWER",
-    "<<": "LSHIFT",
-    ">>": "RSHIFT",
-    "|": "OR",
-    "&": "AND",
-    "^": "XOR",
-    "@": "MATRIX_MULTIPLY",
-}
 
 
 class Parser:
@@ -185,20 +170,10 @@ class Parser:
             self.store_instruction()
 
     def _coerce_native_arg(self, op: str, arg):
-        """Normalize native-op arguments to the shapes bytecode expects."""
         if op == "BINARY_OP":
-            # Accept symbol ('-'), enum name ('SUBTRACT'), or int code
-            if isinstance(arg, str):
-                name = BINARY_SYMBOL_MAP.get(arg, arg).upper()
-                try:
-                    return BinaryOp[name]
-                except KeyError as e:
-                    raise SyntaxError(f"Unknown BINARY_OP argument '{arg}'") from e
-            if isinstance(arg, int):
-                try:
-                    return BinaryOp(arg)
-                except Exception as e:
-                    raise SyntaxError(f"Invalid BINARY_OP code {arg}") from e
+            return coerce_binary_op(arg)
+        if op == "COMPARE_OP":
+            return coerce_compare_op(arg)
         return arg
 
     # ---- emit ----

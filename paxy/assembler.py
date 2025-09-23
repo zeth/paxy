@@ -1,7 +1,9 @@
 # paxy/assembler.py
 from __future__ import annotations
+import os
 from pathlib import Path
 from typing import List, Dict, Tuple, Union
+import dis as _dis
 
 from bytecode import Bytecode, Instr, Label, CompilerFlags
 from .parser import Parser
@@ -130,6 +132,20 @@ def assemble_file(src_path: Path):
 
     resolved = _resolve_labels(instrs)
 
+    if os.getenv("PAXY_DEBUG") == "1":
+        out = []
+        out.append("== RESOLVED ==")
+        for i, it in enumerate(resolved):
+            out.append(f"{i:03d}: {it!r}")
+        bc = Bytecode(resolved)
+        code = bc.to_code()
+        out.append("== DISASSEMBLY ==")
+        out.append(_dis.Bytecode(code).dis())  # returns a str in 3.13
+        # write to file
+        dbg_path = Path(os.getenv("PAXY_DEBUG_OUT", "/tmp/paxy_debug.txt"))
+        dbg_path.write_text("\n".join(out))
+        return code
+
     bc = Bytecode(resolved)
     bc.filename = str(src_path)
     bc.name = "<module>"
@@ -142,4 +158,10 @@ def assemble_file(src_path: Path):
         if first is not None and first.lineno:
             bc.first_lineno = first.lineno
 
-    return bc.to_code()
+    code = bc.to_code()
+
+    if os.getenv("PAXY_DEBUG") == "1":
+        print("== DISASSEMBLY ==")
+        _dis.dis(code)
+
+    return code

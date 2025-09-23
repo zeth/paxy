@@ -30,7 +30,9 @@ def test_label_backward_goto_loops(tmp_path: Path, capsys: pytest.CaptureFixture
         "BINARY_OP '-'    # 3.13: or use the correct opcode if you want\n"
         "STORE_NAME 'n'\n"
         "LOAD_NAME 'n'\n"
-        "POP_JUMP_IF_FALSE end   # if n == 0 break (you can add a macro later)\n"
+        "LOAD_CONST 0\n"
+        "COMPARE_OP '=='\n"
+        "POP_JUMP_IF_TRUE end\n"
         "GOTO top\n"
         "LABEL end\n"
     )
