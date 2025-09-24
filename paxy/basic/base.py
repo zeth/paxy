@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any, Union
 from bytecode import Instr, BinaryOp
 from paxy.opcoerce import coerce_binary_op
-from paxy.labels import LabelDecl, JumpRef
+from paxy.labels import LabelDecl, JumpRef, NamedJump
 
 _NOARG = object()
 
@@ -26,7 +26,7 @@ BINARY_SYMBOL_MAP: dict[str, str] = {
 }
 
 # What BASIC ops may emit
-BasicItem = Union[Instr, LabelDecl, JumpRef]
+BasicItem = Union[Instr, LabelDecl, JumpRef, NamedJump]
 
 
 class BasicOperation:

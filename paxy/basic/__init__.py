@@ -5,7 +5,12 @@ from typing import Any, Dict, Type, Union, List
 from bytecode import Instr
 
 from paxy.basic.base import BasicOperation, BasicItem
+from paxy.basic.compare import CompareOp
 from paxy.basic.dec import Dec
+from paxy.basic.ifjump import IfOp
+from paxy.basic.inc import IncOp
+from paxy.basic.inop import InOp, NotInOp
+from paxy.basic.isbop import IsNotOp, IsBop
 from paxy.basic.let import Let
 from paxy.basic.print import Print
 from paxy.basic.input import Input
@@ -22,6 +27,13 @@ BASIC_OPS: Dict[str, Type[BasicOperation]] = {
     "LABEL": LabelOp,
     "GOTO": GotoOp,
     "DEC": Dec,
+    "COMPARE": CompareOp,
+    "IS": IsBop,
+    "ISNOT": IsNotOp,
+    "IN": InOp,
+    "NOTIN": NotInOp,
+    "INC": IncOp,
+    "IF": IfOp,
 }
 
 
