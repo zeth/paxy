@@ -1,29 +1,25 @@
 # paxy/funcplace.py
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import List, Sequence, Union, Any
+from typing import List, Union, Any
 
-# Import the same ParsedItem type you use in the parser/assembler pipeline.
-# If you keep this module import-light, import by string or adjust as needed.
-from bytecode import Instr, Label  # only for typing clarity; not used at runtime
+# We only use Instr for typing clarity; other placeholders are opaque here (Any).
+from bytecode import Instr
 
-
-# ParsedItem in your project currently includes: Instr | LabelDecl | JumpRef | NamedJump
-# We'll re-declare a local alias to avoid circulars in type-checkers.
 ParsedItem = Union[
     Instr, Any
-]  # "Any" stands in for your other placeholders (LabelDecl, JumpRef, NamedJump)
+]  # Other placeholders (LabelDecl, JumpRef, NamedJump, ...) are allowed
 
 
 @dataclass(frozen=True)
 class FuncDef:
     """
-    Placeholder for a function (SUB … SUBEND).
-    The parser (or a BASIC op) should produce one of these with a body parsed
-    into ParsedItem entries. The assembler lowers it to:
-      LOAD_CONST <code>
-      MAKE_FUNCTION 0
-      STORE_NAME <name>
+    Placeholder for SUB ... SUBEND.
+
+    - name: function name
+    - params: positional parameter names
+    - body: parsed items of the function body (same item types as module-level)
+    - lineno: source line where SUB was declared
     """
 
     name: str
@@ -36,8 +32,9 @@ class FuncDef:
 class ReturnMarker:
     """
     Placeholder for RETURN inside a function body.
-    If has_value is False -> RETURN_CONST None (3.13: RETURN_CONST 0)
-    If has_value is True  -> assumes value is already on the stack, emits RETURN_VALUE.
+
+    - has_value: True if a value was pushed on the stack before RETURN
+    - lineno: source line of RETURN
     """
 
     has_value: bool

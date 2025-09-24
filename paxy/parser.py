@@ -1,7 +1,7 @@
 # paxy/parser.py
 from __future__ import annotations
 
-from typing import Any, Callable, List, Union, Optional, Dict
+from typing import Any, Callable, List, Union, Optional, Dict, Iterable, Iterator
 from pathlib import Path
 from tokenize import tokenize, TokenInfo
 from token import tok_name
@@ -20,11 +20,12 @@ from paxy.opcoerce import (
     coerce_contains_op,
     coerce_is_op,
 )
+from paxy.funcplace import FuncDef  # NEW
 
 VALID_OPS = set(dis.opmap)
 IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
-ParsedItem = Union[Instr, NamedJump, LabelDecl, JumpRef]
+ParsedItem = Union[Instr, NamedJump, LabelDecl, JumpRef, FuncDef]
 
 
 # ----------------------------- Small helpers -----------------------------
@@ -73,7 +74,7 @@ class Emitter:
         self.sink = sink
 
     def emit_basic(self, op: str, args: list[object], lineno: int) -> None:
-        lowered = basic_op(op, args, lineno)  # list[Instr|LabelDecl|JumpRef]
+        lowered = basic_op(op, args, lineno)  # list[Instr|LabelDecl|JumpRef|...]
         self.sink.extend(lowered)
 
     def emit_instr(self, op: str, arg: Any, lineno: int) -> None:
@@ -137,12 +138,24 @@ class Parser:
             "ENDMARKER": self._on_endmarker,
         }
 
+        # Token iterator (needed to capture SUB bodies)
+        self._tok_iter: Iterator[TokenInfo] | None = None
+
     # ---- public API ----
 
     def parse_file(self, src_path: Path) -> list[ParsedItem]:
         self._reset_state()
-        self._process_stream(src_path)
+        with src_path.open("rb") as f:
+            self._parse_token_iter(tokenize(f.readline))
         self._flush_pending_line()  # if file lacked trailing newline
+        self._emit.ensure_framing()
+        return self.instructions
+
+    def parse_tokens(self, toks: Iterable[TokenInfo]) -> list[ParsedItem]:
+        """Parse from an existing token stream (used for SUB bodies)."""
+        self._reset_state()
+        self._parse_token_iter(toks)
+        self._flush_pending_line()
         self._emit.ensure_framing()
         return self.instructions
 
@@ -156,10 +169,13 @@ class Parser:
         if handler:
             handler(tok_info)
 
-    def _process_stream(self, src_path: Path) -> None:
-        with src_path.open("rb") as f:
-            for tok_info in tokenize(f.readline):
-                self.process_token(tok_info)
+    def _parse_token_iter(
+        self, tok_iter: Iterable[TokenInfo] | Iterator[TokenInfo]
+    ) -> None:
+        it = iter(tok_iter)
+        self._tok_iter = it
+        for tok_info in it:
+            self.process_token(tok_info)
 
     # ---- token handlers ----
 
@@ -224,6 +240,11 @@ class Parser:
         if op is None:
             return
 
+        # Special-case: SUB … SUBEND
+        if op == "SUB":
+            self._handle_sub_definition(args, lineno)
+            return
+
         # BASIC macro lines
         if is_basic_op(op):
             self._emit.emit_basic(op, args, lineno)
@@ -241,10 +262,72 @@ class Parser:
 
         raise SyntaxError(f"{op} takes at most one argument (got {len(args)})")
 
+    # ---- SUB support ----
+
+    def _handle_sub_definition(self, args: list[object], lineno: int) -> None:
+        """
+        SUB <name> [params...] ... SUBEND
+        Capture tokens until a line that *starts* with NAME 'SUBEND' and parse them
+        with a fresh Parser to produce the function body.
+        """
+        if not args or not isinstance(args[0], Ident):
+            raise SyntaxError("SUB expects: SUB <name> [params...]")
+        name = str(args[0])
+
+        params: list[str] = []
+        for a in args[1:]:
+            if not isinstance(a, Ident):
+                raise SyntaxError("SUB parameters must be identifiers")
+            params.append(str(a))
+
+        body_tokens = self._collect_tokens_until_subend()
+        inner = Parser()
+        body_items = inner.parse_tokens(body_tokens)
+
+        self.instructions.append(
+            FuncDef(name=name, params=params, body=body_items, lineno=lineno)
+        )
+
+    def _collect_tokens_until_subend(self) -> list[TokenInfo]:
+        """
+        Consume tokens from self._tok_iter and collect all tokens belonging to the body
+        of a SUB until we see a line whose first opcode is NAME 'SUBEND'.
+        The SUBEND line itself is consumed but not included.
+        """
+        if self._tok_iter is None:
+            raise RuntimeError("internal: token iterator missing")
+
+        collected: list[TokenInfo] = []
+        pending_op: Optional[str] = None
+
+        for tok in self._tok_iter:
+            tname = tok_name.get(tok.type)
+
+            if tname == "NAME" and pending_op is None:
+                candidate = tok.string.upper()
+                if candidate == "SUBEND":
+                    # Consume to end-of-line (discard), then stop.
+                    for t2 in self._tok_iter:
+                        if tok_name.get(t2.type) in {"NEWLINE", "ENDMARKER"}:
+                            break
+                    break
+                else:
+                    pending_op = candidate
+
+            collected.append(tok)
+
+            if tname in {"NEWLINE", "ENDMARKER"}:
+                pending_op = None
+                if tname == "ENDMARKER":
+                    break
+
+        return collected
+
     # ---- helpers: classification & literals ----
 
     def _is_opcode_name(self, upper: str) -> bool:
-        return is_basic_op(upper) or upper in VALID_OPS
+        # Recognize SUB specially; the rest are BASIC or native opcodes
+        return upper == "SUB" or is_basic_op(upper) or upper in VALID_OPS
 
     def _is_literal_name(self, s: str) -> bool:
         return s in {"None", "True", "False"}
@@ -286,3 +369,4 @@ class Parser:
         self.encoding = "utf-8"
         self._line.reset()
         self.instructions.clear()
+        self._tok_iter = None

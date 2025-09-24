@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import List, Dict, Tuple, Union, Any, Iterable
+from typing import List, Dict, Tuple, Union, Any
 from types import CodeType
 import dis as _dis
 
@@ -12,7 +12,7 @@ from .parser import Parser
 from .labels import LabelDecl, JumpRef, NamedJump
 from .ident import Ident
 from .constants import COND_JUMP_OPS, UNCOND_JUMP_FIXED
-from .funcplace import FuncDef, ReturnMarker  # NEW: function placeholders
+from .funcplace import FuncDef, ReturnMarker  # NEW
 
 # What the parser can produce (no Label yet)
 ParsedItem = Union[Instr, LabelDecl, JumpRef, NamedJump, FuncDef, ReturnMarker]
@@ -209,21 +209,13 @@ class Assembler:
           LOAD_CONST <code>
           MAKE_FUNCTION 0
           STORE_NAME <name>
-        The <code> is produced by recursively resolving the body, converting
-        ReturnMarker entries to RETURN_* and ensuring a final return.
+        The <code> is produced by recursively resolving the body, ensuring a final return.
         """
-        # Recursively resolve the function body (labels, named jumps, nested funcs allowed)
+        # Recursively resolve the function body
         inner_resolved = Assembler(func.body).resolve()
 
-        # Convert ReturnMarker (if any still present) -> RETURN_*.
-        # Note: ReturnMarkers will not be in `inner_resolved` because resolve() already
-        # errors on module-level ReturnMarker; but if user ever passes them through,
-        # we handle it here defensively.
-        lowered_body: List[Union[Instr, Label]] = []
-        for it in inner_resolved:
-            lowered_body.append(it)
-
         # Ensure function ends with a return (if author omitted)
+        lowered_body: List[Union[Instr, Label]] = list(inner_resolved)
         if not lowered_body or str(getattr(lowered_body[-1], "name", "")) not in {
             "RETURN_CONST",
             "RETURN_VALUE",
