@@ -20,7 +20,9 @@ from paxy.basic.input import Input
 from paxy.basic.importer import ImportSimple
 from paxy.basic.callfn import CallFn
 from paxy.basic.label import LabelOp, GotoOp
+from paxy.basic.returnstmt import ReturnOp
 from paxy.basic.row import RowOp
+from paxy.basic.sub import GoSubOp
 from paxy.basic.vec import VecOp
 from paxy.basic.mapdel import MapDelOp
 
@@ -46,6 +48,8 @@ BASIC_OPS: Dict[str, Type[BasicOperation]] = {
     "MAP": MapOp,
     "MAPADD": MapAddOp,
     "MAPDEL": MapDelOp,
+    "GOSUB": GoSubOp,
+    "RETURN": ReturnOp,
 }
 
 
