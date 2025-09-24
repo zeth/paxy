@@ -22,6 +22,7 @@ from paxy.basic.callfn import CallFn
 from paxy.basic.label import LabelOp, GotoOp
 from paxy.basic.row import RowOp
 from paxy.basic.vec import VecOp
+from paxy.basic.mapdel import MapDelOp
 
 BASIC_OPS: Dict[str, Type[BasicOperation]] = {
     "PRINT": Print,
@@ -44,6 +45,7 @@ BASIC_OPS: Dict[str, Type[BasicOperation]] = {
     "VEC": VecOp,
     "MAP": MapOp,
     "MAPADD": MapAddOp,
+    "MAPDEL": MapDelOp,
 }
 
 
