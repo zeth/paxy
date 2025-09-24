@@ -1,4 +1,5 @@
 from typing import Any, Mapping, Iterable, Sequence
+from types import CodeType
 from enum import Enum, IntFlag
 
 class Label: ...
@@ -42,7 +43,7 @@ class Bytecode:
     flags: int
     first_lineno: int
     def __init__(self, instrs: Sequence[Instr | Label] | None = ...) -> None: ...
-    def to_code(self) -> object: ...
+    def to_code(self) -> CodeType: ...
 
 class CompilerFlags(IntFlag):
     NOFREE: int

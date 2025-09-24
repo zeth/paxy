@@ -1,8 +1,9 @@
 # paxy/assembler.py
 from __future__ import annotations
+
 import os
 from pathlib import Path
-from typing import List, Dict, Tuple, Union, Any
+from typing import List, Dict, Tuple, Union, Any, cast
 from types import CodeType
 import dis as _dis
 
@@ -12,10 +13,8 @@ from .labels import LabelDecl, JumpRef, NamedJump
 from .ident import Ident
 from .constants import COND_JUMP_OPS, UNCOND_JUMP_FIXED
 
-Item = Union[Instr, LabelDecl, JumpRef, NamedJump, Label]
 
-
-def _resolve_labels(items: List[Item]) -> List[Union[Instr, Label]]:
+def _resolve_labels(items: List[Instr]) -> List[Union[Instr, Label]]:
     """
     Replace LabelDecl with actual bytecode.Label instances and
     resolve all jump placeholders (BASIC GOTO + native jumps naming labels).
@@ -24,9 +23,9 @@ def _resolve_labels(items: List[Item]) -> List[Union[Instr, Label]]:
     label_positions: Dict[str, int] = {}
     for idx, it in enumerate(items):
         if isinstance(it, LabelDecl):
-            if it.name in label_positions:
-                raise SyntaxError(f"Duplicate LABEL '{it.name}'")
-            label_positions[it.name] = idx
+            if it.label_name in label_positions:
+                raise SyntaxError(f"Duplicate LABEL '{it.label_name}'")
+            label_positions[it.label_name] = idx
 
     # 2) Create real bytecode.Label objects
     label_objects: Dict[str, Label] = {name: Label() for name in label_positions}
@@ -37,12 +36,13 @@ def _resolve_labels(items: List[Item]) -> List[Union[Instr, Label]]:
     #    - rewrite native jumps with string/Ident targets to placeholders:
     #         ("__CJUMP__", OPCODE, JumpRef)  for conditional
     #         ("__UJUMP__", OPCODE, JumpRef)  for explicit-direction uncond
-    resolved: List[Union[Instr, Label, tuple]] = []
+    #         ("__NJUMP__", OPCODE, JumpRef)  for named native jumps
+    resolved: List[Union[Instr, Label, Tuple[Any, ...]]] = []
     decl_index_to_resolved_index: Dict[int, int] = {}
 
     for idx, it in enumerate(items):
         if isinstance(it, LabelDecl):
-            lbl = label_objects[it.name]
+            lbl = label_objects[it.label_name]
             decl_index_to_resolved_index[idx] = len(resolved)
             resolved.append(lbl)
 
@@ -70,8 +70,10 @@ def _resolve_labels(items: List[Item]) -> List[Union[Instr, Label]]:
     # 4) Map label declaration indices to their resolved positions
     name_to_resolved_index: Dict[str, int] = {}
     for decl_idx, res_idx in decl_index_to_resolved_index.items():
-        name = items[decl_idx].name  # type: ignore[attr-defined]
-        name_to_resolved_index[name] = res_idx
+        it = items[decl_idx]
+        if not isinstance(it, LabelDecl):
+            raise RuntimeError("internal error: decl index did not point to LabelDecl")
+        name_to_resolved_index[it.label_name] = res_idx
 
     # 5) Second pass: patch placeholders to real Instrs with Label args
     final: List[Union[Instr, Label]] = []
@@ -81,29 +83,37 @@ def _resolve_labels(items: List[Item]) -> List[Union[Instr, Label]]:
 
             if tag == "__JUMP__":
                 _, ref = it
-                if ref.name not in name_to_resolved_index:
-                    raise SyntaxError(f"GOTO to undefined LABEL '{ref.name}'")
-                target_pos = name_to_resolved_index[ref.name]
+                if ref.target_name not in name_to_resolved_index:
+                    raise SyntaxError(f"GOTO to undefined LABEL '{ref.target_name}'")
+                target_pos = name_to_resolved_index[ref.target_name]
                 opcode = "JUMP_FORWARD" if target_pos > pos else "JUMP_BACKWARD"
-                final.append(Instr(opcode, label_objects[ref.name], lineno=ref.lineno))
+                final.append(
+                    Instr(opcode, label_objects[ref.target_name], lineno=ref.lineno)
+                )
 
             elif tag == "__CJUMP__":
                 _, opcode, ref = it
-                if ref.name not in name_to_resolved_index:
-                    raise SyntaxError(f"jump to undefined LABEL '{ref.name}'")
-                final.append(Instr(opcode, label_objects[ref.name], lineno=ref.lineno))
+                if ref.target_name not in name_to_resolved_index:
+                    raise SyntaxError(f"jump to undefined LABEL '{ref.target_name}'")
+                final.append(
+                    Instr(opcode, label_objects[ref.target_name], lineno=ref.lineno)
+                )
 
             elif tag == "__UJUMP__":
                 _, opcode, ref = it
-                if ref.name not in name_to_resolved_index:
-                    raise SyntaxError(f"jump to undefined LABEL '{ref.name}'")
-                final.append(Instr(opcode, label_objects[ref.name], lineno=ref.lineno))
+                if ref.target_name not in name_to_resolved_index:
+                    raise SyntaxError(f"jump to undefined LABEL '{ref.target_name}'")
+                final.append(
+                    Instr(opcode, label_objects[ref.target_name], lineno=ref.lineno)
+                )
 
             elif tag == "__NJUMP__":
                 _, opcode, ref = it
-                if ref.name not in name_to_resolved_index:
-                    raise SyntaxError(f"jump to undefined LABEL '{ref.name}'")
-                final.append(Instr(opcode, label_objects[ref.name], lineno=ref.lineno))
+                if ref.target_name not in name_to_resolved_index:
+                    raise SyntaxError(f"jump to undefined LABEL '{ref.target_name}'")
+                final.append(
+                    Instr(opcode, label_objects[ref.target_name], lineno=ref.lineno)
+                )
 
             else:
                 raise RuntimeError(f"unknown placeholder {tag!r}")
@@ -111,7 +121,7 @@ def _resolve_labels(items: List[Item]) -> List[Union[Instr, Label]]:
         else:
             final.append(it)
 
-    # paxy/assembler.py (end of _resolve_labels, just before return)
+    # Sanity pass
     for it in final:
         # no tuple placeholders left
         if isinstance(it, tuple):
@@ -126,17 +136,17 @@ def _resolve_labels(items: List[Item]) -> List[Union[Instr, Label]]:
     return final
 
 
-def assemble_file(src_path: Path) -> object:
+def assemble_file(src_path: Path) -> CodeType:
     """
-    Parse .paxy -> (Instr/LabelDecl/JumpRef...) -> resolve labels -> Bytecode -> CodeType
+    Parse .paxy -> (Instr stream) -> resolve labels -> Bytecode -> CodeType
     """
     parser = Parser()
-    instrs: List[Item] = parser.parse_file(src_path)  # type: ignore[assignment]
+    instrs: List[Instr] = parser.parse_file(src_path)
 
     resolved = _resolve_labels(instrs)
 
     if os.getenv("PAXY_DEBUG") == "1":
-        out = []
+        out: List[str] = []
         out.append("== RESOLVED ==")
         for i, it in enumerate(resolved):
             out.append(f"{i:03d}: {it!r}")

@@ -37,10 +37,6 @@ class LabelDecl(Instr):
         self.label_name = name
         self.is_label_decl = True
 
-    @property
-    def name(self) -> str:  # semantic label identifier
-        return str(self.arg)
-
 
 class JumpRef(Instr):
     """
@@ -53,7 +49,3 @@ class JumpRef(Instr):
         super().__init__("JUMP_REF", target, lineno=lineno)
         self.target_name = target
         self.is_jump_ref = True
-
-    @property
-    def name(self) -> str:  # semantic target identifier
-        return str(self.arg)
