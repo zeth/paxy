@@ -2,8 +2,9 @@ from __future__ import annotations
 from typing import Any
 from paxy.basic.base import BasicOperation
 
+
 class Print(BasicOperation):
-    def make_ops(self, op_args: list[Any]):
+    def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) > 1:
             raise SyntaxError("PRINT takes at most one argument")
         self.add_op("LOAD_NAME", "print")

@@ -1,7 +1,7 @@
 # paxy/parser.py
 from __future__ import annotations
 
-from typing import Any, Callable, Protocol, runtime_checkable
+from typing import Any, Callable
 from pathlib import Path
 from tokenize import tokenize, TokenInfo
 from token import tok_name
@@ -34,7 +34,7 @@ class Parser:
         "CONTAINS_OP": coerce_contains_op,  # 0 -> IN, 1 -> NOT_IN
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.encoding = "utf-8"
         self.current_op: str | None = None
         self.current_args: list[object] = []
@@ -42,7 +42,7 @@ class Parser:
         self.pending_sign: int = 1
         self.instructions: list[Instr] = []
 
-        self.handlers = {
+        self.handlers: dict[str, Callable[[TokenInfo], None]] = {
             "ENCODING": self.handle_encoding,
             "NAME": self.handle_name,
             "STRING": self.handle_string,
@@ -56,7 +56,7 @@ class Parser:
 
     # ---- public API ----
 
-    def parse_file(self, src_path: Path):
+    def parse_file(self, src_path: Path) -> list[Instr]:
         self._reset_state()
         self._process_stream(src_path)
         self._finalize_lines()
@@ -65,18 +65,20 @@ class Parser:
 
     # ---- core stream processing ----
 
-    def process_token(self, tok_info: TokenInfo):
-        token_type_name = tok_name.get(tok_info.type, None)
+    def process_token(self, tok_info: TokenInfo) -> None:
+        token_type_name: str | None = tok_name.get(tok_info.type)
+        if token_type_name is None:
+            return
         handler = self.handlers.get(token_type_name)
         if handler is not None:
             handler(tok_info)
 
     # ---- token handlers (thin; delegate to helpers) ----
 
-    def handle_encoding(self, tok_info: TokenInfo):
+    def handle_encoding(self, tok_info: TokenInfo) -> None:
         self.encoding = tok_info.string
 
-    def handle_name(self, tok_info: TokenInfo):
+    def handle_name(self, tok_info: TokenInfo) -> None:
         s = tok_info.string
 
         # First NAME on a line must be an opcode or BASIC macro; otherwise error.
@@ -94,7 +96,7 @@ class Parser:
         else:
             self.current_args.append(Ident(s))
 
-    def handle_string(self, tok_info: TokenInfo):
+    def handle_string(self, tok_info: TokenInfo) -> None:
         # Try to parse Python literal; else keep raw text.
         try:
             val = ast.literal_eval(tok_info.string)
@@ -102,31 +104,31 @@ class Parser:
             val = tok_info.string
         self.current_args.append(val)
 
-    def handle_number(self, tok_info: TokenInfo):
+    def handle_number(self, tok_info: TokenInfo) -> None:
         val = self._parse_number(tok_info.string, self.pending_sign)
         self.pending_sign = 1
         self.current_args.append(val)
 
-    def handle_op(self, tok_info: TokenInfo):
+    def handle_op(self, tok_info: TokenInfo) -> None:
         self._maybe_mark_unary_minus(tok_info)
 
-    def handle_nl(self, tok_info: TokenInfo):
+    def handle_nl(self, tok_info: TokenInfo) -> None:
         pass
 
-    def handle_comment(self, tok_info: TokenInfo):
+    def handle_comment(self, tok_info: TokenInfo) -> None:
         pass
 
-    def handle_newline(self, tok_info: TokenInfo):
+    def handle_newline(self, tok_info: TokenInfo) -> None:
         if self.current_op is not None:
             self.store_instruction()
 
-    def handle_endmarker(self, tok_info: TokenInfo):
+    def handle_endmarker(self, tok_info: TokenInfo) -> None:
         if self.current_op is not None:
             self.store_instruction()
 
     # ---- emission ----
 
-    def store_instruction(self):
+    def store_instruction(self) -> None:
         op = self.current_op
         args = self.current_args
         lineno = self.current_op_lineno or 1
@@ -206,12 +208,12 @@ class Parser:
     def _is_literal_name(self, s: str) -> bool:
         return s in {"None", "True", "False"}
 
-    def _literal_value(self, s: str):
+    def _literal_value(self, s: str) -> object:
         return {"None": None, "True": True, "False": False}[s]
 
     # ---- helpers: numbers & unary minus ----
 
-    def _parse_number(self, text: str, sign: int):
+    def _parse_number(self, text: str, sign: int) -> object:
         # int with auto base (0x, 0o, 0b, decimal)
         try:
             return sign * int(text, 0)

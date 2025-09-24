@@ -1,5 +1,5 @@
-# minimal local stubs for 'bytecode' to satisfy mypy
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping, Iterable, Sequence
+from enum import Enum, IntFlag
 
 class Label: ...
 class CellVar: ...
@@ -13,9 +13,38 @@ class Instr:
         self, name: str, arg: Any | None = ..., *, lineno: int | None = ...
     ) -> None: ...
 
-# Lightweight stand-ins for the enums you coerce to:
-class BinaryOp: ...
-class Compare: ...
+class BinaryOp(Enum):
+    ADD: "BinaryOp"
+    SUBTRACT: "BinaryOp"
+    MULTIPLY: "BinaryOp"
+    TRUE_DIVIDE: "BinaryOp"
+    FLOOR_DIVIDE: "BinaryOp"
+    REMAINDER: "BinaryOp"
+    POWER: "BinaryOp"
+    LSHIFT: "BinaryOp"
+    RSHIFT: "BinaryOp"
+    OR: "BinaryOp"
+    AND: "BinaryOp"
+    XOR: "BinaryOp"
+    MATRIX_MULTIPLY: "BinaryOp"
 
-# You read this (VALID_OPS = set(dis.opmap)), type as Mapping is enough
+class Compare(Enum):
+    EQ: "Compare"
+    NE: "Compare"
+    LT: "Compare"
+    LE: "Compare"
+    GT: "Compare"
+    GE: "Compare"
+
+class Bytecode:
+    filename: str
+    name: str
+    flags: int
+    first_lineno: int
+    def __init__(self, instrs: Sequence[Instr | Label] | None = ...) -> None: ...
+    def to_code(self) -> object: ...
+
+class CompilerFlags(IntFlag):
+    NOFREE: int
+
 opmap: Mapping[str, int]

@@ -1,12 +1,14 @@
 """Decrement variable by one."""
+
 # paxy/basic/dec.py
 from typing import Any
 from bytecode import BinaryOp
 from paxy.basic.base import BasicOperation
 from paxy.ident import Ident
 
+
 class Dec(BasicOperation):
-    def make_ops(self, op_args: list[Any]):
+    def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) != 1:
             raise SyntaxError("DEC takes exactly one identifier")
         name = op_args[0]

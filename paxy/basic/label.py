@@ -4,9 +4,11 @@ from paxy.basic.base import BasicOperation
 from paxy.ident import Ident
 from paxy.labels import LabelDecl, JumpRef
 
+
 class LabelOp(BasicOperation):
     """LABEL <identifier>  -> placeholder resolved by assembler to a bytecode.Label()"""
-    def make_ops(self, op_args: list[Any]):
+
+    def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) != 1:
             raise SyntaxError("LABEL takes exactly one identifier")
         name = op_args[0]
@@ -18,7 +20,8 @@ class LabelOp(BasicOperation):
 
 class GotoOp(BasicOperation):
     """GOTO <identifier>  -> resolved by assembler to a concrete jump to <identifier>"""
-    def make_ops(self, op_args: list[Any]):
+
+    def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) != 1:
             raise SyntaxError("GOTO takes exactly one identifier")
         name = op_args[0]

@@ -1,32 +1,43 @@
 # paxy/basic/base.py
-from bytecode import Instr, BinaryOp
+from __future__ import annotations
+
 from typing import Any
+from bytecode import Instr, BinaryOp
 from paxy.opcoerce import coerce_binary_op
 
 _NOARG = object()
 
-# optional: reuse the parser’s symbol map if you export it
-BINARY_SYMBOL_MAP = {
-    "+": "ADD", "-": "SUBTRACT", "*": "MULTIPLY", "/": "TRUE_DIVIDE",
-    "//": "FLOOR_DIVIDE", "%": "MODULO", "**": "POWER",
-    "<<": "LSHIFT", ">>": "RSHIFT", "|": "OR", "&": "AND",
-    "^": "XOR", "@": "MATRIX_MULTIPLY",
+# Reuse the parser’s symbol map; names should match bytecode's BinaryOp
+BINARY_SYMBOL_MAP: dict[str, str] = {
+    "+": "ADD",
+    "-": "SUBTRACT",
+    "*": "MULTIPLY",
+    "/": "TRUE_DIVIDE",
+    "//": "FLOOR_DIVIDE",
+    "%": "REMAINDER",  # <-- 3.12/3.13 name (not "MODULO")
+    "**": "POWER",
+    "<<": "LSHIFT",
+    ">>": "RSHIFT",
+    "|": "OR",
+    "&": "AND",
+    "^": "XOR",
+    "@": "MATRIX_MULTIPLY",
 }
 
+
 class BasicOperation:
-    def __init__(self, op_arg: Any, lineno: int):
+    def __init__(self, op_args: list[Any], lineno: int) -> None:
         self.ops: list[Instr] = []
-        self.lineno = lineno
-        self.make_ops(op_arg)
+        self.lineno: int = lineno
+        self.make_ops(op_args)
 
     def _coerce_arg(self, op_name: str, arg: Any) -> Any:
-        if op_name == "BINARY_OP":
-            if isinstance(arg, str):
-                name = BINARY_SYMBOL_MAP.get(arg, arg).upper()
-                return BinaryOp[name]
+        if op_name == "BINARY_OP" and isinstance(arg, str):
+            name = BINARY_SYMBOL_MAP.get(arg, arg).upper()
+            return BinaryOp[name]
         return arg
 
-    def add_op(self, op_name: str, op_arg=_NOARG):
+    def add_op(self, op_name: str, op_arg: Any = _NOARG) -> None:
         if op_arg is _NOARG:
             op = Instr(op_name, lineno=self.lineno)
         else:
@@ -34,8 +45,5 @@ class BasicOperation:
             op = Instr(op_name, coerced, lineno=self.lineno)
         self.ops.append(op)
 
-
-    def make_ops(self, op_arg: Any):
+    def make_ops(self, op_args: list[Any]) -> None:
         raise NotImplementedError
-
-

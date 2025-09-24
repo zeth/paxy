@@ -10,36 +10,39 @@ from .compiler import compile_file
 
 def run_pyc(path: str) -> None:
     """Load and execute a compiled .pyc file as if it were __main__."""
-    loader = SourcelessFileLoader("__main__", path)
-    spec = importlib.util.spec_from_file_location("__main__", path, loader=loader)
+    base_loader = SourcelessFileLoader("__main__", path)
+    spec = importlib.util.spec_from_file_location("__main__", path, loader=base_loader)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Could not create import spec for {path!r}")
+
     module = importlib.util.module_from_spec(spec)
     sys.modules["__main__"] = module
+
+    # Narrow the loader type for mypy and execute the module.
+    loader: importlib.abc.Loader = spec.loader
     loader.exec_module(module)
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         prog="paxy",
-        description="Paxy: BASIC-like language that compiles to Python .pyc"
+        description="Paxy: BASIC-like language that compiles to Python .pyc",
     )
     parser.add_argument("source", help="Paxy source file (.paxy)")
     parser.add_argument(
-        "-c", "--compile-only",
+        "-c",
+        "--compile-only",
         action="store_true",
-        help="Only compile to .pyc, do not run"
+        help="Only compile to .pyc, do not run",
     )
     parser.add_argument(
         "-O",
         dest="optlevel",
         type=int,
         choices=(1, 2),
-        help="Optimization suffix in filename (.opt-1 or .opt-2); filename only"
+        help="Optimization suffix in filename (.opt-1 or .opt-2); filename only",
     )
-    parser.add_argument(
-        "-v", "--verbose",
-        action="store_true",
-        help="Verbose output"
-    )
+    parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     args = parser.parse_args()
 
     src = args.source

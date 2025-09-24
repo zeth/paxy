@@ -13,6 +13,7 @@ from .constants import COND_JUMP_OPS, UNCOND_JUMP_FIXED
 
 Item = Union[Instr, LabelDecl, JumpRef, NamedJump, Label]
 
+
 def _resolve_labels(items: List[Item]) -> List[Union[Instr, Label]]:
     """
     Replace LabelDecl with actual bytecode.Label instances and
@@ -118,12 +119,13 @@ def _resolve_labels(items: List[Item]) -> List[Union[Instr, Label]]:
         if isinstance(it, Instr):
             if it.name in COND_JUMP_OPS | UNCOND_JUMP_FIXED:
                 from bytecode import Label as _Lbl
+
                 if not isinstance(it.arg, _Lbl):
                     raise RuntimeError(f"jump still has non-Label arg: {it}")
     return final
 
 
-def assemble_file(src_path: Path):
+def assemble_file(src_path: Path) -> object:
     """
     Parse .paxy -> (Instr/LabelDecl/JumpRef...) -> resolve labels -> Bytecode -> CodeType
     """

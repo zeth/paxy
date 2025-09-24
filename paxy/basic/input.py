@@ -3,8 +3,9 @@ from typing import Any
 from paxy.basic.base import BasicOperation
 from paxy.ident import Ident
 
+
 class Input(BasicOperation):
-    def make_ops(self, op_args: list[Any]):
+    def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) != 1:
             raise SyntaxError("INPUT takes exactly one identifier")
         name = op_args[0]
