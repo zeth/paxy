@@ -8,15 +8,20 @@ from paxy.basic.base import BasicOperation, BasicItem
 from paxy.basic.compare import CompareOp
 from paxy.basic.dec import Dec
 from paxy.basic.ifjump import IfOp
+from paxy.basic.igl import IglOp
 from paxy.basic.inc import IncOp
 from paxy.basic.inop import InOp, NotInOp
 from paxy.basic.isbop import IsNotOp, IsBop
 from paxy.basic.let import Let
+from paxy.basic.map import MapOp
+from paxy.basic.mapadd import MapAddOp
 from paxy.basic.print import Print
 from paxy.basic.input import Input
 from paxy.basic.importer import ImportSimple
 from paxy.basic.callfn import CallFn
 from paxy.basic.label import LabelOp, GotoOp
+from paxy.basic.row import RowOp
+from paxy.basic.vec import VecOp
 
 BASIC_OPS: Dict[str, Type[BasicOperation]] = {
     "PRINT": Print,
@@ -34,6 +39,11 @@ BASIC_OPS: Dict[str, Type[BasicOperation]] = {
     "NOTIN": NotInOp,
     "INC": IncOp,
     "IF": IfOp,
+    "ROW": RowOp,
+    "IGL": IglOp,
+    "VEC": VecOp,
+    "MAP": MapOp,
+    "MAPADD": MapAddOp,
 }
 
 

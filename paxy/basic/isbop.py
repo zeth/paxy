@@ -1,0 +1,30 @@
+from __future__ import annotations
+from typing import Any
+from paxy.basic.base import BasicOperation
+from paxy.ident import Ident
+
+
+class IsBop(BasicOperation):
+    """IS <dst> <lhs> <rhs>  -> dst = (lhs is rhs)"""
+
+    def make_ops(self, args: list[Any]) -> None:
+        if len(args) != 3 or not isinstance(args[0], Ident):
+            raise SyntaxError("IS expects: IS <dst> <lhs> <rhs>")
+        dst, lhs, rhs = args
+        self._emit_load_for(lhs)
+        self._emit_load_for(rhs)
+        self.add_op("IS_OP", 0)  # 0 -> IS
+        self.add_op("STORE_NAME", str(dst))
+
+
+class IsNotOp(BasicOperation):
+    """ISNOT <dst> <lhs> <rhs>  -> dst = (lhs is not rhs)"""
+
+    def make_ops(self, args: list[Any]) -> None:
+        if len(args) != 3 or not isinstance(args[0], Ident):
+            raise SyntaxError("ISNOT expects: ISNOT <dst> <lhs> <rhs>")
+        dst, lhs, rhs = args
+        self._emit_load_for(lhs)
+        self._emit_load_for(rhs)
+        self.add_op("IS_OP", 1)  # 1 -> IS_NOT
+        self.add_op("STORE_NAME", str(dst))
