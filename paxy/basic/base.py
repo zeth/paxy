@@ -51,3 +51,11 @@ class BasicOperation:
 
     def make_ops(self, op_args: list[Any]) -> None:
         raise NotImplementedError
+
+    def _emit_load_for(self, value: Any) -> None:
+        from paxy.ident import Ident
+
+        if isinstance(value, Ident):
+            self.add_op("LOAD_NAME", str(value))
+        else:
+            self.add_op("LOAD_CONST", value)
