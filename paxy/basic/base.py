@@ -1,20 +1,21 @@
 # paxy/basic/base.py
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Union
 from bytecode import Instr, BinaryOp
 from paxy.opcoerce import coerce_binary_op
+from paxy.labels import LabelDecl, JumpRef
 
 _NOARG = object()
 
-# Reuse the parser’s symbol map; names should match bytecode's BinaryOp
+# Names should match bytecode's BinaryOp (3.12/3.13)
 BINARY_SYMBOL_MAP: dict[str, str] = {
     "+": "ADD",
     "-": "SUBTRACT",
     "*": "MULTIPLY",
     "/": "TRUE_DIVIDE",
     "//": "FLOOR_DIVIDE",
-    "%": "REMAINDER",  # <-- 3.12/3.13 name (not "MODULO")
+    "%": "REMAINDER",
     "**": "POWER",
     "<<": "LSHIFT",
     ">>": "RSHIFT",
@@ -24,10 +25,13 @@ BINARY_SYMBOL_MAP: dict[str, str] = {
     "@": "MATRIX_MULTIPLY",
 }
 
+# What BASIC ops may emit
+BasicItem = Union[Instr, LabelDecl, JumpRef]
+
 
 class BasicOperation:
     def __init__(self, op_args: list[Any], lineno: int) -> None:
-        self.ops: list[Instr] = []
+        self.ops: list[BasicItem] = []
         self.lineno: int = lineno
         self.make_ops(op_args)
 

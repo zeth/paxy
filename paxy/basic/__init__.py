@@ -1,10 +1,10 @@
 # paxy/basic/__init__.py
 from __future__ import annotations
 
-from typing import Any, Dict, Type
+from typing import Any, Dict, Type, Union, List
 from bytecode import Instr
 
-from paxy.basic.base import BasicOperation
+from paxy.basic.base import BasicOperation, BasicItem
 from paxy.basic.dec import Dec
 from paxy.basic.let import Let
 from paxy.basic.print import Print
@@ -29,7 +29,7 @@ def is_basic_op(op_name: str) -> bool:
     return op_name in BASIC_OPS
 
 
-def basic_op(op_name: str, op_args: list[Any], lineno: int) -> list[Instr]:
+def basic_op(op_name: str, op_args: list[Any], lineno: int) -> List[BasicItem]:
     cls = BASIC_OPS[op_name]
     inst = cls(op_args, lineno)
     return inst.ops

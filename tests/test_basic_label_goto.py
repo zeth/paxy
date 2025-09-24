@@ -1,18 +1,19 @@
+# tests/basic_label_goto.py
+
 from pathlib import Path
 import pytest
 from paxy.assembler import assemble_file
 
-def test_label_forward_goto_executes(tmp_path: Path, capsys: pytest.CaptureFixture[str]):
+
+def test_label_forward_goto_executes(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+):
     src = tmp_path / "prog.paxy"
-    src.write_text(
-        "GOTO end\n"
-        "PRINT 'skip'\n"
-        "LABEL end\n"
-        "PRINT 'done'\n"
-    )
+    src.write_text("GOTO end\n" "PRINT 'skip'\n" "LABEL end\n" "PRINT 'done'\n")
     code = assemble_file(src)
     exec(code, {"__name__": "__main__"})
     assert capsys.readouterr().out == "done\n"
+
 
 def test_label_backward_goto_loops(tmp_path: Path, capsys: pytest.CaptureFixture[str]):
     # Simple countdown 3,2,1 using GOTO
@@ -44,6 +45,7 @@ def test_label_backward_goto_loops(tmp_path: Path, capsys: pytest.CaptureFixture
     exec(code, {"__name__": "__main__"})
     out = capsys.readouterr().out.strip().splitlines()
     assert out == ["3", "2", "1"]
+
 
 def test_label_errors(tmp_path: Path):
     src = tmp_path / "dup.paxy"

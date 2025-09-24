@@ -1,0 +1,14 @@
+{
+  // This tells the extension to use your workspace config file
+  "mypy-type-checker.args": [
+    "--config-file",
+    "${workspaceFolder}/mypy.ini",
+    "--mypy-path",
+    "${workspaceFolder}/stubs"
+  ],
+  "python.analysis.stubPath": "${workspaceFolder}/stubs",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}"
+  ],
+  "python-envs.pythonProjects": [],
+}
