@@ -12,9 +12,10 @@ from .parser import Parser
 from .labels import LabelDecl, JumpRef, NamedJump
 from .ident import Ident
 from .constants import COND_JUMP_OPS, UNCOND_JUMP_FIXED
+from .funcplace import FuncDef, ReturnMarker  # NEW: function placeholders
 
 # What the parser can produce (no Label yet)
-ParsedItem = Union[Instr, LabelDecl, JumpRef, NamedJump]
+ParsedItem = Union[Instr, LabelDecl, JumpRef, NamedJump, FuncDef, ReturnMarker]
 # What the resolver returns (only real bytecode items)
 ResolvedItem = Union[Instr, Label]
 # Internal placeholder tuple type (tagged unions used in the first pass)
@@ -22,7 +23,9 @@ Placeholder = Tuple[Any, ...]
 
 
 class Assembler:
-    """Resolves placeholders (labels and named jumps) into real bytecode items."""
+    """Resolves placeholders (labels and named jumps) into real bytecode items,
+    and lowers function placeholders into LOAD_CONST/MAKE_FUNCTION/STORE_NAME.
+    """
 
     # Placeholder tags
     TAG_JUMP = "__JUMP__"  # ("__JUMP__", JumpRef)
@@ -38,10 +41,15 @@ class Assembler:
         self._label_objects: Dict[str, Label] = {}
 
         # first pass (rewritten stream)
-        self._resolved_stream: List[Union[Instr, Label, Placeholder]] = []
+        self._resolved_stream: List[
+            Union[Instr, Label, Placeholder, FuncDef, ReturnMarker]
+        ] = []
         self._decl_idx_to_resolved_idx: Dict[int, int] = {}
 
-        # second pass (final result)
+        # second pass (label/jump-patched stream)
+        self._patched: List[Union[Instr, Label, FuncDef, ReturnMarker]] = []
+
+        # final result (Instr/Label only)
         self._final: List[ResolvedItem] = []
 
         # name -> index in resolved stream where concrete Label lives
@@ -55,7 +63,8 @@ class Assembler:
         self._build_label_objects()
         self._first_pass_rewrite()
         self._index_label_decls()
-        self._second_pass_patch()
+        self._second_pass_patch_jumps()
+        self._lower_functions_and_returns()
         self._sanity_check()
         return self._final
 
@@ -83,9 +92,10 @@ class Assembler:
           - LabelDecl -> Label()
           - GOTO (JumpRef) -> ("__JUMP__", JumpRef)
           - Native jumps with string targets -> ("__C/U/NJUMP__", opcode, JumpRef)
+          - FuncDef / ReturnMarker are passed through for a later lowering pass
           - Other Instrs are kept as-is.
         """
-        resolved: List[Union[Instr, Label, Placeholder]] = []
+        resolved: List[Union[Instr, Label, Placeholder, FuncDef, ReturnMarker]] = []
         decl_map: Dict[int, int] = {}
 
         for idx, it in enumerate(self.items):
@@ -102,6 +112,10 @@ class Assembler:
                 resolved.append(
                     (self.TAG_NJUMP, it.opcode, JumpRef(it.target_name, it.lineno))
                 )
+
+            elif isinstance(it, FuncDef) or isinstance(it, ReturnMarker):
+                # Leave function placeholders and returns for a later lowering stage
+                resolved.append(it)
 
             elif isinstance(it, Instr) and isinstance(it.name, str):
                 op = it.name
@@ -134,50 +148,106 @@ class Assembler:
             name_to_resolved_index[ld.label_name] = res_idx
         self._name_to_resolved_index = name_to_resolved_index
 
-    # ---------- Pass 2: Patch placeholders to real Instrs ----------
+    # ---------- Pass 2: Patch label-related placeholders to real Instrs ----------
 
-    def _second_pass_patch(self) -> None:
-        final: List[ResolvedItem] = []
+    def _second_pass_patch_jumps(self) -> None:
+        patched: List[Union[Instr, Label, FuncDef, ReturnMarker]] = []
         for pos, entry in enumerate(self._resolved_stream):
             if isinstance(entry, tuple):
                 tag = entry[0]
                 if tag == self.TAG_JUMP:
                     _, ref = entry
-                    self._emit_resolved_uncond_jump(final, pos, ref)
+                    patched.append(self._make_resolved_uncond_jump(pos, ref))
                 elif tag == self.TAG_CJUMP:
                     _, opcode, ref = entry
-                    self._emit_resolved_fixed_jump(final, opcode, ref)
+                    patched.append(self._make_resolved_fixed_jump(opcode, ref))
                 elif tag == self.TAG_UJUMP:
                     _, opcode, ref = entry
-                    self._emit_resolved_fixed_jump(final, opcode, ref)
+                    patched.append(self._make_resolved_fixed_jump(opcode, ref))
                 elif tag == self.TAG_NJUMP:
                     _, opcode, ref = entry
-                    self._emit_resolved_fixed_jump(final, opcode, ref)
+                    patched.append(self._make_resolved_fixed_jump(opcode, ref))
                 else:
                     raise RuntimeError(f"unknown placeholder {tag!r}")
             else:
-                final.append(entry)
+                patched.append(entry)
 
-        self._final = final
+        self._patched = patched
 
-    def _emit_resolved_uncond_jump(
-        self, out: List[ResolvedItem], pos: int, ref: JumpRef
-    ) -> None:
+    def _make_resolved_uncond_jump(self, pos: int, ref: JumpRef) -> Instr:
         target_idx = self._lookup_target_index(ref.target_name)
         opcode = "JUMP_FORWARD" if target_idx > pos else "JUMP_BACKWARD"
-        out.append(
-            Instr(opcode, self._label_objects[ref.target_name], lineno=ref.lineno)
-        )
+        return Instr(opcode, self._label_objects[ref.target_name], lineno=ref.lineno)
 
-    def _emit_resolved_fixed_jump(
-        self, out: List[ResolvedItem], opcode: str, ref: JumpRef
-    ) -> None:
+    def _make_resolved_fixed_jump(self, opcode: str, ref: JumpRef) -> Instr:
         self._ensure_target_defined(ref.target_name)
-        out.append(
-            Instr(opcode, self._label_objects[ref.target_name], lineno=ref.lineno)
-        )
+        return Instr(opcode, self._label_objects[ref.target_name], lineno=ref.lineno)
 
-    # ---------- Pass 3: Sanity checks ----------
+    # ---------- Pass 3: Lower functions and returns ----------
+
+    def _lower_functions_and_returns(self) -> None:
+        """
+        Convert:
+          - FuncDef -> LOAD_CONST(code); MAKE_FUNCTION 0; STORE_NAME <name>
+          - ReturnMarker at module level -> error
+        """
+        final: List[ResolvedItem] = []
+        for entry in self._patched:
+            if isinstance(entry, FuncDef):
+                final.extend(self._lower_funcdef(entry))
+            elif isinstance(entry, ReturnMarker):
+                # RETURN outside of function/subroutine
+                raise SyntaxError("RETURN outside of SUB")
+            else:
+                # Instr or Label
+                final.append(entry)
+        self._final = final
+
+    def _lower_funcdef(self, func: FuncDef) -> List[ResolvedItem]:
+        """
+        Lower a FuncDef placeholder into:
+          LOAD_CONST <code>
+          MAKE_FUNCTION 0
+          STORE_NAME <name>
+        The <code> is produced by recursively resolving the body, converting
+        ReturnMarker entries to RETURN_* and ensuring a final return.
+        """
+        # Recursively resolve the function body (labels, named jumps, nested funcs allowed)
+        inner_resolved = Assembler(func.body).resolve()
+
+        # Convert ReturnMarker (if any still present) -> RETURN_*.
+        # Note: ReturnMarkers will not be in `inner_resolved` because resolve() already
+        # errors on module-level ReturnMarker; but if user ever passes them through,
+        # we handle it here defensively.
+        lowered_body: List[Union[Instr, Label]] = []
+        for it in inner_resolved:
+            lowered_body.append(it)
+
+        # Ensure function ends with a return (if author omitted)
+        if not lowered_body or str(getattr(lowered_body[-1], "name", "")) not in {
+            "RETURN_CONST",
+            "RETURN_VALUE",
+        }:
+            lowered_body.append(Instr("RETURN_CONST", 0, lineno=func.lineno))
+
+        # Build a code object for the function
+        bc = Bytecode(lowered_body)
+        bc.name = func.name
+        bc.argnames = list(func.params)  # fast locals for parameters
+        bc.flags |= CompilerFlags.NOFREE
+        if lowered_body:
+            first = next((x for x in lowered_body if isinstance(x, Instr)), None)
+            if first is not None and first.lineno:
+                bc.first_lineno = first.lineno
+        codeobj = bc.to_code()
+
+        return [
+            Instr("LOAD_CONST", codeobj, lineno=func.lineno),
+            Instr("MAKE_FUNCTION", 0, lineno=func.lineno),
+            Instr("STORE_NAME", func.name, lineno=func.lineno),
+        ]
+
+    # ---------- Pass 4: Sanity checks ----------
 
     def _sanity_check(self) -> None:
         for obj in self._final:
