@@ -5,7 +5,10 @@ from pathlib import Path
 import importlib._bootstrap_external as _be
 from .assembler import assemble_file  # (already updated to 3.13)
 
-class PaxyCompileError(RuntimeError): pass
+
+class PaxyCompileError(RuntimeError):
+    pass
+
 
 def output_path_for(src: str | Path, *, optimization: int | None = None) -> Path:
     """
@@ -22,6 +25,7 @@ def output_path_for(src: str | Path, *, optimization: int | None = None) -> Path
     else:
         # sourceless import path that the importer will actually check
         return src.parent / f"{base}.pyc"
+
 
 def compile_file(
     src: str | Path,
