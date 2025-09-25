@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Union
 from bytecode import Instr, BinaryOp
+from paxy.funcplace import ReturnMarker
 from paxy.opcoerce import coerce_binary_op
 from paxy.labels import LabelDecl, JumpRef, NamedJump
 
@@ -26,7 +27,7 @@ BINARY_SYMBOL_MAP: dict[str, str] = {
 }
 
 # What BASIC ops may emit
-BasicItem = Union[Instr, LabelDecl, JumpRef, NamedJump]
+BasicItem = Union[Instr, LabelDecl, JumpRef, NamedJump, ReturnMarker]
 
 
 class BasicOperation:

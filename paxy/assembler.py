@@ -33,8 +33,9 @@ class Assembler:
     TAG_UJUMP = "__UJUMP__"  # ("__UJUMP__", opcode, JumpRef)
     TAG_NJUMP = "__NJUMP__"  # ("__NJUMP__", opcode, JumpRef)
 
-    def __init__(self, items: List[ParsedItem]) -> None:
+    def __init__(self, items: List[ParsedItem], *, in_function: bool = False) -> None:
         self.items: List[ParsedItem] = items
+        self._in_function: bool = in_function
 
         # discovery
         self._label_positions: Dict[str, int] = {}
@@ -235,7 +236,7 @@ class Assembler:
 
         return [
             Instr("LOAD_CONST", codeobj, lineno=func.lineno),
-            Instr("MAKE_FUNCTION", 0, lineno=func.lineno),
+            Instr("MAKE_FUNCTION", lineno=func.lineno),
             Instr("STORE_NAME", func.name, lineno=func.lineno),
         ]
 

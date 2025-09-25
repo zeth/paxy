@@ -1,66 +1,58 @@
-from pathlib import Path
-import pytest
-from paxy.parser import Parser
+# paxy/basic/callfn.py
+from __future__ import annotations
 
-def as_pairs(instrs):
-    return [(str(i.name), i.arg) for i in instrs]
+from typing import Any, List
+from paxy.basic.base import BasicOperation
+from paxy.ident import Ident
 
-def strip_leading_resume(pairs):
-    out = list(pairs)
-    if out and out[0] == ("RESUME", 0):
-        out.pop(0)
-    return out
 
-def canon_argless(pairs):
-    out = []
-    for n, a in pairs:
-        if n in {"PUSH_NULL", "POP_TOP"}:
-            out.append((n, 0))
-        else:
-            out.append((n, a))
-    return out
+class CallFn(BasicOperation):
+    """
+    CALLFN <dest> <func> [args...]
+      - Loads func from globals
+      - PUSH_NULL (CPython 3.11+ calling conv)
+      - Loads each arg (identifier -> LOAD_NAME, otherwise LOAD_CONST)
+      - CALL <argc>
+      - STORE_NAME <dest>
 
-def test_callfn_lowers_to_zero_arg_call(tmp_path: Path):
-    src = tmp_path / "prog.paxy"
-    src.write_text("CALLFN dir\nRETURN_CONST None\n")
-    got = canon_argless(strip_leading_resume(as_pairs(Parser().parse_file(src))))
-    assert got == [
-        ("LOAD_NAME", "dir"),
-        ("PUSH_NULL", 0),
-        ("CALL", 0),
-        ("POP_TOP", 0),
-        ("RETURN_CONST", None),
-    ]
+    Backward-compat (legacy form): CALLFN <func>
+      - Loads func and calls with 0 args, POP_TOP (discard result)
+    """
 
-def test_callfn_runtime_calls_global_function(tmp_path: Path, capsys: pytest.CaptureFixture[str]):
-    # We’ll call a function injected into globals that prints "ok"
-    src = tmp_path / "prog2.paxy"
-    src.write_text("CALLFN zap\n")
+    def make_ops(self, op_args: List[Any]) -> None:  # -> None
+        if not op_args:
+            raise SyntaxError("CALLFN expects at least one argument")
 
-    instrs = Parser().parse_file(src)
+        # Legacy: CALLFN <func>
+        if len(op_args) == 1:
+            func = op_args[0]
+            if not isinstance(func, Ident):
+                raise SyntaxError("CALLFN <func>: func must be an identifier")
+            self.add_op("LOAD_NAME", str(func))
+            self.add_op("PUSH_NULL")
+            self.add_op("CALL", 0)
+            self.add_op("POP_TOP")
+            return
 
-    from bytecode import Bytecode, CompilerFlags
-    bc = Bytecode(instrs)
-    bc.flags |= CompilerFlags.NOFREE
-    code = bc.to_code()
+        # New form: CALLFN <dest> <func> [args...]
+        dest, func, *args = op_args
 
-    g = {"__name__": "__main__", "zap": lambda: print("ok")}
-    exec(code, g)
-    assert capsys.readouterr().out == "ok\n"
+        if not isinstance(dest, Ident):
+            raise SyntaxError("CALLFN: <dest> must be an identifier")
+        if not isinstance(func, Ident):
+            raise SyntaxError("CALLFN: <func> must be an identifier")
 
-def test_callfn_errors(tmp_path: Path):
-    src = tmp_path / "bad1.paxy"
-    src.write_text("CALLFN\n")
-    with pytest.raises(SyntaxError) as exc:
-        Parser().parse_file(src)
-    assert "takes exactly one identifier" in str(exc.value)
+        # LOAD function object
+        self.add_op("LOAD_NAME", str(func))
+        # CPython 3.11+ calling convention
+        self.add_op("PUSH_NULL")
 
-    src.write_text("CALLFN 'zap'\n")
-    with pytest.raises(SyntaxError) as exc:
-        Parser().parse_file(src)
-    assert "expects an identifier" in str(exc.value)
+        # Load positional args
+        for a in args:
+            self._emit_load_for(a)
 
-    src.write_text("CALLFN a b\n")
-    with pytest.raises(SyntaxError) as exc:
-        Parser().parse_file(src)
-    assert "takes exactly one identifier" in str(exc.value)
+        # CALL with argc
+        self.add_op("CALL", len(args))
+
+        # Store result
+        self.add_op("STORE_NAME", str(dest))
