@@ -18,7 +18,7 @@ from paxy.opcoerce import (
     coerce_contains_op,
     coerce_is_op,
 )
-from paxy.placeholders import NamedJump, FuncDef, Ident, ParsedItem
+from paxy.ir import NamedJump, FuncDef, Ident, ParsedItem
 
 VALID_OPS = set(dis.opmap)
 IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")

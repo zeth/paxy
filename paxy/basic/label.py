@@ -1,8 +1,8 @@
 from __future__ import annotations
 from typing import Any
 from paxy.basic.base import BasicOperation
-from paxy.placeholders import Ident
-from paxy.placeholders import LabelDecl, JumpRef
+from paxy.ir import Ident
+from paxy.ir import LabelDecl, JumpRef
 
 
 class LabelOp(BasicOperation):

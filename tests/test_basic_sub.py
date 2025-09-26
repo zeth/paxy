@@ -9,7 +9,7 @@ from bytecode import Instr
 import pytest
 
 from paxy.parser import Parser
-from paxy.placeholders import FuncDef, ReturnMarker
+from paxy.ir import FuncDef, ReturnMarker
 from paxy.assembler import Assembler, assemble_file
 
 

@@ -4,8 +4,8 @@ from __future__ import annotations
 from typing import Any
 from paxy.basic.base import BasicOperation
 from paxy.opcoerce import coerce_compare_op
-from paxy.placeholders import Ident
-from paxy.placeholders import NamedJump
+from paxy.ir import Ident
+from paxy.ir import NamedJump
 
 
 class IfOp(BasicOperation):

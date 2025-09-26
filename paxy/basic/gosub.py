@@ -2,7 +2,7 @@
 from __future__ import annotations
 from typing import Any
 from paxy.basic.base import BasicOperation
-from paxy.placeholders import Ident
+from paxy.ir import Ident
 
 
 class Gosub(BasicOperation):

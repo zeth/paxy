@@ -2,7 +2,7 @@
 from typing import Any
 from paxy.basic.base import BasicOperation
 from paxy.opcoerce import coerce_compare_op
-from paxy.placeholders import Ident
+from paxy.ir import Ident
 
 
 class CompareOp(BasicOperation):

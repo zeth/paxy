@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Any
 from paxy.basic.base import BasicOperation
-from paxy.placeholders import ReturnMarker
+from paxy.ir import ReturnMarker
 
 
 class ReturnOp(BasicOperation):

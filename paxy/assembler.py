@@ -10,7 +10,7 @@ import dis as _dis
 from bytecode import Bytecode, Instr, Label, CompilerFlags
 from paxy.parser import Parser
 from paxy.constants import COND_JUMP_OPS, UNCOND_JUMP_FIXED
-from paxy.placeholders import (
+from paxy.ir import (
     ParsedItem,
     FuncDef,
     ReturnMarker,
