@@ -1,4 +1,29 @@
-# paxy/placeholders.py
+# paxy/ir.py
+"""
+Intermediate Representation (IR) for Paxy BASIC-like programs.
+
+The parser does not emit Python bytecode instructions directly. Instead it
+constructs a lightweight intermediate representation (IR) made up of simple
+dataclasses:
+
+    • Ident         - marks identifiers (variables, function names)
+    • LabelDecl     - placeholder for a declared label (resolved in assembly)
+    • JumpRef       - placeholder for a GOTO target
+    • NamedJump     - placeholder for a conditional/unconditional jump
+    • FuncDef       - placeholder for SUB … SUBEND blocks, capturing params/body
+    • ReturnMarker  - placeholder for RETURN statements
+
+This IR decouples parsing from assembly:
+
+    - The parser only needs to recognize BASIC syntax and build IR nodes.
+    - The assembler consumes IR nodes, resolves labels/jumps, rewrites locals
+      vs globals, and finally lowers everything to concrete Python bytecode
+      (`Instr` and `Label`).
+
+`ParsedItem` is defined as the union of all possible IR node types plus
+`Instr` itself. Both parser and assembler share this alias to make the flow
+explicit: parser → IR → assembler → bytecode.
+"""
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Union
