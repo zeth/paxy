@@ -1,52 +1,62 @@
-# paxy/basic/gosub.py
-from __future__ import annotations
+# tests/test_basic_gosub.py
+from bytecode import Instr
+import pytest
 
-from typing import Any
-from paxy.basic.base import BasicOperation
+from paxy.basic.gosub import Gosub
 from paxy.ident import Ident
 
 
-class CallFn(BasicOperation):
-    """
-    GOSUB <dest> <name> [args...]
+def ops_of(op):
+    seq = []
+    for ins in getattr(op, "ops"):
+        assert isinstance(ins, Instr)
+        seq.append((ins.name, getattr(ins, "arg", None)))
+    return seq
 
-    Loads <name>, calls with args, stores result in <dest>.
 
-    Lowers to:
-        LOAD_NAME <name>          # or LOAD_GLOBAL; LOAD_NAME is fine at module scope
-        <evaluate each arg>
-        BUILD_TUPLE <argc>
-        CALL_FUNCTION_EX 0        # call with only positional args
-        STORE_NAME <dest>
-    """
+def test_gosub_no_args_uses_load_global_push_null_call_then_store():
+    g = Gosub([Ident("z"), Ident("foo")], lineno=1)
+    assert ops_of(g) == [
+        ("LOAD_GLOBAL", (True, "foo")),  # auto-push NULL under callable
+        ("CALL", 0),
+        ("STORE_NAME", "z"),
+    ]
 
-    def make_ops(self, op_args: list[Any]) -> None:
-        if len(op_args) < 2:
-            raise SyntaxError("GOSUB expects: GOSUB <dest> <name> [args...]")
 
-        dest, name, *args = op_args
+def test_gosub_with_ident_and_literal_args():
+    g = Gosub([Ident("out"), Ident("add"), Ident("x"), 5], lineno=10)
+    assert ops_of(g) == [
+        ("LOAD_GLOBAL", (True, "add")),
+        ("LOAD_NAME", "x"),
+        ("LOAD_CONST", 5),
+        ("CALL", 2),
+        ("STORE_NAME", "out"),
+    ]
 
-        if not isinstance(dest, Ident):
-            raise SyntaxError("GOSUB expects an identifier destination")
 
-        # Resolve function name (identifier or quoted string)
-        if isinstance(name, Ident):
-            func_name = str(name)
-        elif isinstance(name, str):
-            func_name = name
-        else:
-            raise SyntaxError("GOSUB function name must be an identifier or string")
+def test_gosub_accepts_string_function_name():
+    g = Gosub([Ident("res"), "doit", 1, 2, 3], lineno=3)
+    assert ops_of(g) == [
+        ("LOAD_GLOBAL", (True, "doit")),
+        ("LOAD_CONST", 1),
+        ("LOAD_CONST", 2),
+        ("LOAD_CONST", 3),
+        ("CALL", 3),
+        ("STORE_NAME", "res"),
+    ]
 
-        # Load the callable
-        self.add_op("LOAD_NAME", func_name)
 
-        # Positional args (left-to-right)
-        for a in args:
-            self._emit_load_for(a)
+def test_gosub_requires_dest_identifier():
+    with pytest.raises(SyntaxError):
+        Gosub(["not_ident", Ident("fn")], lineno=1)
 
-        # Pack positional args into a tuple and call
-        self.add_op("BUILD_TUPLE", len(args))
-        self.add_op("CALL_FUNCTION_EX", 0)
 
-        # Store the return value
-        self.add_op("STORE_NAME", str(dest))
+def test_gosub_requires_function_name_token():
+    with pytest.raises(SyntaxError):
+        Gosub([Ident("dst"), 123], lineno=1)
+
+
+def test_gosub_arity_errors_message_is_helpful():
+    with pytest.raises(SyntaxError) as ex:
+        Gosub([Ident("dst")], lineno=1)
+    assert "GOSUB expects" in str(ex.value)

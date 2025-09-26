@@ -218,8 +218,9 @@ class Assembler:
         # Build function code
         bc = Bytecode(lowered_body)
         bc.name = func.name
-        bc.argnames = list(func.params)  # params -> fast locals in local-mode
-        # Optimized function frame is fine in both modes; STORE_GLOBAL/LOAD_GLOBAL work with it
+        bc.argcount = len(func.params)  # ← CRITICAL: set argcount
+        bc.argnames = list(func.params)  # names for those args
+        # Optimized function frame is fine; STORE_GLOBAL/LOAD_GLOBAL work with it
         bc.flags |= (
             CompilerFlags.NOFREE | CompilerFlags.OPTIMIZED | CompilerFlags.NEWLOCALS
         )
