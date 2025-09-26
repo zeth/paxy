@@ -1,40 +1,53 @@
 # paxy/basic/callfn.py
 from __future__ import annotations
 
-from typing import Any, List
+from typing import Any
+
 from paxy.basic.base import BasicOperation
 from paxy.ident import Ident
 
 
 class CallFn(BasicOperation):
     """
-    CALLFN <dest> <name> [args...]
-      - Loads global <name>, calls with args, stores result in <dest>.
+    CALLFN <dst> <name> [args...]
+
+    Lowers to:
+        LOAD_NAME <name>
+        <LOAD_* for each arg>
+        CALL <nargs>
+        STORE_NAME <dst>
+
+    Notes:
+    - Do NOT emit PUSH_NULL here. That's only for the method fast-path /
+      bit-flagged globals/attrs, not for a plain LOAD_NAME function call.
     """
 
-    def make_ops(self, op_args: List[Any]) -> None:
-        if len(op_args) < 2:
-            raise SyntaxError("CALLFN expects: CALLFN <dest> <name> [args...]")
+    def make_ops(self, op_args: list[Any]) -> None:
+        if len(op_args) < 2 or not isinstance(op_args[0], Ident):
+            raise SyntaxError(
+                "CALLFN expects: CALLFN <dst> <name> [args...] (with <dst> an identifier)"
+            )
 
-        dest, fn, *args = op_args
-        if not isinstance(dest, Ident):
-            raise SyntaxError("CALLFN: <dest> must be an identifier")
-        if not isinstance(fn, Ident):
-            raise SyntaxError("CALLFN: <name> must be an identifier")
+        dst_ident: Ident = op_args[0]
+        fn_token = op_args[1]
+        args = op_args[2:]
 
-        # Correct stack order for 3.13:
-        #   LOAD_GLOBAL (False, name)
-        #   PUSH_NULL
-        #   <args...>
-        #   CALL nargs
-        self.add_op("LOAD_GLOBAL", (False, str(fn)))  # function first
-        self.add_op("PUSH_NULL")  # then the null sentinel
+        # Resolve the function object
+        if isinstance(fn_token, Ident):
+            self.add_op("LOAD_NAME", str(fn_token))
+        elif isinstance(fn_token, str):
+            # Allow a raw string name too
+            self.add_op("LOAD_NAME", fn_token)
+        else:
+            raise SyntaxError("CALLFN second argument must be a function name")
 
+        # Push positional arguments
         for a in args:
             if isinstance(a, Ident):
                 self.add_op("LOAD_NAME", str(a))
             else:
                 self.add_op("LOAD_CONST", a)
 
+        # Call and store
         self.add_op("CALL", len(args))
-        self.add_op("STORE_NAME", str(dest))
+        self.add_op("STORE_NAME", str(dst_ident))
