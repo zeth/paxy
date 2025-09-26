@@ -20,12 +20,12 @@ from paxy.opcoerce import (
     coerce_contains_op,
     coerce_is_op,
 )
-from paxy.funcplace import FuncDef  # NEW
+from paxy.funcplace import FuncDef, ReturnMarker
 
 VALID_OPS = set(dis.opmap)
 IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
-ParsedItem = Union[Instr, NamedJump, LabelDecl, JumpRef, FuncDef]
+ParsedItem = Union[Instr, NamedJump, LabelDecl, JumpRef, FuncDef, ReturnMarker]
 
 
 # ----------------------------- Small helpers -----------------------------

@@ -8,14 +8,13 @@ from types import CodeType
 import dis as _dis
 
 from bytecode import Bytecode, Instr, Label, CompilerFlags
-from .parser import Parser
+from .parser import Parser, ParsedItem
 from .labels import LabelDecl, JumpRef, NamedJump
 from .ident import Ident
 from .constants import COND_JUMP_OPS, UNCOND_JUMP_FIXED
 from .funcplace import FuncDef, ReturnMarker  # NEW
 
-# What the parser can produce (no Label yet)
-ParsedItem = Union[Instr, LabelDecl, JumpRef, NamedJump, FuncDef, ReturnMarker]
+
 # What the resolver returns (only real bytecode items)
 ResolvedItem = Union[Instr, Label]
 # Internal placeholder tuple type (tagged unions used in the first pass)
