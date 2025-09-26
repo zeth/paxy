@@ -30,7 +30,7 @@ def test_sub_gosub_side_effect(tmp_path: Path) -> None:
     assert g.get("flag") is True
 
 
-def test_sub_callfn_returns_value(tmp_path: Path) -> None:
+def test_sub_gosub_returns_value(tmp_path: Path) -> None:
     """
     Define a SUB that returns a value, call it via CALLFN to store the result,
     and assert the stored value is correct.
