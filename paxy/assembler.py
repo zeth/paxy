@@ -184,76 +184,174 @@ class Assembler:
         self._ensure_target_defined(ref.target_name)
         return Instr(opcode, self._label_objects[ref.target_name], lineno=ref.lineno)
 
-    # ---------- Pass 3: Lower functions and returns ----------
-
-    def _lower_functions_and_returns(self) -> None:
-        """
-        Convert:
-          - FuncDef -> LOAD_CONST(code); MAKE_FUNCTION 0; STORE_NAME <name>
-          - ReturnMarker at module level -> error
-        """
-        final: List[ResolvedItem] = []
-        for entry in self._patched:
-            if isinstance(entry, FuncDef):
-                final.extend(self._lower_funcdef(entry))
-            elif isinstance(entry, ReturnMarker):
-                # RETURN outside of function/subroutine
-                raise SyntaxError("RETURN outside of SUB")
-            else:
-                # Instr or Label
-                final.append(entry)
-        self._final = final
-
     def _lower_funcdef(self, func: FuncDef) -> List[ResolvedItem]:
         """
         Lower a FuncDef placeholder into:
-          LOAD_CONST <code>
-          MAKE_FUNCTION 0
-          STORE_NAME <name>
-        The <code> is produced by recursively resolving the body, ensuring a final return.
-        """
-        # Recursively resolve the function body
-        inner_resolved = Assembler(func.body).resolve()
+        LOAD_CONST <code>
+        MAKE_FUNCTION
+        STORE_NAME <name>
 
-        # Ensure function ends with a return (if author omitted)
-        lowered_body: List[Union[Instr, Label]] = list(inner_resolved)
+        For zero-arg SUBs (subroutines), we rewrite all name ops to GLOBALs.
+        For functions with params, we rewrite params + assigned names to FAST locals,
+        and other name loads to GLOBALS.
+        """
+        # Resolve function body (inside-function mode so RETURN markers lower correctly)
+        inner_resolved = Assembler(func.body, in_function=True).resolve()
+        lowered_body: List[ResolvedItem] = list(inner_resolved)
+
+        # Ensure a return if author omitted
         if not lowered_body or str(getattr(lowered_body[-1], "name", "")) not in {
             "RETURN_CONST",
             "RETURN_VALUE",
         }:
             lowered_body.append(Instr("RETURN_CONST", 0, lineno=func.lineno))
 
-        # Build a code object for the function
+        # Choose rewrite mode
+        global_mode = len(func.params) == 0
+        if global_mode:
+            lowered_body = self._rewrite_names_global_mode(lowered_body)
+        else:
+            lowered_body = self._rewrite_locals_for_function(
+                lowered_body, list(func.params)
+            )
+
+        # Build function code
         bc = Bytecode(lowered_body)
         bc.name = func.name
-        bc.argnames = list(func.params)  # fast locals for parameters
-        bc.flags |= CompilerFlags.NOFREE
-        if lowered_body:
-            first = next((x for x in lowered_body if isinstance(x, Instr)), None)
-            if first is not None and first.lineno:
-                bc.first_lineno = first.lineno
+        bc.argnames = list(func.params)  # params -> fast locals in local-mode
+        # Optimized function frame is fine in both modes; STORE_GLOBAL/LOAD_GLOBAL work with it
+        bc.flags |= (
+            CompilerFlags.NOFREE | CompilerFlags.OPTIMIZED | CompilerFlags.NEWLOCALS
+        )
+
+        first = next((x for x in lowered_body if isinstance(x, Instr)), None)
+        if first is not None and first.lineno:
+            bc.first_lineno = first.lineno
+
         codeobj = bc.to_code()
 
         return [
             Instr("LOAD_CONST", codeobj, lineno=func.lineno),
-            Instr("MAKE_FUNCTION", lineno=func.lineno),
+            Instr("MAKE_FUNCTION", lineno=func.lineno),  # 3.13: no arg
             Instr("STORE_NAME", func.name, lineno=func.lineno),
         ]
 
-    # ---------- Pass 4: Sanity checks ----------
+    # ---------- Pass 3: Lower functions and returns ----------
+
+    def _rewrite_locals_for_function(
+        self,
+        body: list[ResolvedItem],
+        params: list[str],
+    ) -> list[ResolvedItem]:
+        """
+        Local-mode: params are locals, and any STORE_NAME target becomes a local.
+        Other reads fall back to LOAD_GLOBAL.
+        """
+        locals_set = set(params)
+        for ins in body:
+            if (
+                isinstance(ins, Instr)
+                and ins.name == "STORE_NAME"
+                and isinstance(ins.arg, str)
+            ):
+                locals_set.add(ins.arg)
+
+        out: list[ResolvedItem] = []
+        for ins in body:
+            if not isinstance(ins, Instr):
+                out.append(ins)
+                continue
+
+            if ins.name == "STORE_NAME" and isinstance(ins.arg, str):
+                if ins.arg in locals_set:
+                    out.append(Instr("STORE_FAST", ins.arg, lineno=ins.lineno))
+                else:
+                    out.append(Instr("STORE_GLOBAL", ins.arg, lineno=ins.lineno))
+            elif ins.name == "LOAD_NAME" and isinstance(ins.arg, str):
+                if ins.arg in locals_set:
+                    out.append(Instr("LOAD_FAST", ins.arg, lineno=ins.lineno))
+                else:
+                    out.append(Instr("LOAD_GLOBAL", ins.arg, lineno=ins.lineno))
+            else:
+                out.append(ins)
+
+        return out
+
+    def _rewrite_names_global_mode(
+        self,
+        body: list[ResolvedItem],
+    ) -> list[ResolvedItem]:
+        """
+        Zero-arg SUBs behave like classic subroutines: assignments are global.
+        Rewrite:
+        STORE_NAME x -> STORE_GLOBAL x
+        LOAD_NAME  x -> LOAD_GLOBAL x
+        (Other ops unchanged.)
+        """
+        out: list[ResolvedItem] = []
+        for ins in body:
+            if not isinstance(ins, Instr):
+                out.append(ins)
+                continue
+
+            if ins.name == "STORE_NAME" and isinstance(ins.arg, str):
+                out.append(Instr("STORE_GLOBAL", ins.arg, lineno=ins.lineno))
+            elif ins.name == "LOAD_NAME" and isinstance(ins.arg, str):
+                out.append(Instr("LOAD_GLOBAL", ins.arg, lineno=ins.lineno))
+            else:
+                out.append(ins)
+
+        return out
+
+    def _lower_functions_and_returns(self) -> None:
+        """
+        Convert:
+          - FuncDef -> LOAD_CONST(code); MAKE_FUNCTION; STORE_NAME <name>
+          - ReturnMarker:
+              * in module context -> error
+              * in function context -> RETURN_VALUE or RETURN_CONST 0
+        """
+        final: List[ResolvedItem] = []
+        for entry in self._patched:
+            if isinstance(entry, FuncDef):
+                final.extend(self._lower_funcdef(entry))
+
+            elif isinstance(entry, ReturnMarker):
+                if not self._in_function:
+                    # RETURN outside of function/subroutine is invalid
+                    raise SyntaxError("RETURN outside of SUB")
+                # Lower to real return
+                if entry.has_value:
+                    final.append(Instr("RETURN_VALUE", lineno=entry.lineno))
+                else:
+                    final.append(Instr("RETURN_CONST", 0, lineno=entry.lineno))
+
+            else:
+                # Instr or Label
+                final.append(entry)
+
+        self._final = final
+
+    # ---------- Helpers ----------
 
     def _sanity_check(self) -> None:
+        """
+        Final pass invariants:
+          - No tuple placeholders remain.
+          - Any jump op still present targets a real Label.
+        """
         for obj in self._final:
+            # Should never see placeholders in the final stream
             if isinstance(obj, tuple):
                 raise RuntimeError(f"unresolved jump placeholder: {obj!r}")
+
+            # For real instructions, verify jump args are Labels
             if isinstance(obj, Instr):
-                if obj.name in COND_JUMP_OPS | UNCOND_JUMP_FIXED:
+                if obj.name in (COND_JUMP_OPS | UNCOND_JUMP_FIXED):
                     from bytecode import Label as _Lbl
 
                     if not isinstance(obj.arg, _Lbl):
-                        raise RuntimeError(f"jump still has non-Label arg: {obj}")
-
-    # ---------- Helpers ----------
+                        raise RuntimeError(f"jump still has non-Label arg: {obj!r}")
 
     def _lookup_target_index(self, name: str) -> int:
         idx = self._name_to_resolved_index.get(name)

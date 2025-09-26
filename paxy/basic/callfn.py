@@ -8,51 +8,33 @@ from paxy.ident import Ident
 
 class CallFn(BasicOperation):
     """
-    CALLFN <dest> <func> [args...]
-      - Loads func from globals
-      - PUSH_NULL (CPython 3.11+ calling conv)
-      - Loads each arg (identifier -> LOAD_NAME, otherwise LOAD_CONST)
-      - CALL <argc>
-      - STORE_NAME <dest>
-
-    Backward-compat (legacy form): CALLFN <func>
-      - Loads func and calls with 0 args, POP_TOP (discard result)
+    CALLFN <dest> <name> [args...]
+      - Loads global <name>, calls with args, stores result in <dest>.
     """
 
-    def make_ops(self, op_args: List[Any]) -> None:  # -> None
-        if not op_args:
-            raise SyntaxError("CALLFN expects at least one argument")
+    def make_ops(self, op_args: List[Any]) -> None:
+        if len(op_args) < 2:
+            raise SyntaxError("CALLFN expects: CALLFN <dest> <name> [args...]")
 
-        # Legacy: CALLFN <func>
-        if len(op_args) == 1:
-            func = op_args[0]
-            if not isinstance(func, Ident):
-                raise SyntaxError("CALLFN <func>: func must be an identifier")
-            self.add_op("LOAD_NAME", str(func))
-            self.add_op("PUSH_NULL")
-            self.add_op("CALL", 0)
-            self.add_op("POP_TOP")
-            return
-
-        # New form: CALLFN <dest> <func> [args...]
-        dest, func, *args = op_args
-
+        dest, fn, *args = op_args
         if not isinstance(dest, Ident):
             raise SyntaxError("CALLFN: <dest> must be an identifier")
-        if not isinstance(func, Ident):
-            raise SyntaxError("CALLFN: <func> must be an identifier")
+        if not isinstance(fn, Ident):
+            raise SyntaxError("CALLFN: <name> must be an identifier")
 
-        # LOAD function object
-        self.add_op("LOAD_NAME", str(func))
-        # CPython 3.11+ calling convention
-        self.add_op("PUSH_NULL")
+        # Correct stack order for 3.13:
+        #   LOAD_GLOBAL (False, name)
+        #   PUSH_NULL
+        #   <args...>
+        #   CALL nargs
+        self.add_op("LOAD_GLOBAL", (False, str(fn)))  # function first
+        self.add_op("PUSH_NULL")  # then the null sentinel
 
-        # Load positional args
         for a in args:
-            self._emit_load_for(a)
+            if isinstance(a, Ident):
+                self.add_op("LOAD_NAME", str(a))
+            else:
+                self.add_op("LOAD_CONST", a)
 
-        # CALL with argc
         self.add_op("CALL", len(args))
-
-        # Store result
         self.add_op("STORE_NAME", str(dest))
