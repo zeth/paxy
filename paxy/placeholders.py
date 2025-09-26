@@ -1,14 +1,39 @@
-# paxy/funcplace.py
+# paxy/placeholders.py
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import List, Union, Any
-
-# We only use Instr for typing clarity; other placeholders are opaque here (Any).
+from typing import List, Union
 from bytecode import Instr
 
-ParsedItem = Union[
-    Instr, Any
-]  # Other placeholders (LabelDecl, JumpRef, NamedJump, ...) are allowed
+
+class Ident(str):
+    """Marker type for identifiers (NAME tokens). Subclass of str so equality stays normal."""
+
+    pass
+
+
+@dataclass(frozen=True)
+class NamedJump:
+    """Placeholder for a native jump with a named target."""
+
+    opcode: str
+    target_name: str
+    lineno: int
+
+
+@dataclass(frozen=True)
+class LabelDecl:
+    """Placeholder for a declared label like: LABEL foo"""
+
+    label_name: str
+    lineno: int
+
+
+@dataclass(frozen=True)
+class JumpRef:
+    """Placeholder for a goto-style reference like: GOTO foo"""
+
+    target_name: str
+    lineno: int
 
 
 @dataclass(frozen=True)
@@ -39,3 +64,6 @@ class ReturnMarker:
 
     has_value: bool
     lineno: int
+
+
+ParsedItem = Union[Instr, NamedJump, LabelDecl, JumpRef, FuncDef, ReturnMarker]

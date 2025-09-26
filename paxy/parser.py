@@ -1,7 +1,7 @@
 # paxy/parser.py
 from __future__ import annotations
 
-from typing import Any, Callable, List, Union, Optional, Dict, Iterable, Iterator
+from typing import Any, Callable, Optional, Dict, Iterable, Iterator
 from pathlib import Path
 from tokenize import tokenize, TokenInfo
 from token import tok_name
@@ -11,21 +11,17 @@ import dis
 import re
 
 from paxy.constants import COND_JUMP_OPS, UNCOND_JUMP_FIXED
-from .ident import Ident
 from paxy.basic import is_basic_op, basic_op
-from paxy.labels import NamedJump, LabelDecl, JumpRef
 from paxy.opcoerce import (
     coerce_binary_op,
     coerce_compare_op,
     coerce_contains_op,
     coerce_is_op,
 )
-from paxy.funcplace import FuncDef, ReturnMarker
+from paxy.placeholders import NamedJump, FuncDef, Ident, ParsedItem
 
 VALID_OPS = set(dis.opmap)
 IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
-
-ParsedItem = Union[Instr, NamedJump, LabelDecl, JumpRef, FuncDef, ReturnMarker]
 
 
 # ----------------------------- Small helpers -----------------------------

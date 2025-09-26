@@ -8,11 +8,17 @@ from types import CodeType
 import dis as _dis
 
 from bytecode import Bytecode, Instr, Label, CompilerFlags
-from .parser import Parser, ParsedItem
-from .labels import LabelDecl, JumpRef, NamedJump
-from .ident import Ident
-from .constants import COND_JUMP_OPS, UNCOND_JUMP_FIXED
-from .funcplace import FuncDef, ReturnMarker  # NEW
+from paxy.parser import Parser
+from paxy.constants import COND_JUMP_OPS, UNCOND_JUMP_FIXED
+from paxy.placeholders import (
+    ParsedItem,
+    FuncDef,
+    ReturnMarker,
+    Ident,
+    LabelDecl,
+    JumpRef,
+    NamedJump,
+)
 
 
 # What the resolver returns (only real bytecode items)

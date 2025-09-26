@@ -2,7 +2,7 @@
 from __future__ import annotations
 from typing import Any, Tuple
 from paxy.basic.base import BasicOperation
-from paxy.ident import Ident
+from paxy.placeholders import Ident
 from paxy.opcoerce import (
     coerce_binary_op,
     coerce_compare_op,

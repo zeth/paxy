@@ -3,7 +3,7 @@ from bytecode import Instr
 import pytest
 
 from paxy.basic.gosub import Gosub
-from paxy.ident import Ident
+from paxy.placeholders import Ident
 
 
 def ops_of(op):
