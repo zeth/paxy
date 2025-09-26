@@ -7,7 +7,7 @@ from paxy.basic.base import BasicOperation
 from paxy.ident import Ident
 
 
-class CallFn(BasicOperation):
+class Gosub(BasicOperation):
     """
     CALLFN <dst> <name> [args...]
 
