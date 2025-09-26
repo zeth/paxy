@@ -9,7 +9,7 @@ from paxy.ident import Ident
 
 class Gosub(BasicOperation):
     """
-    CALLFN <dst> <name> [args...]
+    GOSUB <dst> <name> [args...]
 
     Lowers to:
         LOAD_NAME <name>
@@ -25,7 +25,7 @@ class Gosub(BasicOperation):
     def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) < 2 or not isinstance(op_args[0], Ident):
             raise SyntaxError(
-                "CALLFN expects: CALLFN <dst> <name> [args...] (with <dst> an identifier)"
+                "GOSUB expects: GOSUB <dst> <name> [args...] (with <dst> an identifier)"
             )
 
         dst_ident: Ident = op_args[0]
@@ -39,7 +39,7 @@ class Gosub(BasicOperation):
             # Allow a raw string name too
             self.add_op("LOAD_NAME", fn_token)
         else:
-            raise SyntaxError("CALLFN second argument must be a function name")
+            raise SyntaxError("GOSUB second argument must be a function name")
 
         # Push positional arguments
         for a in args:

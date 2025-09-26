@@ -32,10 +32,10 @@ def test_sub_gosub_side_effect(tmp_path: Path) -> None:
 
 def test_sub_gosub_returns_value(tmp_path: Path) -> None:
     """
-    Define a SUB that returns a value, call it via CALLFN to store the result,
+    Define a SUB that returns a value, call it via GOSUB to store the result,
     and assert the stored value is correct.
 
-    Assumes CALLFN syntax: CALLFN <dest> <name> [args...]
+    Assumes GOSUB syntax: GOSUB <dest> <name> [args...]
     """
     src = tmp_path / "sub2.paxy"
     src.write_text(
@@ -45,7 +45,7 @@ def test_sub_gosub_returns_value(tmp_path: Path) -> None:
         "  RETURN tmp\n"  # RETURN accepts at most one arg in current impl
         "SUBEND\n"
         # r = add(2, 3)
-        "CALLFN r add 2 3\n"
+        "GOSUB r add 2 3\n"
     )
 
     code: CodeType = assemble_file(src)
