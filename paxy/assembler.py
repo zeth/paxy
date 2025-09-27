@@ -209,7 +209,15 @@ class Assembler:
         """
         # Resolve function body (inside-function mode so RETURN markers lower correctly)
         inner_resolved = Assembler(func.body, in_function=True).resolve()
-        lowered_body: List[ResolvedItem] = list(inner_resolved)
+        # lowered_body: List[ResolvedItem] = list(inner_resolved)
+        lowered_body: List[Union[Instr, Label, Placeholder, FuncDef, ReturnMarker]] = (
+            list(inner_resolved)
+        )
+        for it in func.body:
+            if isinstance(it, RangeBlock):
+                lowered_body.extend(self._lower_rangeblock_to_stream(it))
+            else:
+                lowered_body.append(it)
 
         # Ensure a return if author omitted
         if not lowered_body or str(getattr(lowered_body[-1], "name", "")) not in {

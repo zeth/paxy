@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict, Type, Union, List
+from dis import opmap
 from bytecode import Instr
 
 from paxy.basic.base import BasicOperation, BasicItem
@@ -25,6 +26,8 @@ from paxy.basic.returnstmt import ReturnOp
 from paxy.basic.row import RowOp
 from paxy.basic.vec import VecOp
 from paxy.basic.mapdel import MapDelOp
+
+BLOCK_OPS = {"SUB", "SUBEND", "RANGE", "RANGEEND"}
 
 BASIC_OPS: Dict[str, Type[BasicOperation]] = {
     "PRINT": Print,
@@ -55,6 +58,14 @@ BASIC_OPS: Dict[str, Type[BasicOperation]] = {
 
 def is_basic_op(op_name: str) -> bool:
     return op_name in BASIC_OPS
+
+
+VALID_OPS = set(opmap) | set(BASIC_OPS) | BLOCK_OPS
+
+
+def is_opcode_name(op_name: str) -> bool:
+    if op_name in VALID_OPS:
+        return True
 
 
 def basic_op(op_name: str, op_args: list[Any], lineno: int) -> List[BasicItem]:

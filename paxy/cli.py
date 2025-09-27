@@ -5,7 +5,7 @@ import sys
 import importlib.util
 from importlib.machinery import SourcelessFileLoader
 
-from .compiler import compile_file
+from paxy.compiler import compile_file
 
 
 def run_pyc(path: str) -> None:
