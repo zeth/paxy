@@ -15,6 +15,7 @@ from paxy.basic.isbop import IsNotOp, IsBop
 from paxy.basic.let import Let
 from paxy.basic.map import MapOp
 from paxy.basic.mapadd import MapAddOp
+from paxy.basic.par import Par
 from paxy.basic.print import Print
 from paxy.basic.input import Input
 from paxy.basic.importer import ImportSimple
@@ -48,6 +49,7 @@ BASIC_OPS: Dict[str, Type[BasicOperation]] = {
     "MAPADD": MapAddOp,
     "MAPDEL": MapDelOp,
     "RETURN": ReturnOp,
+    "PAR": Par,
 }
 
 
