@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys, time
 from pathlib import Path
 import importlib._bootstrap_external as _be
-from .assembler import assemble_file  # (already updated to 3.13)
+from paxy.assembler import assemble_file
 
 
 class PaxyCompileError(RuntimeError):

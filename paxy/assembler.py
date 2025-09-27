@@ -406,11 +406,22 @@ class Assembler:
         out.append(Instr("FOR_ITER", l_end, lineno=it.lineno))
         out.append(Instr("STORE_NAME", it.var, lineno=it.lineno))
 
-        # Body: recursively lower nested RangeBlocks; pass through other items.
+        # Body: recursively lower nested RangeBlocks; translate placeholders like pass 1c.
         for elt in it.body:
             if isinstance(elt, RangeBlock):
                 out.extend(self._lower_rangeblock_to_stream(elt))
+            elif isinstance(elt, NamedJump):
+                out.append(
+                    (self.TAG_NJUMP, elt.opcode, JumpRef(elt.target_name, elt.lineno))
+                )
+            elif isinstance(elt, JumpRef):
+                out.append((self.TAG_JUMP, elt))
+            elif isinstance(elt, LabelDecl):
+                # Labels inside RANGE would need discovery before this pass.
+                # For now, disallow to avoid unresolved labels.
+                raise SyntaxError("LABEL inside RANGE block is not supported")
             else:
+                # Instr / FuncDef / ReturnMarker — already allowed in 'out' type
                 out.append(elt)
 
         out.append(Instr("JUMP_BACKWARD", l_loop, lineno=it.lineno))
