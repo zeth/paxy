@@ -7,11 +7,10 @@ from tokenize import tokenize, TokenInfo
 from token import tok_name
 from bytecode import Instr
 import ast
-import dis
 import re
 
 from paxy.constants import COND_JUMP_OPS, UNCOND_JUMP_FIXED
-from paxy.basic import is_basic_op, basic_op
+from paxy.basic import is_basic_op, basic_op, is_opcode_name
 from paxy.opcoerce import (
     coerce_binary_op,
     coerce_compare_op,
@@ -20,7 +19,6 @@ from paxy.opcoerce import (
 )
 from paxy.ir import NamedJump, FuncDef, Ident, ParsedItem, RangeBlock
 
-VALID_OPS = set(dis.opmap)
 IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
 
@@ -182,7 +180,7 @@ class Parser:
         s = tok_info.string
         if not self._line.has_op():
             op = s.upper()
-            if self._is_opcode_name(op):
+            if is_opcode_name(op):
                 self._line.begin_op(op, tok_info.start[0])
                 return
             raise SyntaxError(f"Unknown opcode '{s}' at line {tok_info.start[0]}")
@@ -379,10 +377,6 @@ class Parser:
         return collected
 
     # ---- helpers: classification & literals ----
-
-    def _is_opcode_name(self, upper: str) -> bool:
-        # Recognize SUB specially; the rest are BASIC or native opcodes
-        return upper == "SUB" or is_basic_op(upper) or upper in VALID_OPS
 
     def _is_literal_name(self, s: str) -> bool:
         return s in {"None", "True", "False"}
