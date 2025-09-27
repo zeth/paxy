@@ -55,6 +55,9 @@ def test_assembler_lowers_range_to_for_iter_skeleton(tmp_path: Path):
     assert "POP_TOP" in names
 
 
+# tests/test_basic_range.py  (only replace the last test)
+
+
 def test_end_to_end_range_inside_sub(tmp_path: Path):
     """End-to-end: RANGE in a SUB (no nested top-level loops)."""
     src = tmp_path / "range3.paxy"
@@ -63,7 +66,10 @@ def test_end_to_end_range_inside_sub(tmp_path: Path):
         "SUB sum_to n\n"
         "  LET acc 0\n"
         "  RANGE i 1 n\n"
-        '    LET acc acc "+" i\n'
+        "    LOAD_NAME acc\n"
+        "    LOAD_NAME i\n"
+        '    BINARY_OP "+" \n'
+        "    STORE_NAME acc\n"
         "  RANGEEND\n"
         "  RETURN acc\n"
         "SUBEND\n"
