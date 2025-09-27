@@ -278,7 +278,7 @@ class Parser:
         inner = Parser()  # nested parser for the block
         body_items = inner.parse_tokens(body_tokens)
 
-        self.items.append(
+        self.instructions.append(
             RangeBlock(
                 var=str(var_ident),
                 start=start_tok,
@@ -325,6 +325,7 @@ class Parser:
         """
         if self._tok_iter is None:
             raise RuntimeError("internal: token iterator missing")
+        it: Iterator[TokenInfo] = self._tok_iter  # narrow for type checker
 
         # For simple same-kind nesting: which opener corresponds to this closer?
         opener_for: dict[str, str] = {"SUBEND": "SUB", "RANGEEND": "RANGE"}
@@ -335,12 +336,12 @@ class Parser:
         depth = 0  # nesting depth for same-kind blocks
 
         def _consume_to_eol() -> None:
-            for t2 in self._tok_iter:
+            for t2 in it:
                 t2name = tok_name.get(t2.type)
                 if t2name in {"NEWLINE", "ENDMARKER"}:
                     break
 
-        for tok in self._tok_iter:
+        for tok in it:
             tname = tok_name.get(tok.type)
 
             # Detect the first NAME at the start of a logical line
