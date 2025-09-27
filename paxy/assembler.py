@@ -120,6 +120,31 @@ class Assembler:
                     (self.TAG_NJUMP, it.opcode, JumpRef(it.target_name, it.lineno))
                 )
 
+            elif isinstance(it, RangeBlock):
+                # Lower RANGE var start end ... RANGEEND into concrete loop skeleton,
+                # leaving the body items raw so later passes can still process them.
+                # range(start, end)
+                resolved.append(Instr("LOAD_GLOBAL", (True, "range"), lineno=it.lineno))
+                resolved.extend(self._emit_token_load_instrs(it.start, it.lineno))
+                resolved.extend(self._emit_token_load_instrs(it.end, it.lineno))
+                resolved.append(Instr("CALL", 2, lineno=it.lineno))
+                resolved.append(Instr("GET_ITER", lineno=it.lineno))
+
+                l_loop = Label()
+                l_end = Label()
+                resolved.append(l_loop)
+                resolved.append(Instr("FOR_ITER", l_end, lineno=it.lineno))
+                resolved.append(Instr("STORE_NAME", it.var, lineno=it.lineno))
+
+                # Body (raw ParsedItem list) — goes back through the pipeline:
+                # label discovery, jump patching, return lowering, etc.
+                resolved.extend(it.body)
+
+                resolved.append(Instr("JUMP_BACKWARD", l_loop, lineno=it.lineno))
+                resolved.append(l_end)
+                resolved.append(Instr("END_FOR", lineno=it.lineno))
+                resolved.append(Instr("POP_TOP", lineno=it.lineno))
+
             elif isinstance(it, FuncDef) or isinstance(it, ReturnMarker):
                 # Leave function placeholders and returns for a later lowering stage
                 resolved.append(it)
@@ -369,6 +394,15 @@ class Assembler:
     def _ensure_target_defined(self, name: str) -> None:
         if name not in self._name_to_resolved_index:
             raise SyntaxError(f"jump to undefined LABEL '{name}'")
+
+    def _emit_token_load_instrs(self, tok: object, lineno: int) -> list[Instr]:
+        """
+        Helper: load a parsed token either as a name (Ident) or a constant.
+        """
+        if isinstance(tok, Ident):
+            return [Instr("LOAD_NAME", str(tok), lineno=lineno)]
+        else:
+            return [Instr("LOAD_CONST", tok, lineno=lineno)]
 
 
 # ----------------------- Public entry point -----------------------
