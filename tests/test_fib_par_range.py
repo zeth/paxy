@@ -1,11 +1,9 @@
-# tests/test_fib_par_range.py
 from pathlib import Path
-import types
-import builtins
+import types, builtins
 from paxy.assembler import assemble_file
 
 
-def test_fib5_with_par_and_range(tmp_path: Path, capsys):
+def test_fib5_with_par_and_range(tmp_path, capsys):
     src = tmp_path / "fib5.paxy"
     src.write_text(
         "SUB fib5 n\n"
@@ -20,19 +18,19 @@ def test_fib5_with_par_and_range(tmp_path: Path, capsys):
         "  RETURN next\n"
         "SUBEND\n"
         "INPUT n\n"
+        "GOSUB n int n\n"  # <- added coercion
         "GOSUB ans fib5 n\n"
         "PRINT ans\n"
     )
 
-    # mock input("...") -> "10" (fib(10) = 55)
     orig_input = builtins.input
-    builtins.input = lambda *a, **k: "10"
+    builtins.input = lambda *a, **k: "10"  # fib(10)=55
     try:
         code = assemble_file(src)
         g = {}
-        types.FunctionType(code, g)()  # execute module
+        types.FunctionType(code, g)()
     finally:
         builtins.input = orig_input
 
-    captured = capsys.readouterr().out.strip().splitlines()
-    assert captured[-1] == "55"
+    out = capsys.readouterr().out.strip().splitlines()
+    assert out[-1] == "55"
