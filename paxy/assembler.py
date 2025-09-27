@@ -124,26 +124,7 @@ class Assembler:
                 # Lower RANGE var start end ... RANGEEND into concrete loop skeleton,
                 # leaving the body items raw so later passes can still process them.
                 # range(start, end)
-                resolved.append(Instr("LOAD_GLOBAL", (True, "range"), lineno=it.lineno))
-                resolved.extend(self._emit_token_load_instrs(it.start, it.lineno))
-                resolved.extend(self._emit_token_load_instrs(it.end, it.lineno))
-                resolved.append(Instr("CALL", 2, lineno=it.lineno))
-                resolved.append(Instr("GET_ITER", lineno=it.lineno))
-
-                l_loop = Label()
-                l_end = Label()
-                resolved.append(l_loop)
-                resolved.append(Instr("FOR_ITER", l_end, lineno=it.lineno))
-                resolved.append(Instr("STORE_NAME", it.var, lineno=it.lineno))
-
-                # Body (raw ParsedItem list) — goes back through the pipeline:
-                # label discovery, jump patching, return lowering, etc.
-                resolved.extend(it.body)
-
-                resolved.append(Instr("JUMP_BACKWARD", l_loop, lineno=it.lineno))
-                resolved.append(l_end)
-                resolved.append(Instr("END_FOR", lineno=it.lineno))
-                resolved.append(Instr("POP_TOP", lineno=it.lineno))
+                resolved.extend(self._lower_rangeblock_to_stream(it))
 
             elif isinstance(it, FuncDef) or isinstance(it, ReturnMarker):
                 # Leave function placeholders and returns for a later lowering stage
@@ -403,6 +384,40 @@ class Assembler:
             return [Instr("LOAD_NAME", str(tok), lineno=lineno)]
         else:
             return [Instr("LOAD_CONST", tok, lineno=lineno)]
+
+    def _lower_rangeblock_to_stream(
+        self, it: RangeBlock
+    ) -> List[Union[Instr, Label, Placeholder, FuncDef, ReturnMarker]]:
+        """
+        Expand a RANGE block into concrete loop prologue/epilogue and recursively
+        lower any nested RangeBlock in the body.
+        """
+        out: List[Union[Instr, Label, Placeholder, FuncDef, ReturnMarker]] = []
+        # range(start, end)
+        out.append(Instr("LOAD_GLOBAL", (True, "range"), lineno=it.lineno))
+        out.extend(self._emit_token_load_instrs(it.start, it.lineno))
+        out.extend(self._emit_token_load_instrs(it.end, it.lineno))
+        out.append(Instr("CALL", 2, lineno=it.lineno))
+        out.append(Instr("GET_ITER", lineno=it.lineno))
+
+        l_loop = Label()
+        l_end = Label()
+        out.append(l_loop)
+        out.append(Instr("FOR_ITER", l_end, lineno=it.lineno))
+        out.append(Instr("STORE_NAME", it.var, lineno=it.lineno))
+
+        # Body: recursively lower nested RangeBlocks; pass through other items.
+        for elt in it.body:
+            if isinstance(elt, RangeBlock):
+                out.extend(self._lower_rangeblock_to_stream(elt))
+            else:
+                out.append(elt)
+
+        out.append(Instr("JUMP_BACKWARD", l_loop, lineno=it.lineno))
+        out.append(l_end)
+        out.append(Instr("END_FOR", lineno=it.lineno))
+        out.append(Instr("POP_TOP", lineno=it.lineno))
+        return out
 
 
 # ----------------------- Public entry point -----------------------
