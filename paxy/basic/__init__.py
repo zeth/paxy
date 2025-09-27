@@ -64,8 +64,7 @@ VALID_OPS = set(opmap) | set(BASIC_OPS) | BLOCK_OPS
 
 
 def is_opcode_name(op_name: str) -> bool:
-    if op_name in VALID_OPS:
-        return True
+    return op_name in VALID_OPS
 
 
 def basic_op(op_name: str, op_args: list[Any], lineno: int) -> List[BasicItem]:
