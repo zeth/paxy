@@ -91,4 +91,15 @@ class ReturnMarker:
     lineno: int
 
 
-ParsedItem = Union[Instr, NamedJump, LabelDecl, JumpRef, FuncDef, ReturnMarker]
+@dataclass(frozen=True)
+class RangeBlock:
+    var: str  # loop variable (identifier)
+    start: object  # token already parsed (Ident or literal)
+    end: object  # token already parsed (Ident or literal)
+    body: list["ParsedItem"]
+    lineno: int
+
+
+ParsedItem = Union[
+    Instr, NamedJump, LabelDecl, JumpRef, FuncDef, ReturnMarker, RangeBlock
+]

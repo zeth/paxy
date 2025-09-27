@@ -18,7 +18,7 @@ from paxy.opcoerce import (
     coerce_contains_op,
     coerce_is_op,
 )
-from paxy.ir import NamedJump, FuncDef, Ident, ParsedItem
+from paxy.ir import NamedJump, FuncDef, Ident, ParsedItem, RangeBlock
 
 VALID_OPS = set(dis.opmap)
 IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
@@ -236,6 +236,11 @@ class Parser:
         if op is None:
             return
 
+        # RANGE block
+        if op == "RANGE":
+            self._handle_range_block(args, lineno)
+            return
+
         # Special-case: SUB … SUBEND
         if op == "SUB":
             self._handle_sub_definition(args, lineno)
@@ -258,6 +263,31 @@ class Parser:
 
         raise SyntaxError(f"{op} takes at most one argument (got {len(args)})")
 
+    # ---- RANGE support ----
+
+    def _handle_range_block(self, args: list[object], lineno: int) -> None:
+        # Expect: RANGE <ident> <start> <end>
+        if len(args) != 3 or not isinstance(args[0], Ident):
+            raise SyntaxError("RANGE expects: RANGE <var> <start> <end>")
+        var_ident = args[0]
+        start_tok = args[1]
+        end_tok = args[2]
+
+        # Collect tokens until RANGEEND (reuse your existing collector for SUB)
+        body_tokens = self._collect_tokens_until("RANGEEND")
+        inner = Parser()  # nested parser for the block
+        body_items = inner.parse_tokens(body_tokens)
+
+        self.items.append(
+            RangeBlock(
+                var=str(var_ident),
+                start=start_tok,
+                end=end_tok,
+                body=body_items,
+                lineno=lineno,
+            )
+        )
+
     # ---- SUB support ----
 
     def _handle_sub_definition(self, args: list[object], lineno: int) -> None:
@@ -276,7 +306,7 @@ class Parser:
                 raise SyntaxError("SUB parameters must be identifiers")
             params.append(str(a))
 
-        body_tokens = self._collect_tokens_until_subend()
+        body_tokens = self._collect_tokens_until("SUBEND")
         inner = Parser()
         body_items = inner.parse_tokens(body_tokens)
 
@@ -284,31 +314,59 @@ class Parser:
             FuncDef(name=name, params=params, body=body_items, lineno=lineno)
         )
 
-    def _collect_tokens_until_subend(self) -> list[TokenInfo]:
+    def _collect_tokens_until(self, end_op: str) -> list[TokenInfo]:
         """
-        Consume tokens from self._tok_iter and collect all tokens belonging to the body
-        of a SUB until we see a line whose first opcode is NAME 'SUBEND'.
-        The SUBEND line itself is consumed but not included.
+        Consume tokens from self._tok_iter and collect all tokens belonging to the
+        current block until we see a line whose first NAME token matches `end_op`
+        (e.g. 'SUBEND' or 'RANGEEND'). The terminator line itself is consumed
+        (up to its NEWLINE) but not included. Supports nesting for matching pairs:
+        SUB ... SUBEND
+        RANGE ... RANGEEND
         """
         if self._tok_iter is None:
             raise RuntimeError("internal: token iterator missing")
 
+        # For simple same-kind nesting: which opener corresponds to this closer?
+        opener_for: dict[str, str] = {"SUBEND": "SUB", "RANGEEND": "RANGE"}
+        opener = opener_for.get(end_op, None)
+
         collected: list[TokenInfo] = []
         pending_op: Optional[str] = None
+        depth = 0  # nesting depth for same-kind blocks
+
+        def _consume_to_eol() -> None:
+            for t2 in self._tok_iter:
+                t2name = tok_name.get(t2.type)
+                if t2name in {"NEWLINE", "ENDMARKER"}:
+                    break
 
         for tok in self._tok_iter:
             tname = tok_name.get(tok.type)
 
+            # Detect the first NAME at the start of a logical line
             if tname == "NAME" and pending_op is None:
                 candidate = tok.string.upper()
-                if candidate == "SUBEND":
-                    # Consume to end-of-line (discard), then stop.
-                    for t2 in self._tok_iter:
-                        if tok_name.get(t2.type) in {"NEWLINE", "ENDMARKER"}:
-                            break
-                    break
-                else:
+
+                # opener? -> increase nesting and keep the line
+                if opener and candidate == opener:
+                    depth += 1
                     pending_op = candidate
+                    collected.append(tok)
+                    continue
+
+                # closer? -> if at top level, consume that line and stop;
+                #            if nested, consume that line and reduce depth, keep collecting
+                if candidate == end_op:
+                    _consume_to_eol()
+                    if depth == 0:
+                        break
+                    depth -= 1
+                    # do not include the closer line in the body
+                    pending_op = None
+                    continue
+
+                # ordinary line with some opcode/name
+                pending_op = candidate
 
             collected.append(tok)
 

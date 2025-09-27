@@ -18,6 +18,7 @@ from paxy.ir import (
     LabelDecl,
     JumpRef,
     NamedJump,
+    RangeBlock,
 )
 
 
