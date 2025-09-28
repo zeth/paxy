@@ -1,8 +1,8 @@
 # paxy/basic/compare.py
 from typing import Any
 from paxy.basic.base import BasicOperation
-from paxy.opcoerce import coerce_compare_op
-from paxy.ir import Ident
+from paxy.compiler.opcoerce import coerce_compare_op
+from paxy.compiler.ir import Ident
 
 
 class CompareOp(BasicOperation):

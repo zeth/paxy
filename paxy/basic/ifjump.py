@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from typing import Any
 from paxy.basic.base import BasicOperation
-from paxy.opcoerce import coerce_compare_op
-from paxy.ir import Ident
-from paxy.ir import NamedJump
+from paxy.compiler.opcoerce import coerce_compare_op
+from paxy.compiler.ir import Ident
+from paxy.compiler.ir import NamedJump
 
 
 class IfOp(BasicOperation):

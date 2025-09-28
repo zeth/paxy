@@ -4,7 +4,7 @@ from bytecode.instr import Compare
 
 # Import identity/membership enums from our module so tests don't depend on
 # whether the bytecode package exposes them.
-from paxy.opcoerce import (
+from paxy.compiler.opcoerce import (
     coerce_binary_op,
     coerce_compare_op,
     coerce_is_op,

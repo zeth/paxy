@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 import bytecode
 
-from paxy.parser import Parser
+from paxy.compiler.parser import Parser
 
 
 def as_pairs(instrs):
@@ -17,7 +17,10 @@ def is_unset_like(arg):
         return True
     # bytecode exposes a private UNSET; tolerate it without importing internals
     try:
-        return isinstance(arg, bytecode.instr._UNSET) or int(getattr(arg, "value", arg)) == 0
+        return (
+            isinstance(arg, bytecode.instr._UNSET)
+            or int(getattr(arg, "value", arg)) == 0
+        )
     except Exception:
         return False
 
@@ -55,8 +58,7 @@ def parse_pairs(src_text: str, tmp_path: Path):
 
 def test_negative_integer_argument(tmp_path: Path):
     got = parse_pairs(
-        "LOAD_CONST -5\n"
-        "RETURN_CONST None\n",
+        "LOAD_CONST -5\n" "RETURN_CONST None\n",
         tmp_path,
     )
     assert got == [("LOAD_CONST", -5), ("RETURN_CONST", None)]
@@ -64,9 +66,9 @@ def test_negative_integer_argument(tmp_path: Path):
 
 def test_hex_and_binary_integer_arguments(tmp_path: Path):
     got = parse_pairs(
-        "LOAD_CONST 0xFF\n"   # 255
-        "LOAD_CONST 0b1010\n" # 10
-        "LOAD_CONST 0o77\n"   # 63
+        "LOAD_CONST 0xFF\n"  # 255
+        "LOAD_CONST 0b1010\n"  # 10
+        "LOAD_CONST 0o77\n"  # 63
         "RETURN_CONST None\n",
         tmp_path,
     )
@@ -80,9 +82,7 @@ def test_hex_and_binary_integer_arguments(tmp_path: Path):
 
 def test_bools_and_none(tmp_path: Path):
     got = parse_pairs(
-        "LOAD_CONST True\n"
-        "LOAD_CONST False\n"
-        "RETURN_CONST None\n",
+        "LOAD_CONST True\n" "LOAD_CONST False\n" "RETURN_CONST None\n",
         tmp_path,
     )
     assert got == [

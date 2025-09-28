@@ -4,7 +4,7 @@
 from typing import Any
 from bytecode import BinaryOp
 from paxy.basic.base import BasicOperation
-from paxy.ir import Ident
+from paxy.compiler.ir import Ident
 
 
 class Dec(BasicOperation):

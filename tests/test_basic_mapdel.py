@@ -2,7 +2,7 @@ from pathlib import Path
 import bytecode
 import pytest
 from typing import Any, Iterable, Tuple, List
-from paxy.parser import Parser
+from paxy.compiler.parser import Parser
 
 Pair = Tuple[str, Any]
 PairList = List[Pair]

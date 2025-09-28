@@ -10,13 +10,13 @@ import ast
 import re
 
 from paxy.basic import is_basic_op, basic_op, is_opcode_name
-from paxy.opcoerce import (
+from paxy.compiler.opcoerce import (
     coerce_binary_op,
     coerce_compare_op,
     coerce_contains_op,
     coerce_is_op,
 )
-from paxy.ir import (
+from paxy.compiler.ir import (
     NamedJump,
     FuncDef,
     Ident,

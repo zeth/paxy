@@ -4,7 +4,7 @@ import dis
 import bytecode
 import pytest
 
-from paxy.parser import Parser
+from paxy.compiler.parser import Parser
 from paxy.cli import assemble_file
 
 UNSET = bytecode.instr._UNSET()

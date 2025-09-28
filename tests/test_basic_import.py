@@ -1,15 +1,18 @@
 from pathlib import Path
 import sys
-from paxy.parser import Parser
+from paxy.compiler.parser import Parser
+
 
 def as_pairs(instrs):
     return [(str(i.name), i.arg) for i in instrs]
+
 
 def strip_leading_resume(pairs):
     out = list(pairs)
     if out and out[0] == ("RESUME", 0):
         out.pop(0)
     return out
+
 
 def canon_argless(pairs):
     out = []
@@ -19,6 +22,7 @@ def canon_argless(pairs):
         else:
             out.append((n, a))
     return out
+
 
 def test_import_lowers_via___import__(tmp_path: Path):
     src = tmp_path / "prog.paxy"
@@ -33,6 +37,7 @@ def test_import_lowers_via___import__(tmp_path: Path):
         ("RETURN_CONST", None),
     ]
 
+
 def test_import_runtime_populates_sys_modules(tmp_path: Path):
     modname = "time"
     # Ensure it’s present to start; then remove to prove __import__ side effect
@@ -45,6 +50,7 @@ def test_import_runtime_populates_sys_modules(tmp_path: Path):
     # Execute
     g = {"__name__": "__main__"}
     from bytecode import Bytecode, CompilerFlags
+
     bc = Bytecode(instrs)
     bc.flags |= CompilerFlags.NOFREE
     code = bc.to_code()

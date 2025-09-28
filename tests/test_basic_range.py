@@ -7,9 +7,9 @@ import types
 from bytecode import Instr, Label
 import pytest
 
-from paxy.parser import Parser
-from paxy.ir import RangeBlock
-from paxy.assembler import Assembler
+from paxy.compiler.parser import Parser
+from paxy.compiler.ir import RangeBlock
+from paxy.compiler.assembler import Assembler
 from paxy.cli import assemble_file
 
 

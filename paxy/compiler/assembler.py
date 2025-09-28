@@ -8,8 +8,8 @@ from types import CodeType
 import dis as _dis
 
 from bytecode import Bytecode, Instr, Label, CompilerFlags
-from paxy.parser import Parser
-from paxy.ir import (
+from paxy.compiler.parser import Parser
+from paxy.compiler.ir import (
     ParsedItem,
     FuncDef,
     ReturnMarker,

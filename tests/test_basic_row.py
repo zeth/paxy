@@ -4,7 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Iterable, List, Tuple, TypeAlias
 import pytest
-from paxy.parser import Parser
+from paxy.compiler.parser import Parser
 
 Pair: TypeAlias = Tuple[str, Any]
 PairList: TypeAlias = List[Pair]

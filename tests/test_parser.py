@@ -4,9 +4,9 @@ import bytecode
 import pytest
 
 # Adjust this import to wherever your Parser class lives:
-# - if it's in paxy/parser.py -> from paxy.parser import Parser
+# - if it's in paxy/parser.py -> from paxy.compiler.parser import Parser
 # - if it's in paxy/__init__.py -> from paxy import Parser
-from paxy.parser import Parser  # <- change if needed
+from paxy.compiler.parser import Parser  # <- change if needed
 
 
 PROGRAM = """\
@@ -46,13 +46,13 @@ def assert_prog(instrs):
     ]
 
     # 2) Args with robust check
-    assert args[0] == 0                # RESUME 0
-    assert args[1] == "print"               # LOAD_NAME 'print'
+    assert args[0] == 0  # RESUME 0
+    assert args[1] == "print"  # LOAD_NAME 'print'
     assert is_unset(args[2])
-    assert args[3] == "hello"               # LOAD_CONST 'hello'
+    assert args[3] == "hello"  # LOAD_CONST 'hello'
     assert int(getattr(args[4], "value", args[4])) == 1  # CALL 1 (tolerate enum/int)
-    assert is_unset(args[5])               # POP_TOP
-    assert args[6] is None                  # RETURN_CONST None
+    assert is_unset(args[5])  # POP_TOP
+    assert args[6] is None  # RETURN_CONST None
 
 
 def test_parser_emits_expected_instrs(tmp_path: Path):

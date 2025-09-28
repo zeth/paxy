@@ -8,9 +8,9 @@ import types
 from bytecode import Instr
 import pytest
 
-from paxy.parser import Parser
-from paxy.ir import FuncDef, ReturnMarker
-from paxy.assembler import Assembler
+from paxy.compiler.parser import Parser
+from paxy.compiler.ir import FuncDef, ReturnMarker
+from paxy.compiler.assembler import Assembler
 from paxy.cli import assemble_file
 
 

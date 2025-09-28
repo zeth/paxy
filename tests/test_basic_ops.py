@@ -1,7 +1,7 @@
 # tests/test_basic_ops.py
 from pathlib import Path
 import bytecode
-from paxy.parser import Parser
+from paxy.compiler.parser import Parser
 
 PROGRAM1 = "PRINT 'hello'\nRETURN_CONST None\n"
 PROGRAM2 = "PRINT 42\nRETURN_CONST None\n"

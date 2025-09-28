@@ -1,7 +1,7 @@
 from pathlib import Path
 import pytest
 
-from paxy.parser import Parser
+from paxy.compiler.parser import Parser
 from paxy.cli import assemble_file
 
 

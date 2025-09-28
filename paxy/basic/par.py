@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import Any
 from paxy.basic.base import BasicOperation
-from paxy.ir import Ident  # you renamed to ir.py
+from paxy.compiler.ir import Ident  # you renamed to ir.py
 
 
 class Par(BasicOperation):

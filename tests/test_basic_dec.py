@@ -1,9 +1,11 @@
 from pathlib import Path
 from bytecode import BinaryOp
-from paxy.parser import Parser
+from paxy.compiler.parser import Parser
+
 
 def as_pairs(instrs):
     return [(str(i.name), i.arg) for i in instrs]
+
 
 def strip_frame(pairs):
     out = list(pairs)
@@ -13,14 +15,17 @@ def strip_frame(pairs):
         out.pop()
     return out
 
+
 def norm_arg(a):
     # Display BinaryOp enums as their names for stable comparison
     if isinstance(a, BinaryOp):
         return a.name
     return a
 
+
 def norm_pairs(pairs):
     return [(n, norm_arg(a)) for (n, a) in pairs]
+
 
 def test_dec_lowering(tmp_path: Path):
     src = tmp_path / "dec1.paxy"

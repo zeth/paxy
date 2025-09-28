@@ -13,9 +13,9 @@ from types import CodeType
 import dis as _dis
 
 from bytecode import Bytecode, Instr, CompilerFlags
-from paxy.assembler import Assembler
-from paxy.ir import ParsedItem
-from paxy.parser import Parser
+from paxy.compiler.assembler import Assembler
+from paxy.compiler.ir import ParsedItem
+from paxy.compiler.parser import Parser
 
 
 class PaxyCompileError(RuntimeError):
