@@ -1,9 +1,9 @@
 from typing import Any
-from paxy.commands.base import BasicOperation
+from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 
 
-class MapDelOp(BasicOperation):
+class MapDelOp(Command):
     """
     MAPDEL <map> <key>
       -> del <map>[<key>]

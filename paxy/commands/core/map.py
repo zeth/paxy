@@ -1,9 +1,9 @@
 from typing import Any
-from paxy.commands.base import BasicOperation
+from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 
 
-class MapOp(BasicOperation):
+class MapOp(Command):
     """
     MAP <name> [k1 v1 k2 v2 ...]
       -> <name> = {k1: v1, k2: v2, ...}

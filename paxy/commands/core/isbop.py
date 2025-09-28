@@ -1,9 +1,9 @@
 from typing import Any
-from paxy.commands.base import BasicOperation
+from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 
 
-class IsBop(BasicOperation):
+class IsBop(Command):
     """IS <dst> <lhs> <rhs>  -> dst = (lhs is rhs)"""
 
     def make_ops(self, args: list[Any]) -> None:
@@ -16,7 +16,7 @@ class IsBop(BasicOperation):
         self.add_op("STORE_NAME", str(dst))
 
 
-class IsNotOp(BasicOperation):
+class IsNotOp(Command):
     """ISNOT <dst> <lhs> <rhs>  -> dst = (lhs is not rhs)"""
 
     def make_ops(self, args: list[Any]) -> None:

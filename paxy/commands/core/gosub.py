@@ -1,10 +1,10 @@
 # paxy/basic/gosub.py
 from typing import Any
-from paxy.commands.base import BasicOperation
+from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 
 
-class Gosub(BasicOperation):
+class Gosub(Command):
     """
     GOSUB <dst> <name> [args...]
       -> LOAD_GLOBAL (True, <name>); <LOAD_* args>; CALL N; STORE_NAME <dst>

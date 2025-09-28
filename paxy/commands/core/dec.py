@@ -3,11 +3,11 @@
 # paxy/basic/dec.py
 from typing import Any
 from bytecode import BinaryOp
-from paxy.commands.base import BasicOperation
+from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 
 
-class Dec(BasicOperation):
+class Dec(Command):
     def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) != 1:
             raise SyntaxError("DEC takes exactly one identifier")

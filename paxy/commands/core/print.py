@@ -1,8 +1,8 @@
 from typing import Any
-from paxy.commands.base import BasicOperation
+from paxy.commands.base import Command
 
 
-class Print(BasicOperation):
+class Print(Command):
     def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) > 1:
             raise SyntaxError("PRINT takes at most one argument")

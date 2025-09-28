@@ -1,9 +1,9 @@
 from typing import Any
-from paxy.commands.base import BasicOperation
+from paxy.commands.base import Command
 from paxy.compiler.ir import Ident  # you renamed to ir.py
 
 
-class Par(BasicOperation):
+class Par(Command):
     """
     PAR <dst1> <dst2> <expr1> <expr2>
 

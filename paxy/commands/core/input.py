@@ -1,9 +1,9 @@
 from typing import Any
-from paxy.commands.base import BasicOperation
+from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 
 
-class Input(BasicOperation):
+class Input(Command):
     def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) != 1:
             raise SyntaxError("INPUT takes exactly one identifier")

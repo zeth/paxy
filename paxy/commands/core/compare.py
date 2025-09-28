@@ -1,11 +1,11 @@
 # paxy/basic/compare.py
 from typing import Any
-from paxy.commands.base import BasicOperation
+from paxy.commands.base import Command
 from paxy.compiler.opcoerce import coerce_compare_op
 from paxy.compiler.ir import Ident
 
 
-class CompareOp(BasicOperation):
+class CompareOp(Command):
     """COMPARE <dst> <lhs> <cmp> <rhs>"""
 
     def make_ops(self, args: list[Any]) -> None:

@@ -1,6 +1,6 @@
 # paxy/basic/let.py
 from typing import Any, Tuple
-from paxy.commands.base import BasicOperation
+from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 from paxy.compiler.opcoerce import (
     coerce_binary_op,
@@ -10,7 +10,7 @@ from paxy.compiler.opcoerce import (
 )
 
 
-class Let(BasicOperation):
+class Let(Command):
     """
     LET <name> <value>
     LET <name> <lhs> <op> <rhs>     # op: +, -, *, //, ==, <=, is, in, not in, etc.

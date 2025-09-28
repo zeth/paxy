@@ -1,10 +1,10 @@
 from typing import Any
-from paxy.commands.base import BasicOperation
+from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 from paxy.compiler.ir import LabelDecl, JumpRef
 
 
-class LabelOp(BasicOperation):
+class LabelOp(Command):
     """LABEL <identifier>  -> placeholder resolved by assembler to a bytecode.Label()"""
 
     def make_ops(self, op_args: list[Any]) -> None:
@@ -17,7 +17,7 @@ class LabelOp(BasicOperation):
         self.ops.append(LabelDecl(str(name), self.lineno))
 
 
-class GotoOp(BasicOperation):
+class GotoOp(Command):
     """GOTO <identifier>  -> resolved by assembler to a concrete jump to <identifier>"""
 
     def make_ops(self, op_args: list[Any]) -> None:

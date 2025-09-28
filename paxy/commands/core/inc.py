@@ -1,11 +1,11 @@
 # paxy/basic/inc.py
 from typing import Any
-from paxy.commands.base import BasicOperation
+from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 from paxy.compiler.opcoerce import coerce_binary_op
 
 
-class IncOp(BasicOperation):
+class IncOp(Command):
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 1 or not isinstance(args[0], Ident):
             raise SyntaxError("INC expects: INC <name>")

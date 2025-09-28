@@ -28,7 +28,7 @@ BINARY_SYMBOL_MAP: dict[str, str] = {
 BasicItem = Union[Instr, LabelDecl, JumpRef, NamedJump, ReturnMarker]
 
 
-class BasicOperation:
+class Command:
     def __init__(self, op_args: list[Any], lineno: int) -> None:
         self.ops: list[BasicItem] = []
         self.lineno: int = lineno
@@ -60,4 +60,4 @@ class BasicOperation:
             self.add_op("LOAD_CONST", value)
 
 
-CommandMap: TypeAlias = dict[str, type[BasicOperation]]
+CommandMap: TypeAlias = dict[str, type[Command]]

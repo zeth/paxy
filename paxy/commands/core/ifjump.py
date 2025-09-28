@@ -1,13 +1,13 @@
 # paxy/basic/ifjump.py
 
 from typing import Any
-from paxy.commands.base import BasicOperation
+from paxy.commands.base import Command
 from paxy.compiler.opcoerce import coerce_compare_op
 from paxy.compiler.ir import Ident
 from paxy.compiler.ir import NamedJump
 
 
-class IfOp(BasicOperation):
+class IfOp(Command):
     """
     IF <lhs> <cmp> <rhs> <label>
       - compares lhs <cmp> rhs

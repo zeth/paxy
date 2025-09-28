@@ -1,9 +1,9 @@
 from typing import Any
-from paxy.commands.base import BasicOperation
+from paxy.commands.base import Command
 from paxy.compiler.ir import ReturnMarker
 
 
-class ReturnOp(BasicOperation):
+class ReturnOp(Command):
     """
     RETURN [value]
       - RETURN               -> RETURN_CONST None  (3.13 emits RETURN_CONST 0)

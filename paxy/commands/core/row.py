@@ -1,10 +1,10 @@
 # paxy/basic/row.py
 from typing import Any
-from paxy.commands.base import BasicOperation
+from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 
 
-class RowOp(BasicOperation):
+class RowOp(Command):
     """
     ROW <name> [elem1 elem2 ...]  -> name = (elem1, elem2, ...)
     Fast path: all literals -> LOAD_CONST (tuple)

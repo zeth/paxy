@@ -1,8 +1,8 @@
 from typing import Any
-from paxy.commands.base import BasicOperation
+from paxy.commands.base import Command
 
 
-class ImportSimple(BasicOperation):
+class ImportSimple(Command):
     """
     IMPORT 'module'
     Lowers to: LOAD_NAME '__import__'; PUSH_NULL; LOAD_CONST 'module'; CALL 1; POP_TOP
