@@ -8,7 +8,7 @@ from bytecode import Instr
 import ast
 import re
 
-from paxy.commands import is_basic_op, basic_op, is_opcode_name
+from paxy.commands import is_command, command, is_command_name
 from paxy.compiler.opcoerce import (
     coerce_binary_op,
     coerce_compare_op,
@@ -95,7 +95,7 @@ class Emitter:
         self.sink = sink
 
     def emit_basic(self, op: str, args: list[object], lineno: int) -> None:
-        lowered = basic_op(op, args, lineno)  # list[Instr|LabelDecl|JumpRef|...]
+        lowered = command(op, args, lineno)  # list[Instr|LabelDecl|JumpRef|...]
         self.sink.extend(lowered)
 
     def emit_instr(self, op: str, arg: Any, lineno: int) -> None:
@@ -207,7 +207,7 @@ class Parser:
         s = tok_info.string
         if not self._line.has_op():
             op = s.upper()
-            if is_opcode_name(op):
+            if is_command_name(op):
                 self._line.begin_op(op, tok_info.start[0])
                 return
             raise SyntaxError(f"Unknown opcode '{s}' at line {tok_info.start[0]}")
@@ -280,7 +280,7 @@ class Parser:
             return
 
         # BASIC macro lines
-        if is_basic_op(op):
+        if is_command(op):
             self._emit.emit_basic(op, args, lineno)
             return
 
