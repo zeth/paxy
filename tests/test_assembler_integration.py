@@ -7,7 +7,7 @@ import sys
 import pytest
 
 from paxy.assembler import assemble_file
-from paxy.compiler import compile_file
+from paxy.cli import compile_file
 
 
 PROGRAM = """\
@@ -29,7 +29,9 @@ def test_assemble_file_returns_codeobject(tmp_path: Path):
     assert isinstance(code, CodeType)
 
 
-def test_assemble_file_executes_and_prints_hello(tmp_path: Path, capsys: pytest.CaptureFixture[str]):
+def test_assemble_file_executes_and_prints_hello(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+):
     src = tmp_path / "hello.paxy"
     src.write_text(PROGRAM)
 
@@ -41,7 +43,9 @@ def test_assemble_file_executes_and_prints_hello(tmp_path: Path, capsys: pytest.
     assert out == "hello\n"
 
 
-def test_compile_file_writes_pyc_and_is_importable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def test_compile_file_writes_pyc_and_is_importable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
     """
     Full pipeline: assemble -> write sourceless .pyc -> import module.
     """
@@ -63,6 +67,7 @@ def test_compile_file_writes_pyc_and_is_importable(tmp_path: Path, monkeypatch: 
 
     # Capture import-time output to avoid polluting test logs
     import builtins
+
     printed = []
     orig_print = builtins.print
     try:

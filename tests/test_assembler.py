@@ -6,7 +6,7 @@ import sys
 import pytest
 
 from paxy.assembler import assemble_file
-from paxy.compiler import compile_file
+from paxy.cli import compile_file
 
 
 def test_assemble_file_returns_codeobject(tmp_path: Path):
@@ -28,7 +28,9 @@ def test_exec_prints_hello(tmp_path: Path, capsys: pytest.CaptureFixture[str]):
     assert out == "hello\n"
 
 
-def test_compile_file_writes_pyc_and_is_importable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def test_compile_file_writes_pyc_and_is_importable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
     src = tmp_path / "hello.paxy"
     src.write_text("PRINT 'hello'\n")
 
@@ -44,6 +46,7 @@ def test_compile_file_writes_pyc_and_is_importable(tmp_path: Path, monkeypatch: 
 
     # capture import-time output
     import builtins
+
     printed = []
     orig_print = builtins.print
     try:
