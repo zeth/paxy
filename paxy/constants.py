@@ -1,6 +1,0 @@
-COND_JUMP_OPS = {
-    "POP_JUMP_IF_FALSE",
-    "POP_JUMP_IF_TRUE",
-    # "JUMP_IF_FALSE_OR_POP", "JUMP_IF_TRUE_OR_POP", ...
-}
-UNCOND_JUMP_FIXED = {"JUMP_FORWARD", "JUMP_BACKWARD"}  # explicit-direction jumps

@@ -9,7 +9,6 @@ from bytecode import Instr
 import ast
 import re
 
-from paxy.constants import COND_JUMP_OPS, UNCOND_JUMP_FIXED
 from paxy.basic import is_basic_op, basic_op, is_opcode_name
 from paxy.opcoerce import (
     coerce_binary_op,
@@ -17,7 +16,15 @@ from paxy.opcoerce import (
     coerce_contains_op,
     coerce_is_op,
 )
-from paxy.ir import NamedJump, FuncDef, Ident, ParsedItem, RangeBlock
+from paxy.ir import (
+    NamedJump,
+    FuncDef,
+    Ident,
+    ParsedItem,
+    RangeBlock,
+    COND_JUMP_OPS,
+    UNCOND_JUMP_FIXED,
+)
 
 IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
