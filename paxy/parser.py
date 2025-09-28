@@ -21,6 +21,27 @@ from paxy.ir import NamedJump, FuncDef, Ident, ParsedItem, RangeBlock
 
 IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
+# Operators allowed bare (without quotes) inside instruction arguments
+_ALLOWED_OPS = {
+    "+",
+    "-",
+    "*",
+    "/",
+    "%",
+    "//",
+    "**",
+    "==",
+    "!=",
+    "<",
+    "<=",
+    ">",
+    ">=",
+    "|",
+    "&",
+    "^",
+    "<<",
+    ">>",
+}
 
 # ----------------------------- Small helpers -----------------------------
 
@@ -203,8 +224,16 @@ class Parser:
         self._line.add_arg(val)
 
     def _on_op(self, tok_info: TokenInfo) -> None:
-        if tok_info.string == "-" and self._line.has_op():
+        op = tok_info.string
+        if op == "-" and self._line.has_op():
+            # Handle unary minus (applies to the *next* number token)
             self._line.mark_unary_minus()
+            return
+
+        # If we’re inside an instruction, and the op is allowed, treat it as an arg
+        if self._line.has_op() and op in _ALLOWED_OPS:
+            self._line.add_arg(op)
+            return
 
     def _on_nl(self, tok_info: TokenInfo) -> None:  # noqa: ARG002
         pass
