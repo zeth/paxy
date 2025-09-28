@@ -18,8 +18,7 @@ class Par(BasicOperation):
 
     Notes:
       - Works at module scope and inside SUBs.
-      - Your assembler will rewrite NAME↔FAST where appropriate.
-      - Later we can peephole two STORE_FAST into STORE_FAST_STORE_FAST (3.13 fused).
+      - The assembler will rewrite NAME↔FAST where appropriate.
     """
 
     def make_ops(self, op_args: list[Any]) -> None:

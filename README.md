@@ -129,6 +129,11 @@ Delete `m[k]`.
 `NOTIN dst needle haystack`  
 Store boolean result of `needle not in haystack` into `dst`.
 
+### PAR
+
+`PAR dst1 dst2 expr1 expr2`  
+Parallel assignment: `dst1, dst2 = expr1, expr2`.
+
 ### PRINT
 
 `PRINT [value]`  
@@ -188,6 +193,7 @@ These BASIC commands are lowered into the intermediate representation (`paxy.ir`
 | **MAPADD**  | Insert into dict                        | `MAPADD m "c" 3` → `m["c"]=3`             |
 | **MAPDEL**  | Delete from dict                        | `MAPDEL m "a"` → `del m["a"]`             |
 | **NOTIN**   | Negated membership test                 | `NOTIN r x arr` → `r = (x not in arr)`    |
+| **PAR**     | Parallel assignment                     | `PAR a b x y` → `a, b = x, y`             |
 | **PRINT**   | Print a value (or newline)              | `PRINT x`                                 |
 | **RETURN**  | Return from SUB (default 0 if no value) | `RETURN y`                                |
 | **ROW**     | Create tuple                            | `ROW t 1 2 3` → `t = (1,2,3)`             |
