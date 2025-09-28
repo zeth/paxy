@@ -446,10 +446,14 @@ class Assembler:
 
         # body
         for elt in it.body:
-            # Don't inline stray RESUME or bare ReturnMarker into loop body
+            # Never inline a RESUME inside a loop body
             if isinstance(elt, Instr) and elt.name == "RESUME":
                 continue
+            # Do not inline bare ReturnMarkers from the inner snippet
             if isinstance(elt, ReturnMarker):
+                continue
+            # And guard against concrete returns sneaking in from snippet assembly
+            if isinstance(elt, Instr) and elt.name in ("RETURN_CONST", "RETURN_VALUE"):
                 continue
 
             if isinstance(elt, RangeBlock):
