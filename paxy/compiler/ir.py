@@ -73,7 +73,7 @@ class FuncDef:
 
     name: str
     params: List[str]
-    body: List[ParsedItem]
+    body: List["ParsedItem"]
     lineno: int
 
 

@@ -1,6 +1,6 @@
 # paxy/basic/base.py
 
-from typing import Any, Union
+from typing import Any, TypeAlias, Union
 from bytecode import Instr, BinaryOp
 from paxy.compiler.opcoerce import coerce_binary_op
 from paxy.compiler.ir import ReturnMarker, LabelDecl, JumpRef, NamedJump
@@ -58,3 +58,6 @@ class BasicOperation:
             self.add_op("LOAD_NAME", str(value))
         else:
             self.add_op("LOAD_CONST", value)
+
+
+CommandMap: TypeAlias = dict[str, type[BasicOperation]]

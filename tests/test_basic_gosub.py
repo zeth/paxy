@@ -2,7 +2,7 @@
 from bytecode import Instr
 import pytest
 
-from paxy.commands.gosub import Gosub
+from paxy.commands.core.gosub import Gosub
 from paxy.compiler.ir import Ident
 
 
