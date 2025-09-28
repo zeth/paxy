@@ -5,27 +5,27 @@ from typing import Any, Dict, Type, Union, List
 from dis import opmap
 from bytecode import Instr
 
-from paxy.basic.base import BasicOperation, BasicItem
-from paxy.basic.compare import CompareOp
-from paxy.basic.dec import Dec
-from paxy.basic.ifjump import IfOp
-from paxy.basic.igl import IglOp
-from paxy.basic.inc import IncOp
-from paxy.basic.inop import InOp, NotInOp
-from paxy.basic.isbop import IsNotOp, IsBop
-from paxy.basic.let import Let
-from paxy.basic.map import MapOp
-from paxy.basic.mapadd import MapAddOp
-from paxy.basic.par import Par
-from paxy.basic.print import Print
-from paxy.basic.input import Input
-from paxy.basic.importer import ImportSimple
-from paxy.basic.gosub import Gosub
-from paxy.basic.label import LabelOp, GotoOp
-from paxy.basic.returnstmt import ReturnOp
-from paxy.basic.row import RowOp
-from paxy.basic.vec import VecOp
-from paxy.basic.mapdel import MapDelOp
+from paxy.commands.base import BasicOperation, BasicItem
+from paxy.commands.compare import CompareOp
+from paxy.commands.dec import Dec
+from paxy.commands.ifjump import IfOp
+from paxy.commands.igl import IglOp
+from paxy.commands.inc import IncOp
+from paxy.commands.inop import InOp, NotInOp
+from paxy.commands.isbop import IsNotOp, IsBop
+from paxy.commands.let import Let
+from paxy.commands.map import MapOp
+from paxy.commands.mapadd import MapAddOp
+from paxy.commands.par import Par
+from paxy.commands.print import Print
+from paxy.commands.input import Input
+from paxy.commands.importer import ImportSimple
+from paxy.commands.gosub import Gosub
+from paxy.commands.label import LabelOp, GotoOp
+from paxy.commands.returnstmt import ReturnOp
+from paxy.commands.row import RowOp
+from paxy.commands.vec import VecOp
+from paxy.commands.mapdel import MapDelOp
 
 BLOCK_OPS = {"SUB", "SUBEND", "RANGE", "RANGEEND"}
 

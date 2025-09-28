@@ -1,6 +1,6 @@
 # paxy/basic/inc.py
 from typing import Any
-from paxy.basic.base import BasicOperation
+from paxy.commands.base import BasicOperation
 from paxy.compiler.ir import Ident
 from paxy.compiler.opcoerce import coerce_binary_op
 

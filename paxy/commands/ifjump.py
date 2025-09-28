@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from typing import Any
-from paxy.basic.base import BasicOperation
+from paxy.commands.base import BasicOperation
 from paxy.compiler.opcoerce import coerce_compare_op
 from paxy.compiler.ir import Ident
 from paxy.compiler.ir import NamedJump

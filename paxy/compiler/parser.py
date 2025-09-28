@@ -9,7 +9,7 @@ from bytecode import Instr
 import ast
 import re
 
-from paxy.basic import is_basic_op, basic_op, is_opcode_name
+from paxy.commands import is_basic_op, basic_op, is_opcode_name
 from paxy.compiler.opcoerce import (
     coerce_binary_op,
     coerce_compare_op,

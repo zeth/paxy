@@ -1,7 +1,7 @@
 # paxy/basic/let.py
 from __future__ import annotations
 from typing import Any, Tuple
-from paxy.basic.base import BasicOperation
+from paxy.commands.base import BasicOperation
 from paxy.compiler.ir import Ident
 from paxy.compiler.opcoerce import (
     coerce_binary_op,

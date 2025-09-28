@@ -3,7 +3,7 @@
 # paxy/basic/dec.py
 from typing import Any
 from bytecode import BinaryOp
-from paxy.basic.base import BasicOperation
+from paxy.commands.base import BasicOperation
 from paxy.compiler.ir import Ident
 
 

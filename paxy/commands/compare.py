@@ -1,6 +1,6 @@
 # paxy/basic/compare.py
 from typing import Any
-from paxy.basic.base import BasicOperation
+from paxy.commands.base import BasicOperation
 from paxy.compiler.opcoerce import coerce_compare_op
 from paxy.compiler.ir import Ident
 
