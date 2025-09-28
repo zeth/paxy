@@ -5,7 +5,7 @@ from paxy.compiler.opcoerce import coerce_compare_op
 from paxy.compiler.ir import Ident
 
 
-class CompareOp(Command):
+class Compare(Command):
     """COMPARE <dst> <lhs> <cmp> <rhs>"""
 
     def make_ops(self, args: list[Any]) -> None:

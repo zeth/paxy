@@ -3,7 +3,7 @@ from paxy.commands.base import Command
 from paxy.compiler.ir import ReturnMarker
 
 
-class ReturnOp(Command):
+class ReturnCommand(Command):
     """
     RETURN [value]
       - RETURN               -> RETURN_CONST None  (3.13 emits RETURN_CONST 0)

@@ -3,7 +3,7 @@ from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 
 
-class IsBop(Command):
+class IsCommand(Command):
     """IS <dst> <lhs> <rhs>  -> dst = (lhs is rhs)"""
 
     def make_ops(self, args: list[Any]) -> None:
@@ -16,7 +16,7 @@ class IsBop(Command):
         self.add_op("STORE_NAME", str(dst))
 
 
-class IsNotOp(Command):
+class IsNotCommand(Command):
     """ISNOT <dst> <lhs> <rhs>  -> dst = (lhs is not rhs)"""
 
     def make_ops(self, args: list[Any]) -> None:

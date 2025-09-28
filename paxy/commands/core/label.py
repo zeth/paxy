@@ -4,7 +4,7 @@ from paxy.compiler.ir import Ident
 from paxy.compiler.ir import LabelDecl, JumpRef
 
 
-class LabelOp(Command):
+class LabelCommand(Command):
     """LABEL <identifier>  -> placeholder resolved by assembler to a bytecode.Label()"""
 
     def make_ops(self, op_args: list[Any]) -> None:
@@ -17,7 +17,7 @@ class LabelOp(Command):
         self.ops.append(LabelDecl(str(name), self.lineno))
 
 
-class GotoOp(Command):
+class GotoCommand(Command):
     """GOTO <identifier>  -> resolved by assembler to a concrete jump to <identifier>"""
 
     def make_ops(self, op_args: list[Any]) -> None:

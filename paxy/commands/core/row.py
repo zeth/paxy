@@ -4,7 +4,7 @@ from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 
 
-class RowOp(Command):
+class RowCommand(Command):
     """
     ROW <name> [elem1 elem2 ...]  -> name = (elem1, elem2, ...)
     Fast path: all literals -> LOAD_CONST (tuple)

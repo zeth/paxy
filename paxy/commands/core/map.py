@@ -3,7 +3,7 @@ from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 
 
-class MapOp(Command):
+class MapCommand(Command):
     """
     MAP <name> [k1 v1 k2 v2 ...]
       -> <name> = {k1: v1, k2: v2, ...}

@@ -3,7 +3,7 @@ from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 
 
-class InOp(Command):
+class InCommand(Command):
     """IN <dst> <needle> <haystack>  -> dst = (needle in haystack)"""
 
     def make_ops(self, args: list[Any]) -> None:
@@ -16,7 +16,7 @@ class InOp(Command):
         self.add_op("STORE_NAME", str(dst))
 
 
-class NotInOp(Command):
+class NotInCommand(Command):
     """NOTIN <dst> <needle> <haystack>  -> dst = (needle not in haystack)"""
 
     def make_ops(self, args: list[Any]) -> None:

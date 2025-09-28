@@ -3,7 +3,7 @@ from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 
 
-class MapDelOp(Command):
+class MapDel(Command):
     """
     MAPDEL <map> <key>
       -> del <map>[<key>]

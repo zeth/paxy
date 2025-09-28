@@ -4,7 +4,7 @@ from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 
 
-class MapAddOp(Command):
+class MapAdd(Command):
     """
     MAPADD <map> <key> <value>
       -> <map>[<key>] = <value>
