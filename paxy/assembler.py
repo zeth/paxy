@@ -224,12 +224,11 @@ class Assembler:
                 print(f"{i:03d}: {ins!r}")
 
         # 6) Build code object FROM lowered_body
-        bc_func = Bytecode()
+        bc_func = Bytecode(lowered_body)
         bc_func.argcount = len(func.params)
         bc_func.argnames = list(func.params)
         bc_func.flags |= CompilerFlags.OPTIMIZED | CompilerFlags.NEWLOCALS
         bc_func.first_lineno = func.lineno
-        bc_func.extend(lowered_body)
 
         # 7) Emit loader sequence
         return [
