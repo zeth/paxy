@@ -1,10 +1,8 @@
-
-
 from pathlib import Path
 import pytest
 
 from paxy.parser import Parser
-from paxy.assembler import assemble_file
+from paxy.cli import assemble_file
 
 
 def as_pairs(instrs):
@@ -22,11 +20,10 @@ def norm_argless(pairs):
     out = []
     for n, a in pairs:
         if n in {"PUSH_NULL", "POP_TOP"}:
-            out.append((n, 0))   # canonicalize arg-less to 0
+            out.append((n, 0))  # canonicalize arg-less to 0
         else:
             out.append((n, a))
     return out
-
 
 
 def test_input_lowers_to_call_and_store(tmp_path: Path):
@@ -43,7 +40,9 @@ def test_input_lowers_to_call_and_store(tmp_path: Path):
     ]
 
 
-def test_input_runtime_reads_and_stores_string(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def test_input_runtime_reads_and_stores_string(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
     # Program: read into x, then print x to prove value is there
     src = tmp_path / "inp2.paxy"
     src.write_text(
@@ -60,6 +59,7 @@ def test_input_runtime_reads_and_stores_string(tmp_path: Path, monkeypatch: pyte
 
     # Monkeypatch builtins.input to return "42"
     import builtins
+
     monkeypatch.setattr(builtins, "input", lambda: "42")
 
     # Execute as module and check side effect
@@ -68,11 +68,16 @@ def test_input_runtime_reads_and_stores_string(tmp_path: Path, monkeypatch: pyte
     assert g.get("x") == "42"
 
 
-@pytest.mark.parametrize("program, expected_msg", [
-    ("INPUT\n", "takes exactly one identifier"),
-    ("INPUT 123\n", "expects an identifier"),
-])
-def test_input_errors_missing_or_non_identifier(tmp_path: Path, program: str, expected_msg: str):
+@pytest.mark.parametrize(
+    "program, expected_msg",
+    [
+        ("INPUT\n", "takes exactly one identifier"),
+        ("INPUT 123\n", "expects an identifier"),
+    ],
+)
+def test_input_errors_missing_or_non_identifier(
+    tmp_path: Path, program: str, expected_msg: str
+):
     src = tmp_path / "bad.paxy"
     src.write_text(program)
     with pytest.raises(SyntaxError) as exc:

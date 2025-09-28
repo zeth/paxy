@@ -10,7 +10,8 @@ import pytest
 
 from paxy.parser import Parser
 from paxy.ir import FuncDef, ReturnMarker
-from paxy.assembler import Assembler, assemble_file
+from paxy.assembler import Assembler
+from paxy.cli import assemble_file
 
 
 def _ops(items):

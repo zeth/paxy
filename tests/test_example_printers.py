@@ -5,10 +5,9 @@ import bytecode
 import pytest
 
 from paxy.parser import Parser
-from paxy.assembler import assemble_file
+from paxy.cli import assemble_file
 
 UNSET = bytecode.instr._UNSET()
-
 
 
 EXPLICIT = """\
@@ -45,6 +44,7 @@ def norm_argless(pairs):
     Normalize arg-less opcode args: treat 0/None/_enum(0) as 0
     for stable comparison across environments.
     """
+
     def zeroish(x):
         if x is None:
             return 0
@@ -71,23 +71,29 @@ def test_basic_and_explicit_parse_to_same_lowered_sequence(tmp_path: Path):
 
     parser = Parser()
     instrs_explicit = parser.parse_file(p1)
-    instrs_basic    = parser.parse_file(p2)
+    instrs_basic = parser.parse_file(p2)
 
     got_explicit = norm_argless(as_pairs(instrs_explicit))
-    got_basic    = norm_argless(as_pairs(instrs_basic))
+    got_basic = norm_argless(as_pairs(instrs_basic))
 
-    assert got_basic == got_explicit == [
-        ("RESUME", 0),
-        ("LOAD_NAME", "print"),
-        ("PUSH_NULL", UNSET),
-        ("LOAD_CONST", "hello"),
-        ("CALL", 1),
-        ("POP_TOP", UNSET),
-        ("RETURN_CONST", None),
-    ]
+    assert (
+        got_basic
+        == got_explicit
+        == [
+            ("RESUME", 0),
+            ("LOAD_NAME", "print"),
+            ("PUSH_NULL", UNSET),
+            ("LOAD_CONST", "hello"),
+            ("CALL", 1),
+            ("POP_TOP", UNSET),
+            ("RETURN_CONST", None),
+        ]
+    )
 
 
-def test_minimal_is_auto_framed_and_runs(tmp_path: Path, capsys: pytest.CaptureFixture[str]):
+def test_minimal_is_auto_framed_and_runs(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+):
     src = tmp_path / "printer_minimal.paxy"
     src.write_text(MINIMAL)
 

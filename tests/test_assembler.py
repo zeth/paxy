@@ -5,7 +5,7 @@ import importlib.util
 import sys
 import pytest
 
-from paxy.assembler import assemble_file
+from paxy.cli import assemble_file
 from paxy.cli import compile_file
 
 

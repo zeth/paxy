@@ -4,7 +4,7 @@ from pathlib import Path
 import types
 import pytest
 
-from paxy.assembler import assemble_file
+from paxy.cli import assemble_file
 
 
 def _run(src_text: str) -> tuple[dict, str]:

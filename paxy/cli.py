@@ -8,7 +8,14 @@ from importlib.machinery import SourcelessFileLoader
 import sys, time
 from pathlib import Path
 import importlib._bootstrap_external as _be
-from paxy.assembler import assemble_file
+from typing import List
+from types import CodeType
+import dis as _dis
+
+from bytecode import Bytecode, Instr, CompilerFlags
+from paxy.assembler import Assembler
+from paxy.ir import ParsedItem
+from paxy.parser import Parser
 
 
 class PaxyCompileError(RuntimeError):
@@ -30,6 +37,50 @@ def output_path_for(src: str | Path, *, optimization: int | None = None) -> Path
     else:
         # sourceless import path that the importer will actually check
         return src.parent / f"{base}.pyc"
+
+
+def assemble_file(src_path: Path) -> CodeType:
+    """
+    Parse .paxy -> (ParsedItem stream) -> resolve labels -> Bytecode -> CodeType
+    """
+    parser = Parser()
+    parsed: List[ParsedItem] = parser.parse_file(src_path)
+
+    resolved = Assembler(parsed).resolve()
+
+    # Optional debug dump
+    if os.getenv("PAXY_DEBUG") == "1":
+        out: List[str] = []
+        out.append("== RESOLVED ==")
+        for i, obj in enumerate(resolved):
+            out.append(f"{i:03d}: {obj!r}")
+        bc_dbg = Bytecode(resolved)
+        code_dbg = bc_dbg.to_code()
+        out.append("== DISASSEMBLY ==")
+        out.append(_dis.Bytecode(code_dbg).dis())  # returns a str in 3.13
+        dbg_path = Path(os.getenv("PAXY_DEBUG_OUT", "/tmp/paxy_debug.txt"))
+        dbg_path.write_text("\n".join(out))
+        return code_dbg
+
+    # Build final bytecode object
+    bc = Bytecode(resolved)
+    bc.filename = str(src_path)
+    bc.name = "<module>"
+    bc.flags |= CompilerFlags.NOFREE
+
+    # First instruction lineno is used as first_lineno
+    if resolved:
+        first: Instr | None = next((x for x in resolved if isinstance(x, Instr)), None)
+        if first is not None and first.lineno:
+            bc.first_lineno = first.lineno
+
+    code = bc.to_code()
+
+    if os.getenv("PAXY_DEBUG") == "1":
+        print("== DISASSEMBLY ==")
+        _dis.dis(code)
+
+    return code
 
 
 def compile_file(
