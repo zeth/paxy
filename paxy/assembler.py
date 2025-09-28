@@ -197,7 +197,7 @@ class Assembler:
         self._ensure_target_defined(ref.target_name)
         return Instr(opcode, self._label_objects[ref.target_name], lineno=ref.lineno)
 
-    def _lower_funcdef(self, func: FuncDef) -> list:
+    def _lower_funcdef(self, func: FuncDef) -> list[ResolvedItem]:
         # 1) Resolve body inside-function
         inner_resolved = Assembler(func.body, in_function=True).resolve()
 
@@ -242,9 +242,9 @@ class Assembler:
 
     def _rewrite_locals_for_function(
         self,
-        lowered_body: list,  # list[Instr | Label | placeholders]
+        lowered_body: list[ResolvedItem],
         params: list[str],
-    ) -> list:
+    ) -> list[ResolvedItem]:
         """
         Convert NAME ops to FAST for locals (params + anything stored/deleted),
         and LOAD_NAME(non-local) -> LOAD_GLOBAL with 3.13 bitflag tuple.
@@ -261,7 +261,7 @@ class Assembler:
                         local_names.add(self._as_name(arg))
 
         # 2) rewrite
-        out: list = []
+        out: list[ResolvedItem] = []
         for ins in lowered_body:
             if not isinstance(ins, Instr):
                 out.append(ins)
@@ -478,11 +478,11 @@ class Assembler:
 
         return out
 
-    def _sanitize_function_body(self, body: list) -> list:
+    def _sanitize_function_body(self, body: list[ResolvedItem]) -> list[ResolvedItem]:
         """Remove mid-body RESUMEs and default RETURN_CONST if there is an explicit return."""
         # Keep only the first RESUME
         saw_resume = False
-        tmp: list = []
+        tmp: list[ResolvedItem] = []
         for ins in body:
             if isinstance(ins, Instr) and ins.name == "RESUME":
                 if saw_resume:
