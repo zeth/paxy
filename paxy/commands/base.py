@@ -1,5 +1,4 @@
 # paxy/basic/base.py
-from __future__ import annotations
 
 from typing import Any, Union
 from bytecode import Instr, BinaryOp

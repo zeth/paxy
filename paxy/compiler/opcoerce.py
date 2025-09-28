@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import Any
 from enum import IntEnum
 from bytecode import BinaryOp

@@ -1,5 +1,4 @@
 # paxy/basic/let.py
-from __future__ import annotations
 from typing import Any, Tuple
 from paxy.commands.base import BasicOperation
 from paxy.compiler.ir import Ident

@@ -1,5 +1,4 @@
 # paxy/basic/__init__.py
-from __future__ import annotations
 
 from typing import Any, Dict, Type, Union, List
 from dis import opmap

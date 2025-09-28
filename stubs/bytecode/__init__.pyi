@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import Any, Mapping, Iterable, Sequence, overload
 from types import CodeType
 from enum import Enum, IntFlag

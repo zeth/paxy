@@ -1,5 +1,4 @@
 # tests/test_basic_map
-from __future__ import annotations
 from pathlib import Path
 from typing import Any, Iterable, List, Tuple, TypeAlias
 import pytest

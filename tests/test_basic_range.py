@@ -1,5 +1,4 @@
 # tests/test_basic_range.py
-from __future__ import annotations
 
 from pathlib import Path
 import types

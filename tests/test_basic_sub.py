@@ -1,5 +1,4 @@
 # tests/test_basic_sub.py
-from __future__ import annotations
 from pathlib import Path
 from types import CodeType
 import types
