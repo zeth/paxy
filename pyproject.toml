@@ -1,6 +1,6 @@
 [build-system]
-requires = ["hatchling>=1.27.0"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
 
 
 [project]
@@ -45,13 +45,4 @@ paxy = "paxy.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-
-[tool.hatch.build]
-# include your package code + README + license in the distribution
-include = ["paxy", "README.md", "LICENSE"]
-
-[tool.hatch.publish]
-# configure PyPI repos
-# `hatch publish` → uploads to PyPI by default
-# `hatch publish --repo testpypi` → uploads to TestPyPI
-repos.testpypi.url = "https://test.pypi.org/legacy/"
+include = ["paxy*"]
