@@ -1,25 +1,43 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
 
 [project]
 name = "paxy"
 version = "0.1.0"
-description = "Paxy: a BASIC-like language that compiles to Python bytecode (.pyc)."
-authors = [
-  { name = "Your Name", email = "you@example.com" }
-]
+description = "Paxy: a modern BASIC-like language that compiles to Python bytecode (.pyc)."
+authors = [{ name = "Zeth Green", email = "theology@gmail.com" }]
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.13"
+requires-python = ">=3.13.7"
 
 dependencies = [
-  "bytecode>=0.17.0",  # maintained library for building CodeType
+  "bytecode>=0.17.0", # maintained library for building CodeType
 ]
+
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Education",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Compilers",
+  "Topic :: Education",
+  "Topic :: Utilities",
+]
+
+[project.urls]
+Homepage = "https://github.com/zeth/paxy"
+Documentation = "https://github.com/zeth/paxy#readme"
+Repository = "https://github.com/zeth/paxy"
+Issues = "https://github.com/zeth/paxy/issues"
+
 
 [project.optional-dependencies]
 dev = [
-  "pytest>=7.0",       # testing framework
+  "pytest>=7.0", # testing framework
 ]
 
 [project.scripts]
@@ -27,3 +45,13 @@ paxy = "paxy.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
+
+[tool.hatch.build]
+# include your package code + README + license in the distribution
+include = ["paxy", "README.md", "LICENSE"]
+
+[tool.hatch.publish]
+# configure PyPI repos
+# `hatch publish` → uploads to PyPI by default
+# `hatch publish --repo testpypi` → uploads to TestPyPI
+repos.testpypi.url = "https://test.pypi.org/legacy/"
