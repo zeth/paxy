@@ -1,4 +1,28 @@
-# Paxy
+# Paxy — code in calm
+
+Beginner's All-purpose Symbolic Instruction Code taught millions their first programs in the 1970s and 1980s.
+
+Paxy revives the spirit of BASIC — not just as nostalgia, but as a deliberate choice: a simpler way to code.  
+Every line is a single command with arguments.
+
+Where modern programming piles on frameworks, boilerplate, and ceremony, Paxy takes the opposite path.
+
+- **Simplicity first.** A few clear commands (`LET`, `IF`, `PRINT`, `RANGE`) are enough to get started.
+- **Immediate feedback.** Programs run top-to-bottom, exactly as written.
+- **Calm and predictable.** Deterministic and synchronous: the computer follows your steps.
+- **Accessible to everyone.** If you can type, you can code.
+- **Batteries included.** Commands cover the most common use cases.
+
+## Bring your vibes
+
+Paxy is ideal for AI-assisted coding. Modern AI tools stumble on complex syntax, indentation, or hidden imports.  
+Paxy avoids all that. One command per line, plain arguments, no boilerplate — the perfect partner for AI.
+
+- **Copy-paste friendly.** Each line is self-contained.
+- **Hard to break.** No braces, decorators, or indentation traps.
+- **Composable snippets.** Loops, prints, or conditionals can be dropped in like building blocks.
+- **Readable by humans _and_ AI.** Simple, declarative steps.
+- **No ceremony.** Forget imports and types — just write commands.
 
 ## Usage
 
