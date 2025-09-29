@@ -9,7 +9,7 @@ version = "0.1.0"
 description = "Paxy: a modern BASIC-like language that compiles to Python bytecode (.pyc)."
 authors = [{ name = "Zeth Green", email = "theology@gmail.com" }]
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
 requires-python = ">=3.13.7"
 
 dependencies = [
@@ -20,7 +20,6 @@ classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Education",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: MIT License",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3.13",
   "Topic :: Software Development :: Compilers",
