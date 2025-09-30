@@ -159,7 +159,7 @@ class Let(Command):
 
     ### Check membership
 
-    Lists can be searched with `in` and `not in`:
+    A [vector](vec.md) can be searched with `in` and `not in`:
 
     ```paxy
     LET animals ["cat", "dog", "bat"]

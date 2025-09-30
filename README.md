@@ -181,7 +181,7 @@ Return the given value.
 ### ROW
 
 `ROW name [elem1 elem2 ...]`  
-Create a tuple.
+Create a row of data.
 
 ### SUB ... SUBEND
 

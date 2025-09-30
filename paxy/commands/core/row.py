@@ -1,15 +1,18 @@
 # paxy/basic/row.py
+"""
+ROW <name> [elem1 elem2 ...]  -> name = (elem1, elem2, ...)
+Fast path: all literals -> LOAD_CONST (tuple)
+Fallback: mixed idents/literals -> LOAD_*...; BUILD_TUPLE N
+"""
+
+
 from typing import Any
 from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 
 
 class RowCommand(Command):
-    """
-    ROW <name> [elem1 elem2 ...]  -> name = (elem1, elem2, ...)
-    Fast path: all literals -> LOAD_CONST (tuple)
-    Fallback: mixed idents/literals -> LOAD_*...; BUILD_TUPLE N
-    """
+    """Creates a row of elements."""
 
     COMMAND = "ROW"
 

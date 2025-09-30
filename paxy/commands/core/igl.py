@@ -106,11 +106,11 @@ class Igloo(Command):
     - Works with literals or variables.
 
 
+    ## Would you like to know more?
 
-
-
-
-
+    The IGL has a lot of contraints. Let's start removing them.
+    Sometimes we want to store values that are not unique,
+    so next will we look at a [ROW](row.md).
 
     """
 
