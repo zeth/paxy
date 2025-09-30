@@ -38,7 +38,7 @@ class Input(Command):
 
     ```paxy
     INPUT age
-    GOSUB age int age    # convert text to an integer
+    TOINT age age    # convert text to an integer
     PRINT age
     ```
 
@@ -57,8 +57,8 @@ class Input(Command):
     ```paxy
     INPUT a
     INPUT b
-    GOSUB a int a
-    GOSUB b int b
+    TOINT a a
+    TOINT b b
     LET total a + b
     PRINT total
     ```
@@ -95,7 +95,8 @@ class Input(Command):
 
     ## Would you like to know more?
 
-    Want to learn another command? Try [LET](../commands/let.md) or [PRINT](../commands/print.md).
+    In those examples above, we saw an extra command used.
+    Let's look at [TOINT](../commands/toint.md) next.
     """
 
     COMMAND = "INPUT"

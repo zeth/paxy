@@ -1,14 +1,117 @@
 # paxy/basic/igl.py
+"""
+IGL <name> [elem1 elem2 ...]  -> name = frozenset({elem1, ...})
+Fast path: all literals & hashable -> LOAD_CONST frozenset(...)
+Fallback: mixed -> LOAD_NAME 'frozenset'; LOAD_*...; BUILD_TUPLE N; CALL 1
+"""
+
 from typing import Any
 from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 
 
 class Igloo(Command):
-    """
-    IGL <name> [elem1 elem2 ...]  -> name = frozenset({elem1, ...})
-    Fast path: all literals & hashable -> LOAD_CONST frozenset(...)
-    Fallback: mixed -> LOAD_NAME 'frozenset'; LOAD_*...; BUILD_TUPLE N; CALL 1
+    """Group several things together.
+
+    # IGL — build a container (Igloo)
+
+    So far, we've seen simple values: numbers, strings, floats.
+    But programs often need to **group multiple values together**.
+
+    Paxy's first container is the **Igloo**.
+
+    It contains as many values as you want, but each element is unique.
+    If you add two of the same thing, you only get one inside the Igloo,
+    the other one is silently thrown out into the cold,
+    never to be seen again.
+
+    The order of the items doesn't matter.
+
+    That makes it perfect for grouping things you just want
+    to **keep together and test membership**.
+
+    Once created, it cannot be changed (it's frozen).
+    If you want to add or remove items, you have to make it again.
+
+    ---
+
+    ## Syntax
+
+    ```paxy
+    IGL <name> [elem1 elem2 ...]
+    ```
+
+    This creates an igloo and stores it in `<name>`.
+
+    ---
+
+    ## Examples
+
+    ### An igloo of animals
+
+    ```paxy
+    IGL animals "cat" "dog" "bat"
+    PRINT animals
+    ```
+
+    Output:
+    ```
+    {'cat', 'dog', 'bat'}
+    ```
+
+    ### An igloo of integers
+
+    ```paxy
+    IGL prime 2 3 5 7 11 13 17 19
+    LET isprime 2 in prime
+    PRINT isprime  # True
+    ```
+
+    ---
+
+    ### Membership test with `in`
+
+    You can use `in` and `not in` operators (from [LET](let)) to check if something is in the Igloo:
+
+    ```paxy
+    IGL animals "cat" "dog" "bat"
+    LET hasdog "dog" in animals
+    PRINT hasdog    # True
+    ```
+
+    ---
+
+    ### Mixing variables and literals
+
+    You can also include variables:
+
+    ```paxy
+    LET x "apple"
+    IGL basket x "banana" "cherry"
+    PRINT basket
+    ```
+
+    ---
+
+    ### Advanced detail
+
+    It's currently implemented in the compiler as a frozenset, this could change.
+
+    ---
+
+    ## Summary
+
+    - IGL makes a container for multiple values.
+    - Unique, unordered, frozen — great for membership tests.
+    - Works with literals or variables.
+
+
+
+
+
+
+
+
     """
 
     COMMAND = "IGL"
