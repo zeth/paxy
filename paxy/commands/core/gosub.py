@@ -1,4 +1,13 @@
 # paxy/basic/gosub.py
+"""
+GOSUB <dst> <name> [args...] -> LOAD_GLOBAL (True, <name>); <LOAD_* args>; CALL N; STORE_NAME <dst>
+
+Rationale:
+- Using LOAD_GLOBAL (True, name) on 3.13 pushes a NULL under the callable,
+- so CALL N is valid even without PRECALL (handy when 'bytecode' lacks PRECALL).
+
+"""
+
 from typing import Any
 from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
@@ -7,12 +16,16 @@ from paxy.compiler.ir import Ident
 class Gosub(Command):
     """
     GOSUB <dst> <name> [args...]
-      -> LOAD_GLOBAL (True, <name>); <LOAD_* args>; CALL N; STORE_NAME <dst>
 
-    Rationale:
-      - Using LOAD_GLOBAL (True, name) on 3.13 pushes a NULL under the callable,
-        so CALL N is valid even without PRECALL (handy when 'bytecode' lacks PRECALL).
+    Call subroutine `name` with arguments and store the return value in `dst`.
+
+    Example:
+      GOSUB total add x y
     """
+
+    COMMAND = "GOSUB"
+    SUMMARY = "Call a subroutine and store its return value."
+    CATEGORY = "core"
 
     def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) < 2 or not isinstance(op_args[0], Ident):
@@ -28,7 +41,7 @@ class Gosub(Command):
         elif isinstance(fn_token, str):
             fn_name = fn_token
         else:
-            raise SyntaxError("GOSUB second argument must be a function name")
+            raise SyntaxError("GOSUB second argument must be a subroutine name")
 
         # 3.13 pattern without PRECALL: NULL comes from LOAD_GLOBAL(True, name)
         self.add_op("LOAD_GLOBAL", (True, fn_name))
