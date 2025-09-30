@@ -19,7 +19,7 @@ from paxy.commands.core.returnstmt import ReturnCommand
 from paxy.commands.core.row import RowCommand
 from paxy.commands.core.vec import VecCommand
 from paxy.commands.core.mapdel import MapDel
-
+from paxy.commands.core.convert import ToInt, ToFloat, ToStr
 
 CORE_COMMANDS: CommandMap = {
     "PRINT": Print,
@@ -45,4 +45,7 @@ CORE_COMMANDS: CommandMap = {
     "MAPDEL": MapDel,
     "RETURN": ReturnCommand,
     "PAR": Par,
+    "TOINT": ToInt,
+    "TOFLOAT": ToFloat,
+    "TOSTR": ToStr,
 }

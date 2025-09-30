@@ -4,6 +4,99 @@ from paxy.compiler.ir import Ident
 
 
 class Input(Command):
+    """Read a value from the user.
+
+    ```
+    INPUT <name>
+    ```
+
+    The `INPUT` command pauses the program and asks the user to type something.
+    Whatever the user types is stored in the variable `<name>`.
+
+    ---
+
+    ## Basics
+
+    ```paxy
+    INPUT name
+    PRINT name
+    ```
+
+    When run, the program will wait for you to type.
+    If you type `Alice` then hit enter, the output will be:
+
+    ```
+    Alice
+    ```
+
+    ---
+
+    ## Using INPUT with numbers
+
+    By default, everything typed with `INPUT` is text (a "string").
+    If you want a number, you can convert it afterwards:
+
+    ```paxy
+    INPUT age
+    GOSUB age int age    # convert text to an integer
+    PRINT age
+    ```
+
+    If you type `42`, the output is:
+
+    ```
+    42
+    ```
+
+    ---
+
+    ## Combine with LET
+
+    You can use `INPUT` and `LET` together to do calculations:
+
+    ```paxy
+    INPUT a
+    INPUT b
+    GOSUB a int a
+    GOSUB b int b
+    LET total a + b
+    PRINT total
+    ```
+
+    If you type `10` and `32`, the output is:
+
+    ```
+    42
+    ```
+
+    ---
+
+    ## Example: Greeting
+
+    ```paxy
+    PRINT "What is your name?"
+    INPUT name
+    PRINT "Hello,"
+    PRINT name
+    ```
+
+    If you type `Charlie`, the output is:
+
+    ```
+    What is your name?
+    Hello,
+    Charlie
+    ```
+
+    Input reads from what we call stdin ("standard in"),
+    which for simplicy's sake is the normally the keyboard
+    (but in more advanced usage could be another program,
+    don't worry about that).
+
+    ## Would you like to know more?
+
+    Want to learn another command? Try [LET](../commands/let.md) or [PRINT](../commands/print.md).
+    """
 
     COMMAND = "INPUT"
 

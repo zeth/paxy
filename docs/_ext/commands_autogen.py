@@ -1,80 +1,106 @@
-# docs/_ext/commands_autogen.py
 from __future__ import annotations
 
 import importlib
 import inspect
 import pkgutil
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from pathlib import Path
 from typing import Iterable, Tuple, List
 
-# Where to write generated pages (under docs/)
+# Paths
 DOCS_DIR = Path(__file__).resolve().parents[1]
 GEN_DIR = DOCS_DIR / "commands"
 GEN_DIR.mkdir(parents=True, exist_ok=True)
 
 
+# -------------------------
+# Discovery & docstring utils
+# -------------------------
+
+
 def _iter_command_classes() -> Iterable[Tuple[str, type]]:
     """
-    Yield (module_name, classobj) for public Command-like classes in paxy.commands.*.
-
-    Heuristic:
-      - module starts with 'paxy.commands.'
-      - class has attribute 'COMMAND' (public name)
-      - class has method 'make_ops' (your BaseCommand API)
+    Yield (module_name, classobj) for Command-like classes in paxy.commands.*,
+    skipping base module and re-exports.
     """
     try:
         import paxy.commands as root  # type: ignore
     except Exception:
         return []
 
+    seen: set[str] = set()
+
     for modinfo in pkgutil.walk_packages(root.__path__, root.__name__ + "."):
-        mod_tail = modinfo.name.rsplit(".", 1)[-1]
-        if mod_tail.startswith("__"):
+        mod_name = modinfo.name
+        tail = mod_name.rsplit(".", 1)[-1]
+        if tail.startswith("__"):
             continue
+        if mod_name == "paxy.commands.base":
+            continue
+
         try:
-            mod = importlib.import_module(modinfo.name)
+            mod = importlib.import_module(mod_name)
         except Exception:
-            # Don't fail the docs build because a command module can't import
             continue
 
         for _, obj in inspect.getmembers(mod, inspect.isclass):
-            if obj.__module__.startswith("paxy.commands."):
-                if getattr(obj, "COMMAND", None) and hasattr(obj, "make_ops"):
-                    yield modinfo.name, obj
+            if obj.__module__ != mod.__name__:
+                continue
+            if not obj.__module__.startswith("paxy.commands."):
+                continue
+            if not getattr(obj, "COMMAND", None):
+                continue
+            if not hasattr(obj, "make_ops"):
+                continue
+
+            fq = f"{obj.__module__}.{obj.__name__}"
+            if fq in seen:
+                continue
+            seen.add(fq)
+            yield mod_name, obj
 
 
 def _infer_category_from_module(cls: type) -> str:
-    """
-    Infer category from module path.
-      paxy.commands.core.let -> "core"
-      paxy.commands.std.jsonop -> "std"
-      paxy.commands.par (top-level) -> "core" (fallback)
-    """
     modname = getattr(cls, "__module__", "")
     if not modname.startswith("paxy.commands."):
         return "misc"
     parts = modname.split(".")
     if len(parts) >= 3:
-        return parts[2]  # 'core', 'std', 'data', 'web', 'ui', ...
+        return parts[2]  # 'core','std','data','web','ui',...
     return "core"
 
 
 def _get_category(cls: type) -> str:
-    # Prefer explicit CATEGORY, else infer from module path
     return getattr(cls, "CATEGORY", None) or _infer_category_from_module(cls)
 
 
-def _write_command_page(cls: type) -> Tuple[str, str, str]:
+def _split_docstring(cls: type) -> tuple[str, str]:
     """
-    Emit one Markdown page for a command class.
-    Returns (slug, display_name, category).
+    Return (summary, details) from class docstring:
+      - summary = first non-empty line (or default)
+      - details = remaining lines, skipping a single blank separator
     """
-    name = getattr(cls, "COMMAND", cls.__name__)
-    summary = (getattr(cls, "SUMMARY", "") or "").strip()
-    category = _get_category(cls)
     doc = (inspect.getdoc(cls) or "").strip()
+    if not doc:
+        return "_No documentation_", ""
+    lines = doc.splitlines()
+    summary = lines[0].strip() if lines else "_No documentation_"
+    body = lines[1:]
+    if body and not body[0].strip():
+        body = body[1:]
+    details = "\n".join(body).strip()
+    return summary or "_No documentation_", details
 
+
+# -------------------------
+# Per-command page generation
+# -------------------------
+
+
+def _write_command_page(name: str, category: str, summary: str, details: str) -> str:
+    """
+    Write docs/commands/<slug>.md and return slug.
+    """
     slug = "".join(ch.lower() if ch.isalnum() else "-" for ch in str(name)).strip("-")
     out_path = GEN_DIR / f"{slug}.md"
 
@@ -83,22 +109,23 @@ def _write_command_page(cls: type) -> Tuple[str, str, str]:
         "",
         f"**Category:** `{category}`",
         "",
-        (summary if summary else "_No summary provided._"),
+        summary,
         "",
         "---",
         "",
-        (doc if doc else "_No detailed documentation yet._"),
+        details if details else "_No detailed documentation yet._",
         "",
     ]
     out_path.write_text("\n".join(parts), encoding="utf-8")
-    return slug, name, category
+    return slug
 
 
 def _generate_commands_index(pages: Iterable[Tuple[str, str, str]]) -> None:
-    from collections import defaultdict, OrderedDict
-
+    """
+    Write docs/commands.md (grouped listing + one hidden toctree).
+    """
     by_cat: dict[str, list[Tuple[str, str]]] = defaultdict(list)
-    slug_order: "OrderedDict[str, None]" = OrderedDict()  # keep first occurrence only
+    slug_order: "OrderedDict[str, None]" = OrderedDict()
 
     for slug, name, cat in pages:
         by_cat[cat].append((slug, name))
@@ -109,15 +136,14 @@ def _generate_commands_index(pages: Iterable[Tuple[str, str, str]]) -> None:
     order = ["core", "std", "data", "web", "ui", "misc"]
     cats = sorted(by_cat, key=lambda c: (order.index(c) if c in order else 999, c))
 
-    # Human-friendly grouped listing (not a toctree)
+    # Human-friendly grouped list
     for cat in cats:
-        lines.append(f"## {cat.title()}")
-        lines.append("")
+        lines += [f"## {cat.title()}", ""]
         for slug, name in sorted(by_cat[cat], key=lambda x: x[1].lower()):
             lines.append(f"- [{name}](commands/{slug}.md)")
         lines.append("")
 
-    # Single hidden toctree, explicit unique entries (no .md extension)
+    # Hidden toctree with explicit entries
     lines += [
         "```{toctree}",
         ":maxdepth: 1",
@@ -133,19 +159,31 @@ def _generate_commands_index(pages: Iterable[Tuple[str, str, str]]) -> None:
     (DOCS_DIR / "commands.md").write_text("\n".join(lines), encoding="utf-8")
 
 
+# -------------------------
+# Orchestration
+# -------------------------
+
+
 def _generate_all_commands(_app=None) -> None:
     """
-    Generate per-command pages and the grouped index before Sphinx reads sources.
+    Generate per-command pages + grouped index.
     """
-    pages: List[Tuple[str, str, str]] = []
+    collected: list[tuple[str, str, str, str]] = (
+        []
+    )  # (name, category, summary, details)
     for _, cls in _iter_command_classes():
-        pages.append(_write_command_page(cls))
+        name = getattr(cls, "COMMAND", cls.__name__)
+        category = _get_category(cls)
+        summary, details = _split_docstring(cls)
+        collected.append((name, category, summary, details))
+
+    # Write per-command pages and index
+    pages: list[Tuple[str, str, str]] = []
+    for name, category, summary, details in collected:
+        slug = _write_command_page(name, category, summary, details)
+        pages.append((slug, name, category))
     _generate_commands_index(pages)
 
 
 def setup(app):
-    """
-    Sphinx extension entry point.
-    Runs the generator at 'builder-inited' so files exist before reading sources.
-    """
     app.connect("builder-inited", _generate_all_commands)

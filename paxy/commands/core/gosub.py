@@ -15,6 +15,9 @@ from paxy.compiler.ir import Ident
 
 class Gosub(Command):
     """
+    Call a subroutine and store its return value.
+
+
     GOSUB <dst> <name> [args...]
 
     Call subroutine `name` with arguments and store the return value in `dst`.
@@ -24,7 +27,6 @@ class Gosub(Command):
     """
 
     COMMAND = "GOSUB"
-    SUMMARY = "Call a subroutine and store its return value."
 
     def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) < 2 or not isinstance(op_args[0], Ident):

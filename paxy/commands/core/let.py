@@ -11,9 +11,176 @@ from paxy.compiler.opcoerce import (
 
 
 class Let(Command):
-    """
+    """Assign a value. Also supports operators: arithmetic, comparison, `is`, `in`, etc.
+
+    ```
     LET <name> <value>
-    LET <name> <lhs> <op> <rhs>     # op: +, -, *, //, ==, <=, is, in, not in, etc.
+    LET <name> <lhs> <op> <rhs>
+    # op: +, -, *, //, ==, <=, is, in, not in, etc.
+    ```
+
+    ## Simple assignments
+
+    The most basic form of `LET` just gives a name to a value.
+    This lets you store numbers, text, or other data for later use.
+
+    ```paxy
+    LET x 5
+    LET name "Alice"
+    ```
+
+    You can also copy the value of another variable into a new one:
+
+    ```paxy
+    LET y x
+    ```
+
+    ---
+
+    ## Operator assignments
+
+    `LET` can also perform a calculation or check between two values
+    and store the result.
+
+    ### Arithmetic
+
+    These are the standard maths operators: add, subtract, multiply, divide, etc.
+
+    ```paxy
+    LET a 7
+    LET b 3
+
+    LET result a + b        # 10
+    LET answer a - b        # 4
+    LET product a * b       # 21
+    LET div a / b           # 2.333...
+    LET floordiv a // b     # 2
+    LET mod a % b           # 1
+    LET power a ** b        # 343
+    ```
+
+    Divide in computing is a forward slash not a ÷. Think of a fraction, e.g. half is 1/2.
+
+    ---
+
+    ### Comparisons
+
+    Comparisons let you test relationships between values.
+    The result is always `True` or `False`.
+
+    ```paxy
+    LET x 5
+    LET y 8
+
+    LET eq x == y        # False
+    LET ne x != y        # True
+    LET lt x < y         # True
+    LET le x <= y        # True
+    LET gt x > y         # False
+    LET ge x >= y        # False
+    ```
+
+    ---
+
+    ### Identity
+
+    Identity checks whether two variables actually point to the same object in memory.
+    This is different from equality (`==`), which only compares values.
+
+    ```paxy
+    LET a None
+    LET b None
+    LET c 0
+
+    LET same a is b         # True
+    LET notsame a is not c  # True
+    ```
+
+    ---
+
+    ### Membership
+
+    Membership checks if a value is inside a collection such as a list.
+
+    ```paxy
+    LET animals ["cat", "dog", "bat"]
+
+    LET hasdog "dog" in animals       # True
+    LET hasnemo "nemo" not in animals # True
+    ```
+
+    ---
+
+    ### Bitwise
+
+    Bitwise operators work directly on the binary digits of numbers.
+    They’re less common for beginners, but useful for low-level tasks.
+
+    ```paxy
+    LET x 6     # 110 in binary
+    LET y 3     # 011 in binary
+
+    LET anded x & y     # 2  (010)
+    LET ored  x | y     # 7  (111)
+    LET xor   x ^ y     # 5  (101)
+    LET shl   x << 1    # 12 (1100)
+    LET shr   x >> 1    # 3  (011)
+    ```
+
+    If you don't understand this, just ignore it.
+    If you ever get to the point of wanting to use them,
+    then you will understand what they do.
+
+    ---
+
+    ## Examples
+
+    ### Add numbers
+
+    Here we add two numbers and print the result:
+
+    ```paxy
+    LET x 10
+    LET y 20
+    LET total x + y
+    PRINT total     # 30
+    ```
+
+    ### Compare strings
+
+    Equality also works on text:
+
+    ```paxy
+    LET a "cat"
+    LET b "dog"
+    LET same a == b
+    PRINT same      # False
+    ```
+
+    ### Check membership
+
+    Lists can be searched with `in` and `not in`:
+
+    ```paxy
+    LET animals ["cat", "dog", "bat"]
+    LET hasdog "dog" in animals
+    PRINT hasdog    # True
+    ```
+
+    ### Identity test
+
+    `is` checks whether two variables are the *same object*, not just equal in value:
+
+    ```paxy
+    LET x None
+    LET y None
+    LET same x is y
+    PRINT same      # True
+    ```
+
+    ### Would you like to know more?
+
+    Let's look at [PRINT](print.md).
     """
 
     COMMAND = "LET"
