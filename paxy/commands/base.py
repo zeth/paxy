@@ -29,6 +29,10 @@ BasicItem = Union[Instr, LabelDecl, JumpRef, NamedJump, ReturnMarker]
 
 
 class Command:
+
+    COMMAND = "COMMAND"
+    SUMMARY = "Base command, override and add description in subclass."
+
     def __init__(self, op_args: list[Any], lineno: int) -> None:
         self.ops: list[BasicItem] = []
         self.lineno: int = lineno

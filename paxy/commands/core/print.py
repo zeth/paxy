@@ -3,6 +3,9 @@ from paxy.commands.base import Command
 
 
 class Print(Command):
+
+    COMMAND = "PRINT"
+
     def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) > 1:
             raise SyntaxError("PRINT takes at most one argument")

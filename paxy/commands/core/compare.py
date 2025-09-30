@@ -8,6 +8,8 @@ from paxy.compiler.ir import Ident
 class Compare(Command):
     """COMPARE <dst> <lhs> <cmp> <rhs>"""
 
+    COMMAND = "COMPARE"
+
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 4 or not isinstance(args[0], Ident):
             raise SyntaxError("COMPARE expects: COMPARE <dst> <lhs> <cmp> <rhs>")

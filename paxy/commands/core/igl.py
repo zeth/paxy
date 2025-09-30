@@ -11,6 +11,8 @@ class Igloo(Command):
     Fallback: mixed -> LOAD_NAME 'frozenset'; LOAD_*...; BUILD_TUPLE N; CALL 1
     """
 
+    COMMAND = "IGL"
+
     def make_ops(self, args: list[Any]) -> None:
         if not args or not isinstance(args[0], Ident):
             raise SyntaxError("IGL expects: IGL <name> [elem ...]")

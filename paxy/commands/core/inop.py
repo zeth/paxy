@@ -6,6 +6,8 @@ from paxy.compiler.ir import Ident
 class InCommand(Command):
     """IN <dst> <needle> <haystack>  -> dst = (needle in haystack)"""
 
+    COMMAND = "IN"
+
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 3 or not isinstance(args[0], Ident):
             raise SyntaxError("IN expects: IN <dst> <needle> <haystack>")
@@ -18,6 +20,8 @@ class InCommand(Command):
 
 class NotInCommand(Command):
     """NOTIN <dst> <needle> <haystack>  -> dst = (needle not in haystack)"""
+
+    COMMAND = "NOTIN"
 
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 3 or not isinstance(args[0], Ident):

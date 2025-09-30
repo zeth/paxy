@@ -17,6 +17,8 @@ class IfOp(Command):
       IF n '<=' 0 exit
     """
 
+    COMMAND = "IF"
+
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 4:
             raise SyntaxError("IF expects: IF <lhs> <cmp> <rhs> <label>")

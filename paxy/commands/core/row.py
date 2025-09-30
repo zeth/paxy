@@ -11,6 +11,8 @@ class RowCommand(Command):
     Fallback: mixed idents/literals -> LOAD_*...; BUILD_TUPLE N
     """
 
+    COMMAND = "ROW"
+
     def make_ops(self, args: list[Any]) -> None:
         if not args or not isinstance(args[0], Ident):
             raise SyntaxError("ROW expects: ROW <name> [elem ...]")

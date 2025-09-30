@@ -35,6 +35,8 @@ class Par(Command):
       - The assembler will rewrite NAME↔FAST where appropriate.
     """
 
+    COMMAND = "PAR"
+
     def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) != 4:
             raise SyntaxError("PAR expects: PAR <dst1> <dst2> <expr1> <expr2>")

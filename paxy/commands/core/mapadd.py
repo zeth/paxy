@@ -14,6 +14,8 @@ class MapAdd(Command):
         MAPADD m 'b' 2
     """
 
+    COMMAND = "MAPADD"
+
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 3 or not isinstance(args[0], Ident):
             raise SyntaxError("MAPADD expects: MAPADD <map> <key> <value>")

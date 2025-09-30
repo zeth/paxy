@@ -9,6 +9,8 @@ class ImportSimple(Command):
     (No binding; the module is added to sys.modules by __import__)
     """
 
+    COMMAND = "IMPORT"
+
     def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) != 1:
             raise SyntaxError("IMPORT takes exactly one string literal")

@@ -8,6 +8,10 @@ from paxy.compiler.ir import Ident
 
 
 class Dec(Command):
+
+    COMMAND = "DEC"
+    SUMMARY = "Add description here."
+
     def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) != 1:
             raise SyntaxError("DEC takes exactly one identifier")

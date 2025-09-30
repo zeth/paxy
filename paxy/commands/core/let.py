@@ -16,6 +16,8 @@ class Let(Command):
     LET <name> <lhs> <op> <rhs>     # op: +, -, *, //, ==, <=, is, in, not in, etc.
     """
 
+    COMMAND = "LET"
+
     def make_ops(self, args: list[Any]) -> None:
         dst_ident, rest = self._parse_head(args)
 

@@ -19,6 +19,8 @@ class MapCommand(Command):
       STORE_NAME <name>
     """
 
+    COMMAND = "MAP"
+
     def make_ops(self, args: list[Any]) -> None:
         if not args or not isinstance(args[0], Ident):
             raise SyntaxError(

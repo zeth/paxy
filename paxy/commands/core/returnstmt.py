@@ -10,6 +10,8 @@ class ReturnCommand(Command):
       - RETURN <expr>        -> push <expr>, RETURN_VALUE
     """
 
+    COMMAND = "RETURN"
+
     def make_ops(self, args: list[Any]) -> None:
         if len(args) == 0:
             self.ops.append(ReturnMarker(has_value=False, lineno=self.lineno))

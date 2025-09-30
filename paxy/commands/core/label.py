@@ -7,6 +7,8 @@ from paxy.compiler.ir import LabelDecl, JumpRef
 class LabelCommand(Command):
     """LABEL <identifier>  -> placeholder resolved by assembler to a bytecode.Label()"""
 
+    COMMAND = "LABEL"
+
     def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) != 1:
             raise SyntaxError("LABEL takes exactly one identifier")
@@ -19,6 +21,8 @@ class LabelCommand(Command):
 
 class GotoCommand(Command):
     """GOTO <identifier>  -> resolved by assembler to a concrete jump to <identifier>"""
+
+    COMMAND = "GOTO"
 
     def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) != 1:

@@ -9,6 +9,8 @@ class MapDel(Command):
       -> del <map>[<key>]
     """
 
+    COMMAND = "MAPDEL"
+
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 2 or not isinstance(args[0], Ident):
             raise SyntaxError("MAPDEL expects: MAPDEL <map> <key>")

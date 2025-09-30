@@ -25,7 +25,6 @@ class Gosub(Command):
 
     COMMAND = "GOSUB"
     SUMMARY = "Call a subroutine and store its return value."
-    CATEGORY = "core"
 
     def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) < 2 or not isinstance(op_args[0], Ident):

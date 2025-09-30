@@ -4,6 +4,9 @@ from paxy.compiler.ir import Ident
 
 
 class Input(Command):
+
+    COMMAND = "INPUT"
+
     def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) != 1:
             raise SyntaxError("INPUT takes exactly one identifier")

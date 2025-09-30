@@ -10,6 +10,8 @@ class VecCommand(Command):
     Elements can be identifiers or literal constants.
     """
 
+    COMMAND = "VEC"
+
     def make_ops(self, args: list[Any]) -> None:
         if not args or not isinstance(args[0], Ident):
             raise SyntaxError("VEC expects: VEC <name> [elem ...]")

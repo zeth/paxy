@@ -6,6 +6,8 @@ from paxy.compiler.ir import Ident
 class IsCommand(Command):
     """IS <dst> <lhs> <rhs>  -> dst = (lhs is rhs)"""
 
+    COMMAND = "IS"
+
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 3 or not isinstance(args[0], Ident):
             raise SyntaxError("IS expects: IS <dst> <lhs> <rhs>")
@@ -18,6 +20,8 @@ class IsCommand(Command):
 
 class IsNotCommand(Command):
     """ISNOT <dst> <lhs> <rhs>  -> dst = (lhs is not rhs)"""
+
+    COMMAND = "ISNOT"
 
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 3 or not isinstance(args[0], Ident):
