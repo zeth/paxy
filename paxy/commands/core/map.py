@@ -1,57 +1,74 @@
-from typing import Any
+# paxy/commands/core/map.py
+from __future__ import annotations
+from typing import Any, List
+from bytecode import Instr
 from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 
 
 class MapCommand(Command):
     """
-    MAP <name> [k1 v1 k2 v2 ...]
-      -> <name> = {k1: v1, k2: v2, ...}
-    Rules:
-      - Keys MUST be literal strings (JSON-style), not identifiers.
-      - Number of items after <name> must be even.
-      - Values may be identifiers or literals.
+    MAP <dst> [<key> <value> ...]
+    Build a dict (map).
 
-    Lowering (fast path):
-      LOAD_CONST (k1, k2, ..., kn)     # tuple of constant string keys
-      ... emit v1, v2, ..., vn ...
-      BUILD_CONST_KEY_MAP n
-      STORE_NAME <name>
+    Keys may be:
+      - literal strings (e.g. 'name')
+      - identifiers whose *runtime value* is a string (e.g. keyvar)
+
+    Values may be literals or identifiers.
+
+    Examples:
+      MAP m                       ; {}
+      MAP m 'a' 1 'b' 2          ; {'a': 1, 'b': 2}
+      LET k "user"
+      MAP m k 42                  ; {'user': 42}
     """
 
     COMMAND = "MAP"
 
     def make_ops(self, args: list[Any]) -> None:
-        if not args or not isinstance(args[0], Ident):
-            raise SyntaxError(
-                "MAP expects: MAP <name> [k v ...] (name must be an identifier)"
-            )
-        dst = str(args[0])
-        rest = args[1:]
+        if not args:
+            raise SyntaxError("MAP expects: MAP <name> [<key> <value> ...]")
 
-        if len(rest) % 2 != 0:
-            raise SyntaxError(
-                "MAP expects an even number of elements after the name: k v k v ..."
-            )
+        dst = args[0]
+        if not isinstance(dst, Ident):
+            raise SyntaxError("MAP expects first argument to be an identifier name")
 
-        # Split into keys / values and validate keys are literal strings
-        keys: list[str] = []
-        vals: list[Any] = []
-        for i in range(0, len(rest), 2):
-            k = rest[i]
-            v = rest[i + 1]
+        kv = args[1:]
+        if len(kv) == 0:
+            # {}
+            self.add_op("BUILD_MAP", 0)
+            self.add_op("STORE_NAME", str(dst))
+            return
+
+        if len(kv) % 2 != 0:
+            raise SyntaxError("MAP requires an even number of key/value arguments")
+
+        # BUILD_MAP then MAP_ADD 1 per pair; works on 3.13 and 3.14
+        self.add_op("BUILD_MAP", 0)
+
+        # For each (key, value)
+        for i in range(0, len(kv), 2):
+            k = kv[i]
+            v = kv[i + 1]
+
+            # Key: literal string or identifier (runtime string)
             if isinstance(k, Ident):
-                raise SyntaxError("MAP keys must be literal strings (not identifiers)")
-            if not isinstance(k, str):
-                raise SyntaxError(
-                    f"MAP keys must be strings (got {type(k).__name__!s})"
-                )
-            keys.append(k)
-            vals.append(v)
+                self.add_op("LOAD_NAME", str(k))
+            elif isinstance(k, str):
+                self.add_op("LOAD_CONST", k)
+            else:
+                # We accept identifiers (runtime strings) or literal strings only.
+                # Non-string literals (e.g. 1) are rejected here for clarity/predictability.
+                raise SyntaxError("MAP keys must be strings or identifiers")
 
-        # Emit: LOAD_CONST (keys...), then the values, then BUILD_CONST_KEY_MAP
-        self.add_op("LOAD_CONST", tuple(keys))
-        for v in vals:
-            self._emit_load_for(v)
-        self.add_op("BUILD_CONST_KEY_MAP", len(keys))
-        self.add_op("STORE_NAME", dst)
+            # Value: literal or identifier
+            if isinstance(v, Ident):
+                self.add_op("LOAD_NAME", str(v))
+            else:
+                self.add_op("LOAD_CONST", v)
+
+            # Add this pair to the map
+            self.add_op("MAP_ADD", 1)
+
+        self.add_op("STORE_NAME", str(dst))
