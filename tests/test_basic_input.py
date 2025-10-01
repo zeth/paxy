@@ -28,7 +28,7 @@ def norm_argless(pairs):
 
 def test_input_lowers_to_call_and_store(tmp_path: Path):
     src = tmp_path / "inp.paxy"
-    src.write_text("INPUT x\nRETURN_CONST None\n")
+    src.write_text("INP x\nRETURN_CONST None\n")
 
     got = norm_argless(strip_leading_resume(as_pairs(Parser().parse_file(src))))
     assert got == [
@@ -46,7 +46,7 @@ def test_input_runtime_reads_and_stores_string(
     # Program: read into x, then print x to prove value is there
     src = tmp_path / "inp2.paxy"
     src.write_text(
-        "INPUT x\n"
+        "INP x\n"
         "LOAD_NAME 'print'\n"
         "PUSH_NULL\n"
         "LOAD_NAME 'x'\n"
@@ -71,8 +71,8 @@ def test_input_runtime_reads_and_stores_string(
 @pytest.mark.parametrize(
     "program, expected_msg",
     [
-        ("INPUT\n", "takes exactly one identifier"),
-        ("INPUT 123\n", "expects an identifier"),
+        ("INP\n", "takes exactly one identifier"),
+        ("INP 123\n", "expects an identifier"),
     ],
 )
 def test_input_errors_missing_or_non_identifier(
@@ -87,7 +87,7 @@ def test_input_errors_missing_or_non_identifier(
 
 def test_input_error_extra_token(tmp_path: Path):
     src = tmp_path / "bad2.paxy"
-    src.write_text("INPUT x 1\n")
+    src.write_text("INP x 1\n")
     with pytest.raises(SyntaxError) as exc:
         Parser().parse_file(src)
     assert "takes exactly one identifier" in str(exc.value)

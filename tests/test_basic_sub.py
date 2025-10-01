@@ -84,7 +84,7 @@ def test_end_to_end_sub_and_gosub(tmp_path: Path, capsys: pytest.CaptureFixture[
         "LOAD_CONST 32\n"
         "STORE_NAME y\n"
         "GOS z add x y\n"
-        "PRINT z\n"
+        "PNT z\n"
     )
 
     code = assemble_file(src)
@@ -96,5 +96,5 @@ def test_end_to_end_sub_and_gosub(tmp_path: Path, capsys: pytest.CaptureFixture[
     types.FunctionType(code, g)()  # run “module” code
 
     assert g.get("z") == 42
-    # (Optional) your PRINT macro currently LOAD_CONSTs the arg if it's an Ident,
-    # so stdout may print "z" literally; don't assert on stdout unless you adjust PRINT.
+    # (Optional) your PNT macro currently LOAD_CONSTs the arg if it's an Ident,
+    # so stdout may print "z" literally; don't assert on stdout unless you adjust PNT.

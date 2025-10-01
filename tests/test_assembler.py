@@ -11,14 +11,14 @@ from paxy.cli import compile_file
 
 def test_assemble_file_returns_codeobject(tmp_path: Path):
     src = tmp_path / "hello.paxy"
-    src.write_text("PRINT 'hello'\n")
+    src.write_text("PNT 'hello'\n")
     code = assemble_file(src)
     assert isinstance(code, CodeType)
 
 
 def test_exec_prints_hello(tmp_path: Path, capsys: pytest.CaptureFixture[str]):
     src = tmp_path / "hello.paxy"
-    src.write_text("PRINT 'hello'\n")
+    src.write_text("PNT 'hello'\n")
     code = assemble_file(src)
 
     g = {"__name__": "__main__"}
@@ -32,7 +32,7 @@ def test_compile_file_writes_pyc_and_is_importable(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):
     src = tmp_path / "hello.paxy"
-    src.write_text("PRINT 'hello'\n")
+    src.write_text("PNT 'hello'\n")
 
     pyc_path = compile_file(src)
     assert pyc_path.exists()

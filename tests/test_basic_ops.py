@@ -3,10 +3,10 @@ from pathlib import Path
 import bytecode
 from paxy.compiler.parser import Parser
 
-PROGRAM1 = "PRINT 'hello'\nRETURN_CONST None\n"
-PROGRAM2 = "PRINT 42\nRETURN_CONST None\n"
-PROGRAM3 = "PRINT None\nRETURN_CONST None\n"
-PROGRAM4 = "PRINT\nRETURN_CONST None\n"  # blank print() -> CALL 0
+PROGRAM1 = "PNT 'hello'\nRETURN_CONST None\n"
+PROGRAM2 = "PNT 42\nRETURN_CONST None\n"
+PROGRAM3 = "PNT None\nRETURN_CONST None\n"
+PROGRAM4 = "PNT\nRETURN_CONST None\n"  # blank print() -> CALL 0
 
 
 def as_pairs(instrs):

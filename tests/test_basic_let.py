@@ -105,7 +105,7 @@ def test_let_with_print_in_same_file(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     src = tmp_path / "p4.paxy"
-    src.write_text("LET x 1\nPRINT 'hello'\n")
+    src.write_text("LET x 1\nPNT 'hello'\n")
     instrs = Parser().parse_file(src)
 
     # Execute quickly using bytecode → code object

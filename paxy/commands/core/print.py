@@ -7,16 +7,16 @@ class Print(Command):
 
     This is the easiest way to get feedback from your program.
 
-    `PRINT [value]`
+    `PNT [value]`
 
     ---
 
     ## Basics
 
-    If you write `PRINT` on its own, it shows a blank line:
+    If you write `PNT` on its own, it shows a blank line:
 
     ```paxy
-    PRINT
+    PNT
     ```
 
     ---
@@ -26,8 +26,8 @@ class Print(Command):
     You can show words or sentences by quoting them:
 
     ```paxy
-    PRINT "Hello, world!"
-    PRINT "Paxy makes coding calm."
+    PNT "Hello, world!"
+    PNT "Paxy makes coding calm."
     ```
 
     ---
@@ -37,8 +37,8 @@ class Print(Command):
     Numbers can be printed directly:
 
     ```paxy
-    PRINT 42
-    PRINT 3.14
+    PNT 42
+    PNT 3.14
     ```
 
     ---
@@ -49,10 +49,10 @@ class Print(Command):
 
     ```paxy
     LET name "Alice"
-    PRINT name
+    PNT name
 
     LET total 123
-    PRINT total
+    PNT total
     ```
 
     ---
@@ -62,22 +62,22 @@ class Print(Command):
     You can even print the outcome of a calculation:
 
     ```paxy
-    PRINT 5 + 7       # shows 12
-    PRINT 10 * 3      # shows 30
+    PNT 5 + 7       # shows 12
+    PNT 10 * 3      # shows 30
     ```
 
     ---
 
     ## Putting it together
 
-    Here’s a small example that combines `LET` and `PRINT`:
+    Here’s a small example that combines `LET` and `PNT`:
 
     ```paxy
     LET a 10
     LET b 20
     LET sum a + b
-    PRINT "The total is:"
-    PRINT sum
+    PNT "The total is:"
+    PNT sum
     ```
 
     This shows:
@@ -90,24 +90,24 @@ class Print(Command):
     ---
 
     **Summary**:
-    - `PRINT` with nothing → blank line
-    - `PRINT "..."` → text
-    - `PRINT number` → numbers
-    - `PRINT variable` → variables
-    - `PRINT expression` → results of calculations
+    - `PNT` with nothing → blank line
+    - `PNT "..."` → text
+    - `PNT number` → numbers
+    - `PNT variable` → variables
+    - `PNT expression` → results of calculations
 
     ## Would you like to know more?
 
-    We saw how PRINT sends information from the program to the human,
-    let's look at how to send text from the human to the program with the [INPUT](input.md) command.
+    We saw how PNT sends information from the program to the human,
+    let's look at how to send text from the human to the program with the [INP](input.md) command.
 
     """
 
-    COMMAND = "PRINT"
+    COMMAND = "PNT"
 
     def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) > 1:
-            raise SyntaxError("PRINT takes at most one argument")
+            raise SyntaxError("PNT takes at most one argument")
 
         # Load builtin print and prepare CALL convention
         self.add_op("LOAD_NAME", "print")

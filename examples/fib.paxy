@@ -10,8 +10,8 @@ SUB fib5 n
   RET next
 SUBEND
 
-PRINT "Enter a number"
-INPUT n
+PNT "Enter a number"
+INP n
 GOS n int n
 GOS ans fib5 n
-PRINT ans
+PNT ans

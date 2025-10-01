@@ -143,7 +143,7 @@ class Let(Command):
     LET x 10
     LET y 20
     LET total x + y
-    PRINT total     # 30
+    PNT total     # 30
     ```
 
     ### Compare strings
@@ -154,7 +154,7 @@ class Let(Command):
     LET a "cat"
     LET b "dog"
     LET same a == b
-    PRINT same      # False
+    PNT same      # False
     ```
 
     ### Check membership
@@ -164,7 +164,7 @@ class Let(Command):
     ```paxy
     LET animals ["cat", "dog", "bat"]
     LET hasdog "dog" in animals
-    PRINT hasdog    # True
+    PNT hasdog    # True
     ```
 
     ### Identity test
@@ -175,12 +175,12 @@ class Let(Command):
     LET x None
     LET y None
     LET same x is y
-    PRINT same      # True
+    PNT same      # True
     ```
 
     ### Would you like to know more?
 
-    Let's look at [PRINT](print.md).
+    Let's look at [PNT](print.md).
     """
 
     COMMAND = "LET"

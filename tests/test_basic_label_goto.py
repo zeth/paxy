@@ -9,7 +9,7 @@ def test_label_forward_goto_executes(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ):
     src = tmp_path / "prog.paxy"
-    src.write_text("GO end\n" "PRINT 'skip'\n" "LBL end\n" "PRINT 'done'\n")
+    src.write_text("GO end\n" "PNT 'skip'\n" "LBL end\n" "PNT 'done'\n")
     code = assemble_file(src)
     exec(code, {"__name__": "__main__"})
     assert capsys.readouterr().out == "done\n"

@@ -44,7 +44,7 @@ def test_let_with_unquoted_addition(tmp_path: Path):
         "LET a 2\n"
         "LET b 3\n"
         "LET c a + b\n"  # unquoted +
-        "PRINT c\n"
+        "PNT c\n"
     )
     g, out = _run(src)
     assert g.get("c") == 5
@@ -54,7 +54,7 @@ def test_let_with_unquoted_addition(tmp_path: Path):
 def test_unary_minus_literal_in_let(tmp_path: Path):
     src = (
         "LET x -5\n"  # unary minus literal
-        "PRINT x\n"
+        "PNT x\n"
     )
     g, out = _run(src)
     assert g.get("x") == -5
@@ -72,8 +72,8 @@ def test_if_with_unquoted_equality_and_return(tmp_path: Path):
         "SUBEND\n"
         "GOS r1 zero_or_one 0\n"
         "GOS r2 zero_or_one 7\n"
-        "PRINT r1\n"
-        "PRINT r2\n"
+        "PNT r1\n"
+        "PNT r2\n"
     )
     g, out = _run(src)
     lines = out.strip().splitlines()
@@ -89,7 +89,7 @@ def test_range_body_with_unquoted_addition(tmp_path: Path):
         "RANGE i 1 5\n"  # 1,2,3,4
         "  LET total total + i\n"  # unquoted +
         "RANGEEND\n"
-        "PRINT total\n"
+        "PNT total\n"
     )
     g, out = _run(src)
     assert g.get("total") == 10
@@ -118,7 +118,7 @@ def test_if_with_various_unquoted_comparisons(
         f"IF a {op} b ret\n"  # unquoted operator under test
         f"LET flag 1\n"
         f"LBL ret\n"
-        f"PRINT flag\n"
+        f"PNT flag\n"
     )
     g, out = _run(src)
     want = (

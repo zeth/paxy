@@ -26,7 +26,7 @@ def canon_argless(pairs):
 
 def test_import_lowers_via___import__(tmp_path: Path):
     src = tmp_path / "prog.paxy"
-    src.write_text("IMPORT 'time'\nRETURN_CONST None\n")
+    src.write_text("IMP 'time'\nRETURN_CONST None\n")
     got = canon_argless(strip_leading_resume(as_pairs(Parser().parse_file(src))))
     assert got == [
         ("LOAD_NAME", "__import__"),
@@ -44,7 +44,7 @@ def test_import_runtime_populates_sys_modules(tmp_path: Path):
     sys.modules.pop(modname, None)
 
     src = tmp_path / "prog2.paxy"
-    src.write_text("IMPORT 'time'\n")
+    src.write_text("IMP 'time'\n")
     instrs = Parser().parse_file(src)
 
     # Execute

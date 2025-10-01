@@ -7,7 +7,7 @@ Every line is a single command with arguments.
 
 Where modern programming piles on frameworks, boilerplate, and ceremony, Paxy takes the opposite path.
 
-- **Simplicity first.** A few clear commands (`LET`, `IF`, `PRINT`, `RANGE`) are enough to get started.
+- **Simplicity first.** A few clear commands (`LET`, `IF`, `PNT`, `RANGE`) are enough to get started.
 - **Immediate feedback.** Programs run top-to-bottom, exactly as written.
 - **Calm and predictable.** Deterministic and synchronous: the computer follows your steps.
 - **Accessible to everyone.** If you can type, you can code.
@@ -67,9 +67,9 @@ When writing paxy files, you can use low-level Python bytecode names (as in the 
 But we provide high-level BASIC-style commands as a friendlier layer.  
 These are compiled into Python 3.13 bytecode instructions at build time.
 
-### COMPARE
+### CMP
 
-`COMPARE dst lhs cmp rhs`  
+`CMP dst lhs cmp rhs`  
 Evaluate `lhs <cmp> rhs` (where `<cmp>` is `==`, `!=`, `<`, `<=`, `>`, `>=`) and store the boolean result in `dst`.
 
 ### DEC
@@ -92,9 +92,9 @@ Create a `frozenset` from the given elements. Fast-path: all literals become one
 `IF lhs cmp rhs label`  
 Compare `lhs <cmp> rhs`; if true, jump to `label`.
 
-### IMPORT
+### IMP
 
-`IMPORT "module"`  
+`IMP "module"`  
 Import a module by name. Equivalent to `__import__("module")`.
 
 ### INC
@@ -107,9 +107,9 @@ Increment a variable: `x = x + 1`.
 `IN dst needle haystack`  
 Store boolean result of `needle in haystack` into `dst`.
 
-### INPUT
+### INP
 
-`INPUT x`  
+`INP x`  
 Prompt for input: `x = input()`.
 
 ### IS
@@ -117,9 +117,9 @@ Prompt for input: `x = input()`.
 `IS dst lhs rhs`  
 Store boolean result of `lhs is rhs` into `dst`.
 
-### ISNOT
+### NIS
 
-`ISNOT dst lhs rhs`  
+`NIS dst lhs rhs`  
 Store boolean result of `lhs is not rhs` into `dst`.
 
 ### LBL
@@ -158,9 +158,9 @@ Store boolean result of `needle not in haystack` into `dst`.
 `PAR dst1 dst2 expr1 expr2`  
 Parallel assignment: `dst1, dst2 = expr1, expr2`.
 
-### PRINT
+### PNT
 
-`PRINT [value]`  
+`PNT [value]`  
 Print a value (or a blank line).
 
 ### RANGE … RANGEEND
@@ -206,29 +206,29 @@ These BASIC commands are lowered into the intermediate representation (`paxy.ir`
 
 ### Command Reference (Cheat Sheet)
 
-| Command     | Purpose                                 | Example                                   |
-| ----------- | --------------------------------------- | ----------------------------------------- |
-| **COMPARE** | Compare values and store boolean result | `COMPARE r a == b`                        |
-| **DEC**     | Decrement a variable                    | `DEC x` → `x = x - 1`                     |
-| **GOS**     | Call function, store result             | `GOS z add x y`                           |
-| **IGL**     | Create frozenset                        | `IGL s 1 2 3` → `s = frozenset({1,2,3})`  |
-| **IF**      | Conditional jump                        | `IF a < b loop_start`                     |
-| **IMPORT**  | Import a module                         | `IMPORT "math"`                           |
-| **INC**     | Increment a variable                    | `INC x` → `x = x + 1`                     |
-| **IN**      | Membership test                         | `IN r x arr` → `r = (x in arr)`           |
-| **INPUT**   | Read from stdin                         | `INPUT name` → `name = input()`           |
-| **IS**      | Identity test                           | `IS r a b` → `r = (a is b)`               |
-| **ISNOT**   | Negated identity test                   | `ISNOT r a b` → `r = (a is not b)`        |
-| **LBL**     | Define a jump target                    | `LBL loop_start`                          |
-| **LET**     | Assign value or expression              | `LET x 10`, `LET y a + b`                 |
-| **MAP**     | Create dictionary with string keys      | `MAP m "a" 1 "b" 2` → `m = {"a":1,"b":2}` |
-| **MAD**     | Insert into dict                        | `MAD m "c" 3` → `m["c"]=3`                |
-| **MAL**     | Delete from dict                        | `MAL m "a"` → `del m["a"]`                |
-| **NIN**     | Negated membership test                 | `NIN r x arr` → `r = (x not in arr)`      |
-| **PAR**     | Parallel assignment                     | `PAR a b x y` → `a, b = x, y`             |
-| **PRINT**   | Print a value (or newline)              | `PRINT x`                                 |
-| **RANGE**   | Loop over a range of integers           | `RANGE i 1 5 … RANGEEND → for i in 1..4`  |
-| **RET**     | Return from SUB (default 0 if no value) | `RET y`                                   |
-| **ROW**     | Create tuple                            | `ROW t 1 2 3` → `t = (1,2,3)`             |
-| **SUB**     | Define a subroutine                     | `SUB add a b ... RET a+b SUBEND`          |
-| **VEC**     | Create list                             | `VEC v 1 2 3` → `v = [1,2,3]`             |
+| Command   | Purpose                                 | Example                                   |
+| --------- | --------------------------------------- | ----------------------------------------- |
+| **CMP**   | Compare values and store boolean result | `CMP r a == b`                            |
+| **DEC**   | Decrement a variable                    | `DEC x` → `x = x - 1`                     |
+| **GOS**   | Call function, store result             | `GOS z add x y`                           |
+| **IGL**   | Create frozenset                        | `IGL s 1 2 3` → `s = frozenset({1,2,3})`  |
+| **IF**    | Conditional jump                        | `IF a < b loop_start`                     |
+| **IMP**   | Import a module                         | `IMP "math"`                              |
+| **INC**   | Increment a variable                    | `INC x` → `x = x + 1`                     |
+| **IN**    | Membership test                         | `IN r x arr` → `r = (x in arr)`           |
+| **INP**   | Read from stdin                         | `INP name` → `name = input()`             |
+| **IS**    | Identity test                           | `IS r a b` → `r = (a is b)`               |
+| **NIS**   | Negated identity test                   | `NIS r a b` → `r = (a is not b)`          |
+| **LBL**   | Define a jump target                    | `LBL loop_start`                          |
+| **LET**   | Assign value or expression              | `LET x 10`, `LET y a + b`                 |
+| **MAP**   | Create dictionary with string keys      | `MAP m "a" 1 "b" 2` → `m = {"a":1,"b":2}` |
+| **MAD**   | Insert into dict                        | `MAD m "c" 3` → `m["c"]=3`                |
+| **MAL**   | Delete from dict                        | `MAL m "a"` → `del m["a"]`                |
+| **NIN**   | Negated membership test                 | `NIN r x arr` → `r = (x not in arr)`      |
+| **PAR**   | Parallel assignment                     | `PAR a b x y` → `a, b = x, y`             |
+| **PNT**   | Print a value (or newline)              | `PNT x`                                   |
+| **RANGE** | Loop over a range of integers           | `RANGE i 1 5 … RANGEEND → for i in 1..4`  |
+| **RET**   | Return from SUB (default 0 if no value) | `RET y`                                   |
+| **ROW**   | Create tuple                            | `ROW t 1 2 3` → `t = (1,2,3)`             |
+| **SUB**   | Define a subroutine                     | `SUB add a b ... RET a+b SUBEND`          |
+| **VEC**   | Create list                             | `VEC v 1 2 3` → `v = [1,2,3]`             |

@@ -38,7 +38,7 @@ class RowCommand(Command):
 
     ```paxy
     ROW pair 1 2
-    PRINT pair
+    PNT pair
     ```
 
     Output:
@@ -52,7 +52,7 @@ class RowCommand(Command):
 
     ```paxy
     ROW coords 0 0 10 10
-    PRINT coords    # (0, 0, 10, 10)
+    PNT coords    # (0, 0, 10, 10)
     ```
 
     ---
@@ -62,7 +62,7 @@ class RowCommand(Command):
     ```paxy
     LET x 42
     ROW triple x "answer" 3.14
-    PRINT triple          # (42, "answer", 3.14)
+    PNT triple          # (42, "answer", 3.14)
     ```
 
     ---
@@ -74,7 +74,7 @@ class RowCommand(Command):
     ```paxy
     ROW animals "cat" "dog" "bat" "dog"
     LET hasdog "dog" in animals
-    PRINT hasdog          # True
+    PNT hasdog          # True
     ```
 
     ### Rebuild to “change” a row

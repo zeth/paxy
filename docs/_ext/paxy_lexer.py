@@ -12,13 +12,13 @@ from pygments.token import (
     Whitespace,
 )
 
-COMMANDS = r"(LET|PRINT|INPUT|IF|GO|LBL|SUB|SUBEND|RET|GOS|RANGE|RANGEEND|PAR|INC|DEC|MAP|MAD|MAL|ROW|VEC|IGL|ISBOP|INOP|COMPARE|IMPORT)"
+COMMANDS = r"(LET|PNT|INP|IF|GO|LBL|SUB|SUBEND|RET|GOS|RANGE|RANGEEND|PAR|INC|DEC|MAP|MAD|MAL|ROW|VEC|IGL|ISBOP|INOP|CMP|IMP)"
 
 
 class PaxyLexer(RegexLexer):
     """
     Very small lexer for Paxy examples:
-    - Treats leading words like LET/PRINT/etc. as keywords
+    - Treats leading words like LET/PNT/etc. as keywords
     - Supports # comments to end of line
     - Numbers, strings, names, common operators
     """

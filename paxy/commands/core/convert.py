@@ -29,7 +29,7 @@ class ToInt(_ConvertBase):
     **Syntax:**
 
     ```paxy
-    TOINT <dst> <src>
+    TIN <dst> <src>
     ```
 
     - `<dst>` is the variable where the result will be stored.
@@ -45,7 +45,7 @@ class ToInt(_ConvertBase):
     - `42` is an integer (whole number).
     - `3.14` is a float (decimal number).
 
-    Sometimes we need to convert between them. For example, `INPUT` always gives you a string, but if you want to do arithmetic, you need an integer.
+    Sometimes we need to convert between them. For example, `INP` always gives you a string, but if you want to do arithmetic, you need an integer.
 
     ---
 
@@ -54,11 +54,11 @@ class ToInt(_ConvertBase):
     ### Convert input to integer
 
     ```paxy
-    INPUT a
-    TOINT a a
+    INP a
+    TIN a a
     LET b 10
     LET sum a + b
-    PRINT sum
+    PNT sum
     ```
 
     If the user types `32`, the program prints `42`.
@@ -69,22 +69,22 @@ class ToInt(_ConvertBase):
 
     ```paxy
     LET x "3.9"
-    TOFLOAT f x
-    TOINT n f
-    PRINT n      # 3
+    TFL f x
+    TIN n f
+    PNT n      # 3
     ```
 
     ### Would you like to know more?
 
     We turned text into numbers,
-    now let's go the other way with [TOSTR](../commands/tostr.md) next.
+    now let's go the other way with [TST](../commands/tostr.md) next.
     """
 
-    COMMAND = "TOINT"
+    COMMAND = "TIN"
 
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 2 or not isinstance(args[0], Ident):
-            raise SyntaxError("TOINT: usage: TOINT <dst> <src>")
+            raise SyntaxError("TIN: usage: TIN <dst> <src>")
         dst, src = args  # type: ignore[misc]
         self.add_op("LOAD_GLOBAL", (True, "int"))
         self._emit_load_token(src)
@@ -98,7 +98,7 @@ class ToFloat(_ConvertBase):
     **Syntax:**
 
     ```paxy
-    TOFLOAT <dst> <src>
+    TFL <dst> <src>
     ```
 
     - `<dst>` is the variable where the result will be stored.
@@ -108,24 +108,24 @@ class ToFloat(_ConvertBase):
 
     ## Why?
 
-    See [TOINT](toint.md) for an explanation of types.
-    `TOFLOAT` is useful when you need decimal precision instead of integers.
+    See [TIN](toint.md) for an explanation of types.
+    `TFL` is useful when you need decimal precision instead of integers.
 
     ---
 
     ## Examples
 
     ```paxy
-    INPUT value
-    TOFLOAT f value
+    INP value
+    TFL f value
     LET doubled f * 2
-    PRINT doubled
+    PNT doubled
     ```
 
     ```paxy
     LET s "2.718"
-    TOFLOAT e s
-    PRINT e
+    TFL e s
+    PNT e
     ```
 
     ### Would you like to know more?
@@ -136,11 +136,11 @@ class ToFloat(_ConvertBase):
 
     """
 
-    COMMAND = "TOFLOAT"
+    COMMAND = "TFL"
 
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 2 or not isinstance(args[0], Ident):
-            raise SyntaxError("TOFLOAT: usage: TOFLOAT <dst> <src>")
+            raise SyntaxError("TFL: usage: TFL <dst> <src>")
         dst, src = args  # type: ignore[misc]
         self.add_op("LOAD_GLOBAL", (True, "float"))
         self._emit_load_token(src)
@@ -154,7 +154,7 @@ class ToStr(_ConvertBase):
     **Syntax:**
 
     ```paxy
-    TOSTR <dst> <src>
+    TST <dst> <src>
     ```
 
     - `<dst>` is the variable where the result will be stored.
@@ -164,8 +164,8 @@ class ToStr(_ConvertBase):
 
     ## Why?
 
-    See [TOINT](toint.md) for an explanation of types.
-    `TOSTR` is useful when you want to turn numbers into text.
+    See [TIN](toint.md) for an explanation of types.
+    `TST` is useful when you want to turn numbers into text.
 
     ---
 
@@ -173,27 +173,27 @@ class ToStr(_ConvertBase):
 
     ```paxy
     LET score 99
-    TOSTR msg score
-    PRINT msg       # "99"
+    TST msg score
+    PNT msg       # "99"
     ```
 
     ```paxy
     LET pi 3.14
-    TOSTR txt pi
-    PRINT txt       # "3.14"
+    TST txt pi
+    PNT txt       # "3.14"
     ```
 
     ## Would you like to know more?
 
-    We have another command that follows a similar idea: [TOFLOAT](../commands/tofloat.md).
+    We have another command that follows a similar idea: [TFL](../commands/tofloat.md).
 
     """
 
-    COMMAND = "TOSTR"
+    COMMAND = "TST"
 
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 2 or not isinstance(args[0], Ident):
-            raise SyntaxError("TOSTR: usage: TOSTR <dst> <src>")
+            raise SyntaxError("TST: usage: TST <dst> <src>")
         dst, src = args  # type: ignore[misc]
         self.add_op("LOAD_GLOBAL", (True, "str"))
         self._emit_load_token(src)

@@ -19,13 +19,13 @@ class IsCommand(Command):
 
 
 class IsNotCommand(Command):
-    """ISNOT <dst> <lhs> <rhs>  -> dst = (lhs is not rhs)"""
+    """NIS <dst> <lhs> <rhs>  -> dst = (lhs is not rhs)"""
 
-    COMMAND = "ISNOT"
+    COMMAND = "NIS"
 
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 3 or not isinstance(args[0], Ident):
-            raise SyntaxError("ISNOT expects: ISNOT <dst> <lhs> <rhs>")
+            raise SyntaxError("NIS expects: NIS <dst> <lhs> <rhs>")
         dst, lhs, rhs = args
         self._emit_load_for(lhs)
         self._emit_load_for(rhs)

@@ -1,3 +1,3 @@
 RESUME 0
-PRINT 'hello'
+PNT 'hello'
 RETURN_CONST None

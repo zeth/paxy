@@ -6,13 +6,13 @@ from paxy.compiler.ir import Ident
 
 
 class Compare(Command):
-    """COMPARE <dst> <lhs> <cmp> <rhs>"""
+    """CMP <dst> <lhs> <cmp> <rhs>"""
 
-    COMMAND = "COMPARE"
+    COMMAND = "CMP"
 
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 4 or not isinstance(args[0], Ident):
-            raise SyntaxError("COMPARE expects: COMPARE <dst> <lhs> <cmp> <rhs>")
+            raise SyntaxError("CMP expects: CMP <dst> <lhs> <cmp> <rhs>")
         dst, lhs, cmpop, rhs = args
         self._emit_load_for(lhs)
         self._emit_load_for(rhs)

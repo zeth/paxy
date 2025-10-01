@@ -51,7 +51,7 @@ class Igloo(Command):
 
     ```paxy
     IGL animals "cat" "dog" "bat"
-    PRINT animals
+    PNT animals
     ```
 
     Output:
@@ -64,7 +64,7 @@ class Igloo(Command):
     ```paxy
     IGL prime 2 3 5 7 11 13 17 19
     LET isprime 2 in prime
-    PRINT isprime  # True
+    PNT isprime  # True
     ```
 
     ---
@@ -76,7 +76,7 @@ class Igloo(Command):
     ```paxy
     IGL animals "cat" "dog" "bat"
     LET hasdog "dog" in animals
-    PRINT hasdog    # True
+    PNT hasdog    # True
     ```
 
     ---
@@ -88,7 +88,7 @@ class Igloo(Command):
     ```paxy
     LET x "apple"
     IGL basket x "banana" "cherry"
-    PRINT basket
+    PNT basket
     ```
 
     ---

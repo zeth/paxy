@@ -22,12 +22,12 @@ RETURN_CONST None
 
 BASIC = """\
 RESUME 0
-PRINT 'hello'
+PNT 'hello'
 RETURN_CONST None
 """
 
 MINIMAL = """\
-PRINT 'hello'
+PNT 'hello'
 """
 
 
