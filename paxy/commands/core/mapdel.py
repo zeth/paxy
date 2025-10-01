@@ -5,15 +5,15 @@ from paxy.compiler.ir import Ident
 
 class MapDel(Command):
     """
-    MAPDEL <map> <key>
+    MAL <map> <key>
       -> del <map>[<key>]
     """
 
-    COMMAND = "MAPDEL"
+    COMMAND = "MAL"
 
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 2 or not isinstance(args[0], Ident):
-            raise SyntaxError("MAPDEL expects: MAPDEL <map> <key>")
+            raise SyntaxError("MAL expects: MAL <map> <key>")
         mapname, key = args
 
         # LOAD_NAME map

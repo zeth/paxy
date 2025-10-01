@@ -49,7 +49,7 @@ CORE_COMMANDS: CommandMap = {
     "VEC": VecCommand,
     "MAP": MapCommand,
     "MAD": Mad,
-    "MAPDEL": MapDel,
+    "MAL": MapDel,
     "RETURN": ReturnCommand,
     "PAR": Par,
     "TOINT": ToInt,

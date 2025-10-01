@@ -16,7 +16,7 @@ def as_pairs(instrs: Iterable[Any]) -> PairList:
 
 def test_mapdel_simple(tmp_path: Path) -> None:
     src = tmp_path / "md1.paxy"
-    src.write_text("MAP m 'a' 1 'b' 2\n" "MAPDEL m 'a'\n")
+    src.write_text("MAP m 'a' 1 'b' 2\n" "MAL m 'a'\n")
     got = as_pairs(Parser().parse_file(src))
 
     names = [n for (n, _) in got]
@@ -47,7 +47,7 @@ def test_mapdel_simple(tmp_path: Path) -> None:
 
 def test_mapdel_with_identifier_key(tmp_path: Path) -> None:
     src = tmp_path / "md2.paxy"
-    src.write_text("LET k 'x'\n" "MAP m 'x' 1\n" "MAPDEL m k\n")
+    src.write_text("LET k 'x'\n" "MAP m 'x' 1\n" "MAL m k\n")
     got = as_pairs(Parser().parse_file(src))
 
     names = [n for (n, _) in got]
@@ -74,7 +74,7 @@ def test_mapdel_with_identifier_key(tmp_path: Path) -> None:
     assert got[3] == ("LOAD_CONST", ("x",))
     assert got[4] == ("LOAD_CONST", 1)
     assert got[6] == ("STORE_NAME", "m")
-    # MAPDEL m k
+    # MAL m k
     assert got[7] == ("LOAD_NAME", "m")
     assert got[8] == ("LOAD_NAME", "k")
     assert got[9] == ("DELETE_SUBSCR", UNSET)
@@ -84,9 +84,9 @@ def test_mapdel_with_identifier_key(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     "program, msg_part",
     [
-        ("MAPDEL\n", "MAPDEL expects"),
-        ("MAPDEL m\n", "MAPDEL expects"),
-        ("MAPDEL 1 'a'\n", "MAPDEL expects"),
+        ("MAL\n", "MAL expects"),
+        ("MAL m\n", "MAL expects"),
+        ("MAL 1 'a'\n", "MAL expects"),
     ],
 )
 def test_mapdel_errors(tmp_path: Path, program: str, msg_part: str) -> None:

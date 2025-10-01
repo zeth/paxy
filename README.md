@@ -143,9 +143,9 @@ Create a dict with string keys.
 `MAD m k v`  
 Set `m[k] = v`.
 
-### MAPDEL
+### MAL
 
-`MAPDEL m k`  
+`MAL m k`  
 Delete `m[k]`.
 
 ### NOTIN
@@ -223,7 +223,7 @@ These BASIC commands are lowered into the intermediate representation (`paxy.ir`
 | **LET**     | Assign value or expression              | `LET x 10`, `LET y a + b`                 |
 | **MAP**     | Create dictionary with string keys      | `MAP m "a" 1 "b" 2` → `m = {"a":1,"b":2}` |
 | **MAD**     | Insert into dict                        | `MAD m "c" 3` → `m["c"]=3`                |
-| **MAPDEL**  | Delete from dict                        | `MAPDEL m "a"` → `del m["a"]`             |
+| **MAL**     | Delete from dict                        | `MAL m "a"` → `del m["a"]`                |
 | **NOTIN**   | Negated membership test                 | `NOTIN r x arr` → `r = (x not in arr)`    |
 | **PAR**     | Parallel assignment                     | `PAR a b x y` → `a, b = x, y`             |
 | **PRINT**   | Print a value (or newline)              | `PRINT x`                                 |
