@@ -54,7 +54,7 @@ def assert_prog(instrs):
     assert args[3] == "hello"  # LOAD_CONST 'hello'
     assert int(getattr(args[4], "value", args[4])) == 1  # CALL 1 (tolerate enum/int)
     assert is_unset(args[5])  # POP_TOP
-    assert args[6] is None  # RETURN_CONST None
+    assert args[6] is None  # LOAD_CONST None
 
 
 def test_parser_emits_expected_instrs(tmp_path: Path):
