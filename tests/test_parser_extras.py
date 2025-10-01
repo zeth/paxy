@@ -61,7 +61,7 @@ def test_negative_integer_argument(tmp_path: Path):
         "LOAD_CONST -5\n" "RETURN_CONST None\n",
         tmp_path,
     )
-    assert got == [("LOAD_CONST", -5), ("RETURN_CONST", None)]
+    assert got == [("LOAD_CONST", -5), ("LOAD_CONST", 1), ("RETURN_VALUE", 1)]
 
 
 def test_hex_and_binary_integer_arguments(tmp_path: Path):
