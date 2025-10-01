@@ -17,7 +17,7 @@ LOAD_CONST 'hello'
 CALL 1
 POP_TOP
 LOAD_CONST 0;
-RETURN_VALUE 
+RETURN_VALUE
 """
 
 
@@ -43,7 +43,8 @@ def assert_prog(instrs):
         "LOAD_CONST",
         "CALL",
         "POP_TOP",
-        "RETURN_CONST",
+        "LOAD_CONST",
+        "RETURN_VALUE",
     ]
 
     # 2) Args with robust check
