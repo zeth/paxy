@@ -14,9 +14,9 @@ def as_pairs(instrs: Iterable[Any]) -> PairList:
     return [(str(i.name), getattr(i, "arg", None)) for i in instrs]
 
 
-def test_mapadd_simple(tmp_path: Path) -> None:
+def test_MAD_simple(tmp_path: Path) -> None:
     src = tmp_path / "ma1.paxy"
-    src.write_text("MAP m 'a' 1\n" "MAPADD m 'b' 2\n")
+    src.write_text("MAP m 'a' 1\n" "MAD m 'b' 2\n")
     got = as_pairs(Parser().parse_file(src))
 
     # Assert just the opcode names in order
@@ -47,9 +47,9 @@ def test_mapadd_simple(tmp_path: Path) -> None:
     assert got[9] == ("RETURN_CONST", 0)
 
 
-def test_mapadd_with_variable_value(tmp_path: Path) -> None:
+def test_MAD_with_variable_value(tmp_path: Path) -> None:
     src = tmp_path / "ma2.paxy"
-    src.write_text("LET v 42\n" "MAP m 'x' 1\n" "MAPADD m 'v' v\n")
+    src.write_text("LET v 42\n" "MAP m 'x' 1\n" "MAD m 'v' v\n")
     got = as_pairs(Parser().parse_file(src))
 
     names = [n for (n, _) in got]
@@ -77,7 +77,7 @@ def test_mapadd_with_variable_value(tmp_path: Path) -> None:
     assert got[3] == ("LOAD_CONST", ("x",))
     assert got[4] == ("LOAD_CONST", 1)
     assert got[6] == ("STORE_NAME", "m")
-    # MAPADD m 'v' v
+    # MAD m 'v' v
     assert got[7] == ("LOAD_NAME", "m")
     assert got[8] == ("LOAD_CONST", "v")
     assert got[9] == ("LOAD_NAME", "v")
@@ -88,13 +88,13 @@ def test_mapadd_with_variable_value(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     "program, msg_part",
     [
-        ("MAPADD\n", "MAPADD expects"),
-        ("MAPADD m\n", "MAPADD expects"),
-        ("MAPADD m 'k'\n", "MAPADD expects"),
-        ("MAPADD 1 2 3\n", "MAPADD expects"),
+        ("MAD\n", "MAD expects"),
+        ("MAD m\n", "MAD expects"),
+        ("MAD m 'k'\n", "MAD expects"),
+        ("MAD 1 2 3\n", "MAD expects"),
     ],
 )
-def test_mapadd_errors(tmp_path: Path, program: str, msg_part: str) -> None:
+def test_MAD_errors(tmp_path: Path, program: str, msg_part: str) -> None:
     src = tmp_path / "ma_err.paxy"
     src.write_text(program)
     with pytest.raises(SyntaxError) as exc:

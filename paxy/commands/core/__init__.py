@@ -8,7 +8,7 @@ from paxy.commands.core.inop import InCommand, NotInCommand
 from paxy.commands.core.isbop import IsNotCommand, IsCommand
 from paxy.commands.core.let import Let
 from paxy.commands.core.map import MapCommand
-from paxy.commands.core.mapadd import MapAdd
+from paxy.commands.core.mapadd import Mad
 from paxy.commands.core.par import Par
 from paxy.commands.core.print import Print
 from paxy.commands.core.input import Input
@@ -48,7 +48,7 @@ CORE_COMMANDS: CommandMap = {
     "IGL": Igloo,
     "VEC": VecCommand,
     "MAP": MapCommand,
-    "MAPADD": MapAdd,
+    "MAD": Mad,
     "MAPDEL": MapDel,
     "RETURN": ReturnCommand,
     "PAR": Par,

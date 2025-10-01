@@ -138,9 +138,9 @@ Assign a value.
 `MAP name "k1" v1 "k2" v2 ...`  
 Create a dict with string keys.
 
-### MAPADD
+### MAD
 
-`MAPADD m k v`  
+`MAD m k v`  
 Set `m[k] = v`.
 
 ### MAPDEL
@@ -222,7 +222,7 @@ These BASIC commands are lowered into the intermediate representation (`paxy.ir`
 | **LABEL**   | Define a jump target                    | `LABEL loop_start`                        |
 | **LET**     | Assign value or expression              | `LET x 10`, `LET y a + b`                 |
 | **MAP**     | Create dictionary with string keys      | `MAP m "a" 1 "b" 2` → `m = {"a":1,"b":2}` |
-| **MAPADD**  | Insert into dict                        | `MAPADD m "c" 3` → `m["c"]=3`             |
+| **MAD**     | Insert into dict                        | `MAD m "c" 3` → `m["c"]=3`                |
 | **MAPDEL**  | Delete from dict                        | `MAPDEL m "a"` → `del m["a"]`             |
 | **NOTIN**   | Negated membership test                 | `NOTIN r x arr` → `r = (x not in arr)`    |
 | **PAR**     | Parallel assignment                     | `PAR a b x y` → `a, b = x, y`             |

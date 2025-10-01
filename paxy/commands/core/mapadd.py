@@ -1,24 +1,24 @@
-# paxy/basic/mapadd.py
+# paxy/basic/MAD.py
 from typing import Any
 from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 
 
-class MapAdd(Command):
+class Mad(Command):
     """
-    MAPADD <map> <key> <value>
+    MAD <map> <key> <value>
       -> <map>[<key>] = <value>
 
     Example:
         MAP m 'a' 1
-        MAPADD m 'b' 2
+        MAD m 'b' 2
     """
 
-    COMMAND = "MAPADD"
+    COMMAND = "MAD"
 
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 3 or not isinstance(args[0], Ident):
-            raise SyntaxError("MAPADD expects: MAPADD <map> <key> <value>")
+            raise SyntaxError("MAD expects: MAD <map> <key> <value>")
         mapname, key, val = args
 
         # LOAD_NAME m
