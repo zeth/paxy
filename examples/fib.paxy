@@ -8,7 +8,7 @@ SUB fib5 n
   RANGEEND
   LBL ret
   RET next
-SUBEND
+SBE
 
 PNT "Enter a number"
 INP n

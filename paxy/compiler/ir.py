@@ -10,7 +10,7 @@ dataclasses:
     • LabelDecl     - placeholder for a declared label (resolved in assembly)
     • JumpRef       - placeholder for a GO target
     • NamedJump     - placeholder for a conditional/unconditional jump
-    • FuncDef       - placeholder for SUB … SUBEND blocks, capturing params/body
+    • FuncDef       - placeholder for SUB … SBE blocks, capturing params/body
     • ReturnMarker  - placeholder for RET statements
 
 This IR decouples parsing from assembly:
@@ -63,7 +63,7 @@ class JumpRef:
 @dataclass(frozen=True)
 class FuncDef:
     """
-    Placeholder for SUB ... SUBEND.
+    Placeholder for SUB ... SBE.
 
     - name: function name
     - params: positional parameter names

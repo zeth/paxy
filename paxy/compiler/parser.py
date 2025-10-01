@@ -274,7 +274,7 @@ class Parser:
             self._handle_range_block(args, lineno)
             return
 
-        # Special-case: SUB … SUBEND
+        # Special-case: SUB … SBE
         if op == "SUB":
             self._handle_sub_definition(args, lineno)
             return
@@ -325,8 +325,8 @@ class Parser:
 
     def _handle_sub_definition(self, args: list[object], lineno: int) -> None:
         """
-        SUB <name> [params...] ... SUBEND
-        Capture tokens until a line that *starts* with NAME 'SUBEND' and parse them
+        SUB <name> [params...] ... SBE
+        Capture tokens until a line that *starts* with NAME 'SBE' and parse them
         with a fresh Parser to produce the function body.
         """
         if not args or not isinstance(args[0], Ident):
@@ -339,7 +339,7 @@ class Parser:
                 raise SyntaxError("SUB parameters must be identifiers")
             params.append(str(a))
 
-        body_tokens = self._collect_tokens_until("SUBEND")
+        body_tokens = self._collect_tokens_until("SBE")
         inner = Parser()
         body_items = inner.parse_tokens(body_tokens)
 
@@ -351,9 +351,9 @@ class Parser:
         """
         Consume tokens from self._tok_iter and collect all tokens belonging to the
         current block until we see a line whose first NAME token matches `end_op`
-        (e.g. 'SUBEND' or 'RANGEEND'). The terminator line itself is consumed
+        (e.g. 'SBE' or 'RANGEEND'). The terminator line itself is consumed
         (up to its NEWLINE) but not included. Supports nesting for matching pairs:
-        SUB ... SUBEND
+        SUB ... SBE
         RANGE ... RANGEEND
         """
         if self._tok_iter is None:
@@ -361,7 +361,7 @@ class Parser:
         it: Iterator[TokenInfo] = self._tok_iter  # narrow for type checker
 
         # For simple same-kind nesting: which opener corresponds to this closer?
-        opener_for: dict[str, str] = {"SUBEND": "SUB", "RANGEEND": "RANGE"}
+        opener_for: dict[str, str] = {"SBE": "SUB", "RANGEEND": "RANGE"}
         opener = opener_for.get(end_op, None)
 
         collected: list[TokenInfo] = []

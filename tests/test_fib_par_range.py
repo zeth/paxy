@@ -16,7 +16,7 @@ def test_fib5_with_par_and_range(tmp_path, capsys):
         "  RANGEEND\n"
         "  LBL ret\n"
         "  RET next\n"
-        "SUBEND\n"
+        "SBE\n"
         "INP n\n"
         "GOS n int n\n"  # <- added coercion
         "GOS ans fib5 n\n"

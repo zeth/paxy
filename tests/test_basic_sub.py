@@ -31,7 +31,7 @@ def test_parser_captures_funcdef_structure(tmp_path: Path):
         "  LOAD_NAME b\n"
         '  BINARY_OP "+" \n'
         "  RET\n"
-        "SUBEND\n"
+        "SBE\n"
     )
 
     p = Parser()
@@ -52,7 +52,7 @@ def test_parser_captures_funcdef_structure(tmp_path: Path):
 
 def test_assembler_lowers_funcdef_to_makefunction(tmp_path: Path):
     src = tmp_path / "sub2.paxy"
-    src.write_text("SUB noargs\n" "  LOAD_CONST 123\n" "  RET\n" "SUBEND\n")
+    src.write_text("SUB noargs\n" "  LOAD_CONST 123\n" "  RET\n" "SBE\n")
 
     parsed = Parser().parse_file(src)
     resolved = Assembler(parsed).resolve()
@@ -78,7 +78,7 @@ def test_end_to_end_sub_and_gosub(tmp_path: Path, capsys: pytest.CaptureFixture[
         '  BINARY_OP "+" \n'
         "  STORE_NAME tmp\n"  # <--- capture the result
         "  RET tmp\n"  # <--- RET with a value (assembler emits RETURN_VALUE)
-        "SUBEND\n"
+        "SBE\n"
         "LOAD_CONST 10\n"
         "STORE_NAME x\n"
         "LOAD_CONST 32\n"

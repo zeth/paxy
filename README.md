@@ -183,11 +183,11 @@ Return the given value.
 `ROW name [elem1 elem2 ...]`  
 Create a row of data.
 
-### SUB ... SUBEND
+### SUB ... SBE
 
 SUB name [params...]
 ... body ...
-SUBEND
+SBE
 
 Define a function. Use `RET` within it.
 
@@ -230,5 +230,5 @@ These BASIC commands are lowered into the intermediate representation (`paxy.ir`
 | **RANGE** | Loop over a range of integers           | `RANGE i 1 5 … RANGEEND → for i in 1..4`  |
 | **RET**   | Return from SUB (default 0 if no value) | `RET y`                                   |
 | **ROW**   | Create tuple                            | `ROW t 1 2 3` → `t = (1,2,3)`             |
-| **SUB**   | Define a subroutine                     | `SUB add a b ... RET a+b SUBEND`          |
+| **SUB**   | Define a subroutine                     | `SUB add a b ... RET a+b SBE`             |
 | **VEC**   | Create list                             | `VEC v 1 2 3` → `v = [1,2,3]`             |

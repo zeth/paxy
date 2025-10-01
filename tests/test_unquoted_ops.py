@@ -69,7 +69,7 @@ def test_if_with_unquoted_equality_and_return(tmp_path: Path):
         "  RET 1\n"
         "  LBL ret\n"
         "  RET 0\n"
-        "SUBEND\n"
+        "SBE\n"
         "GOS r1 zero_or_one 0\n"
         "GOS r2 zero_or_one 7\n"
         "PNT r1\n"
