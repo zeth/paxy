@@ -501,15 +501,15 @@ class Assembler:
             else:
                 tmp.append(ins)
 
-        # If there is any explicit RETURN_VALUE, remove all RETURN_CONST
-        has_explicit_return = any(
-            isinstance(ins, Instr) and ins.name == "RETURN_VALUE" for ins in tmp
-        )
-        if has_explicit_return:
-            tmp = [
-                ins
-                for ins in tmp
-                if not (isinstance(ins, Instr) and ins.name == "RETURN_CONST")
-            ]
+        # # If there is any explicit RETURN_VALUE, remove all RETURN_CONST
+        # has_explicit_return = any(
+        #     isinstance(ins, Instr) and ins.name == "RETURN_VALUE" for ins in tmp
+        # )
+        # if has_explicit_return:
+        #     tmp = [
+        #         ins
+        #         for ins in tmp
+        #         if not (isinstance(ins, Instr) and ins.name == "RETURN_CONST")
+        #     ]
 
         return tmp
