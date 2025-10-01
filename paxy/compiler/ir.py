@@ -8,7 +8,7 @@ dataclasses:
 
     • Ident         - marks identifiers (variables, function names)
     • LabelDecl     - placeholder for a declared label (resolved in assembly)
-    • JumpRef       - placeholder for a GOTO target
+    • JumpRef       - placeholder for a GO target
     • NamedJump     - placeholder for a conditional/unconditional jump
     • FuncDef       - placeholder for SUB … SUBEND blocks, capturing params/body
     • ReturnMarker  - placeholder for RET statements
@@ -54,7 +54,7 @@ class LabelDecl:
 
 @dataclass(frozen=True)
 class JumpRef:
-    """Placeholder for a goto-style reference like: GOTO foo"""
+    """Placeholder for a goto-style reference like: GO foo"""
 
     target_name: str
     lineno: int

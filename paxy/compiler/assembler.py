@@ -98,7 +98,7 @@ class Assembler:
         """
         Build a temporary stream where:
           - LabelDecl -> Label()
-          - GOTO (JumpRef) -> ("__JUMP__", JumpRef)
+          - GO (JumpRef) -> ("__JUMP__", JumpRef)
           - Native jumps with string targets -> ("__C/U/NJUMP__", opcode, JumpRef)
           - FuncDef / ReturnMarker are passed through for a later lowering pass
           - Other Instrs are kept as-is.
@@ -399,7 +399,7 @@ class Assembler:
     def _lookup_target_index(self, name: str) -> int:
         idx = self._name_to_resolved_index.get(name)
         if idx is None:
-            raise SyntaxError(f"GOTO to undefined LABEL '{name}'")
+            raise SyntaxError(f"GO to undefined LABEL '{name}'")
         return idx
 
     def _ensure_target_defined(self, name: str) -> None:

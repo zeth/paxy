@@ -20,15 +20,15 @@ class LabelCommand(Command):
 
 
 class GotoCommand(Command):
-    """GOTO <identifier>  -> resolved by assembler to a concrete jump to <identifier>"""
+    """GO <identifier>  -> resolved by assembler to a concrete jump to <identifier>"""
 
-    COMMAND = "GOTO"
+    COMMAND = "GO"
 
     def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) != 1:
-            raise SyntaxError("GOTO takes exactly one identifier")
+            raise SyntaxError("GO takes exactly one identifier")
         name = op_args[0]
         if not isinstance(name, Ident):
-            raise SyntaxError("GOTO expects an identifier")
+            raise SyntaxError("GO expects an identifier")
         # Emit a placeholder; assembler picks forward/backward opcode later
         self.ops.append(JumpRef(str(name), self.lineno))

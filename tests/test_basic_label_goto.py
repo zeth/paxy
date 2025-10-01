@@ -9,14 +9,14 @@ def test_label_forward_goto_executes(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ):
     src = tmp_path / "prog.paxy"
-    src.write_text("GOTO end\n" "PRINT 'skip'\n" "LABEL end\n" "PRINT 'done'\n")
+    src.write_text("GO end\n" "PRINT 'skip'\n" "LABEL end\n" "PRINT 'done'\n")
     code = assemble_file(src)
     exec(code, {"__name__": "__main__"})
     assert capsys.readouterr().out == "done\n"
 
 
 def test_label_backward_goto_loops(tmp_path: Path, capsys: pytest.CaptureFixture[str]):
-    # Simple countdown 3,2,1 using GOTO
+    # Simple countdown 3,2,1 using GO
     src = tmp_path / "loop.paxy"
     src.write_text(
         "LET n 3\n"
@@ -34,7 +34,7 @@ def test_label_backward_goto_loops(tmp_path: Path, capsys: pytest.CaptureFixture
         "LOAD_CONST 0\n"
         "COMPARE_OP '=='\n"
         "POP_JUMP_IF_TRUE end\n"
-        "GOTO top\n"
+        "GO top\n"
         "LABEL end\n"
     )
     # Note: The two conditional/jump lines above are illustrative. If you don't
@@ -54,6 +54,6 @@ def test_label_errors(tmp_path: Path):
         assemble_file(src)
 
     src = tmp_path / "undef.paxy"
-    src.write_text("GOTO nowhere\n")
+    src.write_text("GO nowhere\n")
     with pytest.raises(SyntaxError):
         assemble_file(src)
