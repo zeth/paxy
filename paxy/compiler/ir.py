@@ -11,7 +11,7 @@ dataclasses:
     • JumpRef       - placeholder for a GOTO target
     • NamedJump     - placeholder for a conditional/unconditional jump
     • FuncDef       - placeholder for SUB … SUBEND blocks, capturing params/body
-    • ReturnMarker  - placeholder for RETURN statements
+    • ReturnMarker  - placeholder for RET statements
 
 This IR decouples parsing from assembly:
 
@@ -80,10 +80,10 @@ class FuncDef:
 @dataclass(frozen=True)
 class ReturnMarker:
     """
-    Placeholder for RETURN inside a function body.
+    Placeholder for RET inside a function body.
 
-    - has_value: True if a value was pushed on the stack before RETURN
-    - lineno: source line of RETURN
+    - has_value: True if a value was pushed on the stack before RET
+    - lineno: source line of RET
     """
 
     has_value: bool

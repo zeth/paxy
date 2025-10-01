@@ -353,8 +353,8 @@ class Assembler:
 
             elif isinstance(entry, ReturnMarker):
                 if not self._in_function:
-                    # RETURN outside of function/subroutine is invalid
-                    raise SyntaxError("RETURN outside of SUB")
+                    # RET outside of function/subroutine is invalid
+                    raise SyntaxError("RET outside of SUB")
                 # Lower to real return
                 if entry.has_value:
                     final.append(Instr("RETURN_VALUE", lineno=entry.lineno))

@@ -71,7 +71,7 @@ def test_end_to_end_range_inside_sub(tmp_path: Path):
         '    BINARY_OP "+" \n'
         "    STORE_NAME acc\n"
         "  RANGEEND\n"
-        "  RETURN acc\n"
+        "  RET acc\n"
         "SUBEND\n"
         # call sum_to and stash result
         "LET n 5\n"

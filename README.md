@@ -171,11 +171,11 @@ RANGEEND
 
 Loop from start up to (but not including) end, assigning each value to var.
 
-### RETURN
+### RET
 
-`RETURN`  
+`RET`  
 Return `0`.  
-`RETURN value`  
+`RET value`  
 Return the given value.
 
 ### ROW
@@ -189,7 +189,7 @@ SUB name [params...]
 ... body ...
 SUBEND
 
-Define a function. Use `RETURN` within it.
+Define a function. Use `RET` within it.
 
 ### VEC
 
@@ -228,7 +228,7 @@ These BASIC commands are lowered into the intermediate representation (`paxy.ir`
 | **PAR**     | Parallel assignment                     | `PAR a b x y` → `a, b = x, y`             |
 | **PRINT**   | Print a value (or newline)              | `PRINT x`                                 |
 | **RANGE**   | Loop over a range of integers           | `RANGE i 1 5 … RANGEEND → for i in 1..4`  |
-| **RETURN**  | Return from SUB (default 0 if no value) | `RETURN y`                                |
+| **RET**     | Return from SUB (default 0 if no value) | `RET y`                                   |
 | **ROW**     | Create tuple                            | `ROW t 1 2 3` → `t = (1,2,3)`             |
-| **SUB**     | Define a subroutine                     | `SUB add a b ... RETURN a+b SUBEND`       |
+| **SUB**     | Define a subroutine                     | `SUB add a b ... RET a+b SUBEND`          |
 | **VEC**     | Create list                             | `VEC v 1 2 3` → `v = [1,2,3]`             |

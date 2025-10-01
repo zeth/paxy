@@ -66,9 +66,9 @@ def test_if_with_unquoted_equality_and_return(tmp_path: Path):
     src = (
         "SUB zero_or_one n\n"
         "  IF n == 0 ret\n"  # unquoted ==
-        "  RETURN 1\n"
+        "  RET 1\n"
         "  LABEL ret\n"
-        "  RETURN 0\n"
+        "  RET 0\n"
         "SUBEND\n"
         "GOSUB r1 zero_or_one 0\n"
         "GOSUB r2 zero_or_one 7\n"

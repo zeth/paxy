@@ -7,7 +7,7 @@ SUB fib5 n
     PAR last next  next  t
   RANGEEND
   LABEL ret
-  RETURN next
+  RET next
 SUBEND
 
 PRINT "Enter a number"

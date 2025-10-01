@@ -50,7 +50,7 @@ CORE_COMMANDS: CommandMap = {
     "MAP": MapCommand,
     "MAD": Mad,
     "MAL": MapDel,
-    "RETURN": ReturnCommand,
+    "RET": ReturnCommand,
     "PAR": Par,
     "TOINT": ToInt,
     "TOFLOAT": ToFloat,
