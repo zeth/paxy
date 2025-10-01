@@ -148,9 +148,9 @@ Set `m[k] = v`.
 `MAL m k`  
 Delete `m[k]`.
 
-### NOTIN
+### NIN
 
-`NOTIN dst needle haystack`  
+`NIN dst needle haystack`  
 Store boolean result of `needle not in haystack` into `dst`.
 
 ### PAR
@@ -224,7 +224,7 @@ These BASIC commands are lowered into the intermediate representation (`paxy.ir`
 | **MAP**     | Create dictionary with string keys      | `MAP m "a" 1 "b" 2` → `m = {"a":1,"b":2}` |
 | **MAD**     | Insert into dict                        | `MAD m "c" 3` → `m["c"]=3`                |
 | **MAL**     | Delete from dict                        | `MAL m "a"` → `del m["a"]`                |
-| **NOTIN**   | Negated membership test                 | `NOTIN r x arr` → `r = (x not in arr)`    |
+| **NIN**     | Negated membership test                 | `NIN r x arr` → `r = (x not in arr)`      |
 | **PAR**     | Parallel assignment                     | `PAR a b x y` → `a, b = x, y`             |
 | **PRINT**   | Print a value (or newline)              | `PRINT x`                                 |
 | **RANGE**   | Loop over a range of integers           | `RANGE i 1 5 … RANGEEND → for i in 1..4`  |

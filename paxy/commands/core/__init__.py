@@ -41,7 +41,7 @@ CORE_COMMANDS: CommandMap = {
     "IS": IsCommand,
     "ISNOT": IsNotCommand,
     "IN": InCommand,
-    "NOTIN": NotInCommand,
+    "NIN": NotInCommand,
     "INC": Inc,
     "IF": IfOp,
     "ROW": RowCommand,

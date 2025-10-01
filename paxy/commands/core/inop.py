@@ -19,13 +19,13 @@ class InCommand(Command):
 
 
 class NotInCommand(Command):
-    """NOTIN <dst> <needle> <haystack>  -> dst = (needle not in haystack)"""
+    """NIN <dst> <needle> <haystack>  -> dst = (needle not in haystack)"""
 
-    COMMAND = "NOTIN"
+    COMMAND = "NIN"
 
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 3 or not isinstance(args[0], Ident):
-            raise SyntaxError("NOTIN expects: NOTIN <dst> <needle> <haystack>")
+            raise SyntaxError("NIN expects: NIN <dst> <needle> <haystack>")
         dst, needle, hay = args
         self._emit_load_for(needle)
         self._emit_load_for(hay)
