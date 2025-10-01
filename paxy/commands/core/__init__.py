@@ -17,7 +17,14 @@ from paxy.commands.core.gosub import Gosub
 from paxy.commands.core.label import LabelCommand, GotoCommand
 from paxy.commands.core.returnstmt import ReturnCommand
 from paxy.commands.core.row import RowCommand
-from paxy.commands.core.vec import VecCommand
+from paxy.commands.core.vec import (
+    LenCommand,
+    VAppendCommand,
+    VPopCommand,
+    VRemoveCommand,
+    VReverseCommand,
+    VecCommand,
+)
 from paxy.commands.core.mapdel import MapDel
 from paxy.commands.core.convert import ToInt, ToFloat, ToStr
 
@@ -48,4 +55,9 @@ CORE_COMMANDS: CommandMap = {
     "TOINT": ToInt,
     "TOFLOAT": ToFloat,
     "TOSTR": ToStr,
+    "VAP": VAppendCommand,
+    "VOP": VPopCommand,
+    "VEM": VRemoveCommand,
+    "VER": VReverseCommand,
+    "LEN": LenCommand,
 }

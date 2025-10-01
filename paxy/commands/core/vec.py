@@ -30,36 +30,36 @@ class VecCommand(Command):
         self.add_op("STORE_NAME", dst)
 
 
-class AppendCommand(Command):
+class VAppendCommand(Command):
     """Append an element to a vector.
 
-    APPEND <vec> <elem>
+    VAP <vec> <elem>
       -> <vec>.append(<elem>)
     """
 
-    COMMAND = "APPEND"
+    COMMAND = "VAP"
 
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 2:
-            raise SyntaxError("APPEND expects: APPEND <vec> <elem>")
+            raise SyntaxError("VAP expects: VAP <vec> <elem>")
         vec, elem = args
         self.add_op("LOAD_NAME", str(vec))
         self._emit_load_for(elem)
         self.add_op("LIST_APPEND", 1)
 
 
-class PopCommand(Command):
+class VPopCommand(Command):
     """Remove and return the last element (or by index).
 
-    POP <dst> <vec> [index]
+    VOP <dst> <vec> [index]
       -> <dst> = <vec>.pop([index])
     """
 
-    COMMAND = "POP"
+    COMMAND = "VOP"
 
     def make_ops(self, args: list[Any]) -> None:
         if len(args) not in (2, 3):
-            raise SyntaxError("POP expects: POP <dst> <vec> [index]")
+            raise SyntaxError("VOP expects: VOP <dst> <vec> [index]")
         dst, vec, *opt_index = args
         self.add_op("LOAD_NAME", str(vec))
         if opt_index:
@@ -70,43 +70,43 @@ class PopCommand(Command):
         self.add_op("STORE_NAME", str(dst))
 
 
-class RemoveCommand(Command):
+class VRemoveCommand(Command):
     """Remove the first matching element.
 
-    REMOVE <vec> <elem>
+    VEM <vec> <elem>
       -> <vec>.remove(<elem>)
     """
 
-    COMMAND = "REMOVE"
+    COMMAND = "VEM"
 
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 2:
-            raise SyntaxError("REMOVE expects: REMOVE <vec> <elem>")
+            raise SyntaxError("VEM expects: VEM <vec> <elem>")
         vec, elem = args
         self.add_op("LOAD_NAME", str(vec))
         self._emit_load_for(elem)
         self.add_op("CALL_METHOD", ("remove", 1))
 
 
-class ReverseCommand(Command):
+class VReverseCommand(Command):
     """Reverse a vector in place.
 
-    REVERSE <vec>
+    VER <vec>
       -> <vec>.reverse()
     """
 
-    COMMAND = "REVERSE"
+    COMMAND = "VER"
 
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 1:
-            raise SyntaxError("REVERSE expects: REVERSE <vec>")
+            raise SyntaxError("VER expects: VER <vec>")
         vec = args[0]
         self.add_op("LOAD_NAME", str(vec))
         self.add_op("CALL_METHOD", ("reverse", 0))
 
 
 class LenCommand(Command):
-    """Get the length of a vector.
+    """Get the length of a container.
 
     LEN <dst> <vec>
       -> <dst> = len(<vec>)
