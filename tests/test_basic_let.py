@@ -2,8 +2,12 @@
 
 from pathlib import Path
 from typing import Any, Iterable, List, Tuple, TypeAlias
+import bytecode
 import pytest
 from paxy.compiler.parser import Parser
+
+UNSET = bytecode.instr._UNSET()
+
 
 # ---- Type aliases ----
 Pair: TypeAlias = Tuple[str, Any]
@@ -66,7 +70,8 @@ def test_let_int(tmp_path: Path) -> None:
         ("RESUME", 0),
         ("LOAD_CONST", 1),
         ("STORE_NAME", "x"),
-        ("RETURN_CONST", 0),
+        ("LOAD_CONST", 0),
+        ("RETURN_VALUE", UNSET),
     ]
 
 
@@ -78,7 +83,8 @@ def test_let_string(tmp_path: Path) -> None:
         ("RESUME", 0),
         ("LOAD_CONST", "hi"),
         ("STORE_NAME", "title"),
-        ("RETURN_CONST", 0),
+        ("LOAD_CONST", 0),
+        ("RETURN_VALUE", UNSET),
     ]
 
 
@@ -97,7 +103,8 @@ def test_let_negative_hex_bool_none(tmp_path: Path) -> None:
         ("STORE_NAME", "t"),
         ("LOAD_CONST", None),
         ("STORE_NAME", "z"),
-        ("RETURN_CONST", 0),
+        ("LOAD_CONST", 0),
+        ("RETURN_VALUE", UNSET),
     ]
 
 
@@ -160,7 +167,8 @@ def test_let_binary_add(tmp_path: Path) -> None:
         ("LOAD_NAME", "b"),
         ("BINARY_OP", "ADD"),
         ("STORE_NAME", "z"),
-        ("RETURN_CONST", 0),
+        ("LOAD_CONST", 0),
+        ("RETURN_VALUE", UNSET),
     ]
 
 
@@ -178,7 +186,8 @@ def test_let_compare_eq(tmp_path: Path) -> None:
         ("LOAD_NAME", "b"),
         ("COMPARE_OP", "EQ"),
         ("STORE_NAME", "ok"),
-        ("RETURN_CONST", 0),
+        ("LOAD_CONST", 0),
+        ("RETURN_VALUE", UNSET),
     ]
 
 
@@ -196,7 +205,8 @@ def test_let_identity_is(tmp_path: Path) -> None:
         ("LOAD_NAME", "b"),
         ("IS_OP", "IS"),
         ("STORE_NAME", "same"),
-        ("RETURN_CONST", 0),
+        ("LOAD_CONST", 0),
+        ("RETURN_VALUE", UNSET),
     ]
 
 
@@ -216,5 +226,6 @@ def test_let_membership_in(tmp_path: Path) -> None:
         ("LOAD_NAME", "s"),
         ("CONTAINS_OP", "IN"),
         ("STORE_NAME", "present"),
-        ("RETURN_CONST", 0),
+        ("LOAD_CONST", 0),
+        ("RETURN_VALUE", UNSET),
     ]
