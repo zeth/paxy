@@ -1,6 +1,6 @@
 # paxy/basic/gosub.py
 """
-GOSUB <dst> <name> [args...] -> LOAD_GLOBAL (True, <name>); <LOAD_* args>; CALL N; STORE_NAME <dst>
+GOS <dst> <name> [args...] -> LOAD_GLOBAL (True, <name>); <LOAD_* args>; CALL N; STORE_NAME <dst>
 
 Rationale:
 - Using LOAD_GLOBAL (True, name) on 3.13 pushes a NULL under the callable,
@@ -18,19 +18,19 @@ class Gosub(Command):
     Call a subroutine and store its return value.
 
 
-    GOSUB <dst> <name> [args...]
+    GOS <dst> <name> [args...]
 
     Call subroutine `name` with arguments and store the return value in `dst`.
 
     Example:
-      GOSUB total add x y
+      GOS total add x y
     """
 
-    COMMAND = "GOSUB"
+    COMMAND = "GOS"
 
     def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) < 2 or not isinstance(op_args[0], Ident):
-            raise SyntaxError("GOSUB expects: GOSUB <dst> <name> [args...]")
+            raise SyntaxError("GOS expects: GOS <dst> <name> [args...]")
 
         dst_ident: Ident = op_args[0]
         fn_token = op_args[1]
@@ -42,7 +42,7 @@ class Gosub(Command):
         elif isinstance(fn_token, str):
             fn_name = fn_token
         else:
-            raise SyntaxError("GOSUB second argument must be a subroutine name")
+            raise SyntaxError("GOS second argument must be a subroutine name")
 
         # 3.13 pattern without PRECALL: NULL comes from LOAD_GLOBAL(True, name)
         self.add_op("LOAD_GLOBAL", (True, fn_name))

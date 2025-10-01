@@ -83,7 +83,7 @@ def test_end_to_end_sub_and_gosub(tmp_path: Path, capsys: pytest.CaptureFixture[
         "STORE_NAME x\n"
         "LOAD_CONST 32\n"
         "STORE_NAME y\n"
-        "GOSUB z add x y\n"
+        "GOS z add x y\n"
         "PRINT z\n"
     )
 

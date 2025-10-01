@@ -59,4 +59,4 @@ def test_gosub_requires_function_name_token():
 def test_gosub_arity_errors_message_is_helpful():
     with pytest.raises(SyntaxError) as ex:
         Gosub([Ident("dst")], lineno=1)
-    assert "GOSUB expects" in str(ex.value)
+    assert "GOS expects" in str(ex.value)

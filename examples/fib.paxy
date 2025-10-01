@@ -12,6 +12,6 @@ SUBEND
 
 PRINT "Enter a number"
 INPUT n
-GOSUB n int n
-GOSUB ans fib5 n
+GOS n int n
+GOS ans fib5 n
 PRINT ans

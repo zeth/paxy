@@ -70,8 +70,8 @@ def test_if_with_unquoted_equality_and_return(tmp_path: Path):
         "  LABEL ret\n"
         "  RET 0\n"
         "SUBEND\n"
-        "GOSUB r1 zero_or_one 0\n"
-        "GOSUB r2 zero_or_one 7\n"
+        "GOS r1 zero_or_one 0\n"
+        "GOS r2 zero_or_one 7\n"
         "PRINT r1\n"
         "PRINT r2\n"
     )

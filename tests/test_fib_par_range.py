@@ -18,8 +18,8 @@ def test_fib5_with_par_and_range(tmp_path, capsys):
         "  RET next\n"
         "SUBEND\n"
         "INPUT n\n"
-        "GOSUB n int n\n"  # <- added coercion
-        "GOSUB ans fib5 n\n"
+        "GOS n int n\n"  # <- added coercion
+        "GOS ans fib5 n\n"
         "PRINT ans\n"
     )
 

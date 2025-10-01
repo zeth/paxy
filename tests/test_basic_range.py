@@ -75,7 +75,7 @@ def test_end_to_end_range_inside_sub(tmp_path: Path):
         "SUBEND\n"
         # call sum_to and stash result
         "LET n 5\n"
-        "GOSUB total sum_to n\n"
+        "GOS total sum_to n\n"
     )
 
     code = assemble_file(src)

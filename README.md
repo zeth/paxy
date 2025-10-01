@@ -77,9 +77,9 @@ Evaluate `lhs <cmp> rhs` (where `<cmp>` is `==`, `!=`, `<`, `<=`, `>`, `>=`) and
 `DEC x`  
 Decrement a variable: `x = x - 1`.
 
-### GOSUB
+### GOS
 
-`GOSUB dst fn [args...]`  
+`GOS dst fn [args...]`  
 Call function `fn` with arguments and store the return value in `dst`.
 
 ### IGL
@@ -210,7 +210,7 @@ These BASIC commands are lowered into the intermediate representation (`paxy.ir`
 | ----------- | --------------------------------------- | ----------------------------------------- |
 | **COMPARE** | Compare values and store boolean result | `COMPARE r a == b`                        |
 | **DEC**     | Decrement a variable                    | `DEC x` → `x = x - 1`                     |
-| **GOSUB**   | Call function, store result             | `GOSUB z add x y`                         |
+| **GOS**     | Call function, store result             | `GOS z add x y`                           |
 | **IGL**     | Create frozenset                        | `IGL s 1 2 3` → `s = frozenset({1,2,3})`  |
 | **IF**      | Conditional jump                        | `IF a < b loop_start`                     |
 | **IMPORT**  | Import a module                         | `IMPORT "math"`                           |

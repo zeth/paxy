@@ -33,7 +33,7 @@ CORE_COMMANDS: CommandMap = {
     "LET": Let,
     "INPUT": Input,
     "IMPORT": ImportSimple,
-    "GOSUB": Gosub,
+    "GOS": Gosub,
     "LABEL": LabelCommand,
     "GOTO": GotoCommand,
     "DEC": Dec,
