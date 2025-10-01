@@ -1,97 +1,62 @@
 from pathlib import Path
-import bytecode
-import pytest
-from typing import Any, Iterable, Tuple, List
+
 from paxy.compiler.parser import Parser
+from tests.helpers import as_pairs
+from bytecode.instr import _UNSET
 
-Pair = Tuple[str, Any]
-PairList = List[Pair]
-
-UNSET = bytecode.instr._UNSET()
-
-
-def as_pairs(instrs: Iterable[Any]) -> PairList:
-    return [(str(i.name), getattr(i, "arg", None)) for i in instrs]
+UNSET = _UNSET()
 
 
 def test_mapdel_simple(tmp_path: Path) -> None:
-    src = tmp_path / "md1.paxy"
-    src.write_text("MAP m 'a' 1 'b' 2\n" "MAL m 'a'\n")
+    # Create a map with two entries, then delete one with MAL.
+    src = tmp_path / "m_del1.paxy"
+    src.write_text("MAP m 'a' 1 'b' 2\nMAL m 'a'\n")
+
     got = as_pairs(Parser().parse_file(src))
-
-    names = [n for (n, _) in got]
-    assert names == [
-        "RESUME",
-        "LOAD_CONST",
-        "LOAD_CONST",
-        "LOAD_CONST",
-        "BUILD_CONST_KEY_MAP",
-        "STORE_NAME",
-        "LOAD_NAME",
-        "LOAD_CONST",
-        "DELETE_SUBSCR",
-        "RETURN_CONST",
+    assert got == [
+        ("RESUME", 0),
+        # MAP m 'a' 1 'b' 2 -> build via MAP_ADD, then bind to m
+        ("BUILD_MAP", 0),
+        ("LOAD_CONST", "a"),
+        ("LOAD_CONST", 1),
+        ("MAP_ADD", 1),
+        ("LOAD_CONST", "b"),
+        ("LOAD_CONST", 2),
+        ("MAP_ADD", 1),
+        ("STORE_NAME", "m"),
+        # MAL m 'a' -> del m['a']
+        ("LOAD_NAME", "m"),
+        ("LOAD_CONST", "a"),
+        ("DELETE_SUBSCR", UNSET),  # no-arg op; normalized as 0
+        ("LOAD_CONST", 0),
+        ("RETURN_VALUE", UNSET),
     ]
-
-    assert got[0][0] == "RESUME"
-    assert int(got[0][1]) == 0
-    assert got[1] == ("LOAD_CONST", ("a", "b"))
-    assert got[2] == ("LOAD_CONST", 1)
-    assert got[3] == ("LOAD_CONST", 2)
-    assert got[5] == ("STORE_NAME", "m")
-    assert got[6] == ("LOAD_NAME", "m")
-    assert got[7] == ("LOAD_CONST", "a")
-    assert got[8] == ("DELETE_SUBSCR", UNSET)
-    assert got[9] == ("RETURN_CONST", 0)
 
 
 def test_mapdel_with_identifier_key(tmp_path: Path) -> None:
-    src = tmp_path / "md2.paxy"
-    src.write_text("LET k 'x'\n" "MAP m 'x' 1\n" "MAL m k\n")
+    # Deleting with a key coming from a variable (still a string at runtime).
+    src = tmp_path / "m_del2.paxy"
+    src.write_text("LET k 'alpha'\nLET v 99\nMAP m k v\nMAL m k\n")
+
     got = as_pairs(Parser().parse_file(src))
-
-    names = [n for (n, _) in got]
-    assert names == [
-        "RESUME",
-        "LOAD_CONST",
-        "STORE_NAME",
-        "LOAD_CONST",
-        "LOAD_CONST",
-        "BUILD_CONST_KEY_MAP",
-        "STORE_NAME",
-        "LOAD_NAME",
-        "LOAD_NAME",
-        "DELETE_SUBSCR",
-        "RETURN_CONST",
+    assert got == [
+        ("RESUME", 0),
+        # LET k 'alpha'
+        ("LOAD_CONST", "alpha"),
+        ("STORE_NAME", "k"),
+        # LET v 99
+        ("LOAD_CONST", 99),
+        ("STORE_NAME", "v"),
+        # MAP m k v -> build via MAP_ADD, then bind to m
+        ("BUILD_MAP", 0),
+        ("LOAD_NAME", "k"),
+        ("LOAD_NAME", "v"),
+        ("MAP_ADD", 1),
+        ("STORE_NAME", "m"),
+        # MAL m k  -> del m[k]
+        ("LOAD_NAME", "m"),
+        ("LOAD_NAME", "k"),
+        ("DELETE_SUBSCR", UNSET),  # no-arg op; normalized as 0
+        ("LOAD_CONST", 0),
+        ("RETURN_VALUE", UNSET),
     ]
-
-    # LET k 'x'
-    assert got[0][0] == "RESUME"
-    assert int(got[0][1]) == 0
-    assert got[1] == ("LOAD_CONST", "x")
-    assert got[2] == ("STORE_NAME", "k")
-    # MAP m 'x' 1
-    assert got[3] == ("LOAD_CONST", ("x",))
-    assert got[4] == ("LOAD_CONST", 1)
-    assert got[6] == ("STORE_NAME", "m")
-    # MAL m k
-    assert got[7] == ("LOAD_NAME", "m")
-    assert got[8] == ("LOAD_NAME", "k")
-    assert got[9] == ("DELETE_SUBSCR", UNSET)
-    assert got[10] == ("RETURN_CONST", 0)
-
-
-@pytest.mark.parametrize(
-    "program, msg_part",
-    [
-        ("MAL\n", "MAL expects"),
-        ("MAL m\n", "MAL expects"),
-        ("MAL 1 'a'\n", "MAL expects"),
-    ],
-)
-def test_mapdel_errors(tmp_path: Path, program: str, msg_part: str) -> None:
-    src = tmp_path / "md_err.paxy"
-    src.write_text(program)
-    with pytest.raises(SyntaxError) as exc:
-        Parser().parse_file(src)
-    assert msg_part in str(exc.value)

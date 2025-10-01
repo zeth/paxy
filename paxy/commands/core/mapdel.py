@@ -14,11 +14,8 @@ class MapDel(Command):
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 2 or not isinstance(args[0], Ident):
             raise SyntaxError("MAL expects: MAL <map> <key>")
-        mapname, key = args
 
-        # LOAD_NAME map
+        mapname, key = args
         self.add_op("LOAD_NAME", str(mapname))
-        # LOAD key
         self._emit_load_for(key)
-        # DELETE_SUBSCR (performs: del map[key])
         self.add_op("DELETE_SUBSCR")

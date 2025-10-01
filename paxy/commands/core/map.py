@@ -1,74 +1,64 @@
-# paxy/commands/core/map.py
-from __future__ import annotations
-from typing import Any, List
-from bytecode import Instr
+from typing import Any
 from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 
 
 class MapCommand(Command):
     """
-    MAP <dst> [<key> <value> ...]
-    Build a dict (map).
+    MAP <name> [k1 v1 k2 v2 ...]
+      -> <name> = {k1: v1, k2: v2, ...}
 
     Keys may be:
-      - literal strings (e.g. 'name')
-      - identifiers whose *runtime value* is a string (e.g. keyvar)
+      - literal strings: 'a', "foo"
+      - identifiers: k, key_name   (value looked up at runtime)
 
-    Values may be literals or identifiers.
+    Values may be identifiers or literals.
 
-    Examples:
-      MAP m                       ; {}
-      MAP m 'a' 1 'b' 2          ; {'a': 1, 'b': 2}
-      LET k "user"
-      MAP m k 42                  ; {'user': 42}
+    Lowering (3.14-friendly):
+        BUILD_MAP 0
+        # for each (k, v) pair in order:
+        <LOAD key>       # LOAD_CONST "a"  or LOAD_NAME k
+        <LOAD value>     # LOAD_CONST 1    or LOAD_NAME v
+        MAP_ADD 1
+        ...
+        STORE_NAME <name>
     """
 
     COMMAND = "MAP"
 
     def make_ops(self, args: list[Any]) -> None:
-        if not args:
-            raise SyntaxError("MAP expects: MAP <name> [<key> <value> ...]")
+        if not args or not isinstance(args[0], Ident):
+            raise SyntaxError(
+                "MAP expects: MAP <name> [k v ...] (name must be an identifier)"
+            )
+        dst_ident = str(args[0])
+        rest = args[1:]
 
-        dst = args[0]
-        if not isinstance(dst, Ident):
-            raise SyntaxError("MAP expects first argument to be an identifier name")
+        if len(rest) % 2 != 0:
+            raise SyntaxError("MAP expects an even number of key/value arguments")
 
-        kv = args[1:]
-        if len(kv) == 0:
-            # {}
-            self.add_op("BUILD_MAP", 0)
-            self.add_op("STORE_NAME", str(dst))
-            return
-
-        if len(kv) % 2 != 0:
-            raise SyntaxError("MAP requires an even number of key/value arguments")
-
-        # BUILD_MAP then MAP_ADD 1 per pair; works on 3.13 and 3.14
+        # Start with an empty dict and append with MAP_ADD
         self.add_op("BUILD_MAP", 0)
 
-        # For each (key, value)
-        for i in range(0, len(kv), 2):
-            k = kv[i]
-            v = kv[i + 1]
+        # Add each (key, value) pair
+        for i in range(0, len(rest), 2):
+            key_tok = rest[i]
+            val_tok = rest[i + 1]
 
-            # Key: literal string or identifier (runtime string)
-            if isinstance(k, Ident):
-                self.add_op("LOAD_NAME", str(k))
-            elif isinstance(k, str):
-                self.add_op("LOAD_CONST", k)
+            # Keys: allow Ident (runtime), or literal str. Disallow other literal types.
+            if isinstance(key_tok, Ident):
+                self.add_op("LOAD_NAME", str(key_tok))
+            elif isinstance(key_tok, str):
+                self.add_op("LOAD_CONST", key_tok)
             else:
-                # We accept identifiers (runtime strings) or literal strings only.
-                # Non-string literals (e.g. 1) are rejected here for clarity/predictability.
-                raise SyntaxError("MAP keys must be strings or identifiers")
+                # Not an identifier and not a string literal => reject
+                raise SyntaxError("MAP keys must be literal strings or identifiers")
 
-            # Value: literal or identifier
-            if isinstance(v, Ident):
-                self.add_op("LOAD_NAME", str(v))
-            else:
-                self.add_op("LOAD_CONST", v)
+            # Value (identifier or literal)
+            self._emit_load_for(val_tok)
 
-            # Add this pair to the map
+            # Insert one item
             self.add_op("MAP_ADD", 1)
 
-        self.add_op("STORE_NAME", str(dst))
+        # Bind to the destination name
+        self.add_op("STORE_NAME", dst_ident)
