@@ -211,11 +211,16 @@ class Assembler:
 
         # 4) Ensure *some* return exists (only if none at all after sanitize)
         has_any_return = any(
-            isinstance(ins, Instr) and ins.name in ("RETURN_VALUE", "RETURN_CONST")
+            isinstance(ins, Instr) and ins.name == "RETURN_VALUE"
             for ins in lowered_body
         )
         if not has_any_return:
-            lowered_body.append(Instr("RETURN_CONST", 0, lineno=func.lineno))
+            lowered_body.extend(
+                [
+                    Instr("LOAD_CONST", 0, lineno=func.lineno),
+                    Instr("RETURN_VALUE", lineno=func.lineno),
+                ]
+            )
 
         # 5) (optional) debug
         if os.getenv("PAXY_DEBUG") == "1":
@@ -359,7 +364,12 @@ class Assembler:
                 if entry.has_value:
                     final.append(Instr("RETURN_VALUE", lineno=entry.lineno))
                 else:
-                    final.append(Instr("RETURN_CONST", 0, lineno=entry.lineno))
+                    final.extend(
+                        [
+                            Instr("LOAD_CONST", 0, lineno=entry.lineno),
+                            Instr("RETURN_VALUE", lineno=entry.lineno),
+                        ]
+                    )
 
             else:
                 # Instr or Label
