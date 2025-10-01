@@ -109,8 +109,8 @@ class Igloo(Command):
     ## Would you like to know more?
 
     The IGL has a lot of contraints. Let's start removing them.
-    Sometimes we want to store values that are not unique,
-    so next will we look at a [ROW](row.md).
+    Sometimes you **want duplicates** and **care about order**.
+    That's where [ROW](row.md) comes in.
 
     """
 
