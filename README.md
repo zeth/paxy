@@ -122,9 +122,9 @@ Store boolean result of `lhs is rhs` into `dst`.
 `ISNOT dst lhs rhs`  
 Store boolean result of `lhs is not rhs` into `dst`.
 
-### LABEL
+### LBL
 
-`LABEL name`  
+`LBL name`  
 Define a jump target.
 
 ### LET
@@ -219,7 +219,7 @@ These BASIC commands are lowered into the intermediate representation (`paxy.ir`
 | **INPUT**   | Read from stdin                         | `INPUT name` → `name = input()`           |
 | **IS**      | Identity test                           | `IS r a b` → `r = (a is b)`               |
 | **ISNOT**   | Negated identity test                   | `ISNOT r a b` → `r = (a is not b)`        |
-| **LABEL**   | Define a jump target                    | `LABEL loop_start`                        |
+| **LBL**     | Define a jump target                    | `LBL loop_start`                          |
 | **LET**     | Assign value or expression              | `LET x 10`, `LET y a + b`                 |
 | **MAP**     | Create dictionary with string keys      | `MAP m "a" 1 "b" 2` → `m = {"a":1,"b":2}` |
 | **MAD**     | Insert into dict                        | `MAD m "c" 3` → `m["c"]=3`                |

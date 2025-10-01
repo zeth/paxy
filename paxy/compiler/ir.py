@@ -46,7 +46,7 @@ class NamedJump:
 
 @dataclass(frozen=True)
 class LabelDecl:
-    """Placeholder for a declared label like: LABEL foo"""
+    """Placeholder for a declared label like: LBL foo"""
 
     label_name: str
     lineno: int

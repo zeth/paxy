@@ -9,7 +9,7 @@ def test_label_forward_goto_executes(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ):
     src = tmp_path / "prog.paxy"
-    src.write_text("GO end\n" "PRINT 'skip'\n" "LABEL end\n" "PRINT 'done'\n")
+    src.write_text("GO end\n" "PRINT 'skip'\n" "LBL end\n" "PRINT 'done'\n")
     code = assemble_file(src)
     exec(code, {"__name__": "__main__"})
     assert capsys.readouterr().out == "done\n"
@@ -20,7 +20,7 @@ def test_label_backward_goto_loops(tmp_path: Path, capsys: pytest.CaptureFixture
     src = tmp_path / "loop.paxy"
     src.write_text(
         "LET n 3\n"
-        "LABEL top\n"
+        "LBL top\n"
         "LOAD_NAME 'print'\n"
         "PUSH_NULL\n"
         "LOAD_NAME 'n'\n"
@@ -35,7 +35,7 @@ def test_label_backward_goto_loops(tmp_path: Path, capsys: pytest.CaptureFixture
         "COMPARE_OP '=='\n"
         "POP_JUMP_IF_TRUE end\n"
         "GO top\n"
-        "LABEL end\n"
+        "LBL end\n"
     )
     # Note: The two conditional/jump lines above are illustrative. If you don't
     # have POP_JUMP_IF_FALSE macro yet, replace with raw CPython opcode lines.
@@ -49,7 +49,7 @@ def test_label_backward_goto_loops(tmp_path: Path, capsys: pytest.CaptureFixture
 
 def test_label_errors(tmp_path: Path):
     src = tmp_path / "dup.paxy"
-    src.write_text("LABEL x\nLABEL x\n")
+    src.write_text("LBL x\nLABEL x\n")
     with pytest.raises(SyntaxError):
         assemble_file(src)
 

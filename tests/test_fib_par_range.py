@@ -14,7 +14,7 @@ def test_fib5_with_par_and_range(tmp_path, capsys):
         '    LET t last "+" next\n'
         "    PAR last next  next  t\n"
         "  RANGEEND\n"
-        "  LABEL ret\n"
+        "  LBL ret\n"
         "  RET next\n"
         "SUBEND\n"
         "INPUT n\n"

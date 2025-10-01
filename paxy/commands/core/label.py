@@ -5,16 +5,16 @@ from paxy.compiler.ir import LabelDecl, JumpRef
 
 
 class LabelCommand(Command):
-    """LABEL <identifier>  -> placeholder resolved by assembler to a bytecode.Label()"""
+    """LBL <identifier>  -> placeholder resolved by assembler to a bytecode.Label()"""
 
-    COMMAND = "LABEL"
+    COMMAND = "LBL"
 
     def make_ops(self, op_args: list[Any]) -> None:
         if len(op_args) != 1:
-            raise SyntaxError("LABEL takes exactly one identifier")
+            raise SyntaxError("LBL takes exactly one identifier")
         name = op_args[0]
         if not isinstance(name, Ident):
-            raise SyntaxError("LABEL expects an identifier")
+            raise SyntaxError("LBL expects an identifier")
         # Emit a placeholder; assembler will replace with a real bytecode.Label
         self.ops.append(LabelDecl(str(name), self.lineno))
 

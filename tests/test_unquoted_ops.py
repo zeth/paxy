@@ -67,7 +67,7 @@ def test_if_with_unquoted_equality_and_return(tmp_path: Path):
         "SUB zero_or_one n\n"
         "  IF n == 0 ret\n"  # unquoted ==
         "  RET 1\n"
-        "  LABEL ret\n"
+        "  LBL ret\n"
         "  RET 0\n"
         "SUBEND\n"
         "GOS r1 zero_or_one 0\n"
@@ -117,7 +117,7 @@ def test_if_with_various_unquoted_comparisons(
         f"LET flag 0\n"
         f"IF a {op} b ret\n"  # unquoted operator under test
         f"LET flag 1\n"
-        f"LABEL ret\n"
+        f"LBL ret\n"
         f"PRINT flag\n"
     )
     g, out = _run(src)

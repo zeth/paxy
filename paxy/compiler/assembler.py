@@ -83,7 +83,7 @@ class Assembler:
         for idx, it in enumerate(self.items):
             if isinstance(it, LabelDecl):
                 if it.label_name in self._label_positions:
-                    raise SyntaxError(f"Duplicate LABEL '{it.label_name}'")
+                    raise SyntaxError(f"Duplicate LBL '{it.label_name}'")
                 self._label_positions[it.label_name] = idx
 
     # ---------- Pass 1b: Create Label objects ----------
@@ -399,12 +399,12 @@ class Assembler:
     def _lookup_target_index(self, name: str) -> int:
         idx = self._name_to_resolved_index.get(name)
         if idx is None:
-            raise SyntaxError(f"GO to undefined LABEL '{name}'")
+            raise SyntaxError(f"GO to undefined LBL '{name}'")
         return idx
 
     def _ensure_target_defined(self, name: str) -> None:
         if name not in self._name_to_resolved_index:
-            raise SyntaxError(f"jump to undefined LABEL '{name}'")
+            raise SyntaxError(f"jump to undefined LBL '{name}'")
 
     def _emit_token_load_instrs(self, tok: object, lineno: int) -> list[Instr]:
         """
@@ -464,7 +464,7 @@ class Assembler:
             elif isinstance(elt, JumpRef):
                 out.append((self.TAG_JUMP, elt))
             elif isinstance(elt, LabelDecl):
-                raise SyntaxError("LABEL inside RANGE block is not supported")
+                raise SyntaxError("LBL inside RANGE block is not supported")
             else:
                 # Instr / FuncDef — pass through; later passes will handle them
                 out.append(elt)
