@@ -122,7 +122,7 @@ class Assembler:
                 )
 
             elif isinstance(it, RangeBlock):
-                # Lower RANGE var start end ... RNE into concrete loop skeleton,
+                # Lower RNG var start end ... RNE into concrete loop skeleton,
                 # leaving the body items raw so later passes can still process them.
                 # range(start, end)
                 resolved.extend(self._lower_rangeblock_to_stream(it))
@@ -422,7 +422,7 @@ class Assembler:
         self, it: RangeBlock
     ) -> List[Union[Instr, Label, Placeholder, FuncDef, ReturnMarker]]:
         """
-        Expand a RANGE block into concrete loop prologue/epilogue and recursively
+        Expand a RNG block into concrete loop prologue/epilogue and recursively
         lower any nested RangeBlock in the body.
         """
         out: List[Union[Instr, Label, Placeholder, FuncDef, ReturnMarker]] = []
@@ -464,7 +464,7 @@ class Assembler:
             elif isinstance(elt, JumpRef):
                 out.append((self.TAG_JUMP, elt))
             elif isinstance(elt, LabelDecl):
-                raise SyntaxError("LBL inside RANGE block is not supported")
+                raise SyntaxError("LBL inside RNG block is not supported")
             else:
                 # Instr / FuncDef — pass through; later passes will handle them
                 out.append(elt)

@@ -10,7 +10,7 @@ def test_fib5_with_par_and_range(tmp_path, capsys):
         '  IF n "==" 0 ret\n'
         "  LET last 0\n"
         "  LET next 1\n"
-        "  RANGE _ 1 n\n"
+        "  RNG _ 1 n\n"
         '    LET t last "+" next\n'
         "    PAR last next  next  t\n"
         "  RNE\n"

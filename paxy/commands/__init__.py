@@ -7,7 +7,7 @@ from paxy.commands.base import BasicItem
 from paxy.commands.core import CORE_COMMANDS
 
 
-BLOCK_OPS = {"SUB", "SBE", "RANGE", "RNE"}
+BLOCK_OPS = {"SUB", "SBE", "RNG", "RNE"}
 
 
 def is_command(op_name: str) -> bool:

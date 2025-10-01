@@ -269,8 +269,8 @@ class Parser:
         if op is None:
             return
 
-        # RANGE block
-        if op == "RANGE":
+        # RNG block
+        if op == "RNG":
             self._handle_range_block(args, lineno)
             return
 
@@ -296,12 +296,12 @@ class Parser:
 
         raise SyntaxError(f"{op} takes at most one argument (got {len(args)})")
 
-    # ---- RANGE support ----
+    # ---- RNG support ----
 
     def _handle_range_block(self, args: list[object], lineno: int) -> None:
-        # Expect: RANGE <ident> <start> <end>
+        # Expect: RNG <ident> <start> <end>
         if len(args) != 3 or not isinstance(args[0], Ident):
-            raise SyntaxError("RANGE expects: RANGE <var> <start> <end>")
+            raise SyntaxError("RNG expects: RNG <var> <start> <end>")
         var_ident = args[0]
         start_tok = args[1]
         end_tok = args[2]
@@ -354,14 +354,14 @@ class Parser:
         (e.g. 'SBE' or 'RNE'). The terminator line itself is consumed
         (up to its NEWLINE) but not included. Supports nesting for matching pairs:
         SUB ... SBE
-        RANGE ... RNE
+        RNG ... RNE
         """
         if self._tok_iter is None:
             raise RuntimeError("internal: token iterator missing")
         it: Iterator[TokenInfo] = self._tok_iter  # narrow for type checker
 
         # For simple same-kind nesting: which opener corresponds to this closer?
-        opener_for: dict[str, str] = {"SBE": "SUB", "RNE": "RANGE"}
+        opener_for: dict[str, str] = {"SBE": "SUB", "RNE": "RNG"}
         opener = opener_for.get(end_op, None)
 
         collected: list[TokenInfo] = []

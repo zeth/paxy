@@ -2,7 +2,7 @@ SUB fib5 n
   IF n == 0 ret
   LET last 0
   LET next 1
-  RANGE _ 1 n
+  RNG _ 1 n
     LET t last + next
     PAR last next  next  t
   RNE

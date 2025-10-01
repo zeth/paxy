@@ -83,10 +83,10 @@ def test_if_with_unquoted_equality_and_return(tmp_path: Path):
 
 
 def test_range_body_with_unquoted_addition(tmp_path: Path):
-    # Sum 1..4 using RANGE and unquoted "+"
+    # Sum 1..4 using RNG and unquoted "+"
     src = (
         "LET total 0\n"
-        "RANGE i 1 5\n"  # 1,2,3,4
+        "RNG i 1 5\n"  # 1,2,3,4
         "  LET total total + i\n"  # unquoted +
         "RNE\n"
         "PNT total\n"

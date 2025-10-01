@@ -18,7 +18,7 @@ def _instr_names(resolved):
 
 def test_parser_captures_rangeblock_structure(tmp_path: Path):
     src = tmp_path / "range1.paxy"
-    src.write_text("LET total 0\n" "RANGE i 1 5\n" '  LET total total "+" i\n' "RNE\n")
+    src.write_text("LET total 0\n" "RNG i 1 5\n" '  LET total total "+" i\n' "RNE\n")
 
     parsed = Parser().parse_file(src)
 
@@ -33,7 +33,7 @@ def test_assembler_lowers_range_to_for_iter_skeleton(tmp_path: Path):
     src = tmp_path / "range2.paxy"
     src.write_text(
         "LET s 0\n"
-        "RANGE k 1 4\n"  # Python range(1,4): 1,2,3
+        "RNG k 1 4\n"  # Python range(1,4): 1,2,3
         '  LET s s "+" k\n'
         "RNE\n"
     )
@@ -57,13 +57,13 @@ def test_assembler_lowers_range_to_for_iter_skeleton(tmp_path: Path):
 
 
 def test_end_to_end_range_inside_sub(tmp_path: Path):
-    """End-to-end: RANGE in a SUB (no nested top-level loops)."""
+    """End-to-end: RNG in a SUB (no nested top-level loops)."""
     src = tmp_path / "range3.paxy"
     src.write_text(
         # sum_to(n): sum of 1..(n-1)
         "SUB sum_to n\n"
         "  LET acc 0\n"
-        "  RANGE i 1 n\n"
+        "  RNG i 1 n\n"
         "    LOAD_NAME acc\n"
         "    LOAD_NAME i\n"
         '    BINARY_OP "+" \n'

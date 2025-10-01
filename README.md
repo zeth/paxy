@@ -7,7 +7,7 @@ Every line is a single command with arguments.
 
 Where modern programming piles on frameworks, boilerplate, and ceremony, Paxy takes the opposite path.
 
-- **Simplicity first.** A few clear commands (`LET`, `IF`, `PNT`, `RANGE`) are enough to get started.
+- **Simplicity first.** A few clear commands (`LET`, `IF`, `PNT`, `RNG`) are enough to get started.
 - **Immediate feedback.** Programs run top-to-bottom, exactly as written.
 - **Calm and predictable.** Deterministic and synchronous: the computer follows your steps.
 - **Accessible to everyone.** If you can type, you can code.
@@ -163,9 +163,9 @@ Parallel assignment: `dst1, dst2 = expr1, expr2`.
 `PNT [value]`  
 Print a value (or a blank line).
 
-### RANGE … RNE
+### RNG … RNE
 
-RANGE name start end
+RNG name start end
 ...body...
 RNE
 
@@ -206,29 +206,29 @@ These BASIC commands are lowered into the intermediate representation (`paxy.ir`
 
 ### Command Reference (Cheat Sheet)
 
-| Command   | Purpose                                 | Example                                   |
-| --------- | --------------------------------------- | ----------------------------------------- |
-| **CMP**   | Compare values and store boolean result | `CMP r a == b`                            |
-| **DEC**   | Decrement a variable                    | `DEC x` → `x = x - 1`                     |
-| **GOS**   | Call function, store result             | `GOS z add x y`                           |
-| **IGL**   | Create frozenset                        | `IGL s 1 2 3` → `s = frozenset({1,2,3})`  |
-| **IF**    | Conditional jump                        | `IF a < b loop_start`                     |
-| **IMP**   | Import a module                         | `IMP "math"`                              |
-| **INC**   | Increment a variable                    | `INC x` → `x = x + 1`                     |
-| **IN**    | Membership test                         | `IN r x arr` → `r = (x in arr)`           |
-| **INP**   | Read from stdin                         | `INP name` → `name = input()`             |
-| **IS**    | Identity test                           | `IS r a b` → `r = (a is b)`               |
-| **NIS**   | Negated identity test                   | `NIS r a b` → `r = (a is not b)`          |
-| **LBL**   | Define a jump target                    | `LBL loop_start`                          |
-| **LET**   | Assign value or expression              | `LET x 10`, `LET y a + b`                 |
-| **MAP**   | Create dictionary with string keys      | `MAP m "a" 1 "b" 2` → `m = {"a":1,"b":2}` |
-| **MAD**   | Insert into dict                        | `MAD m "c" 3` → `m["c"]=3`                |
-| **MAL**   | Delete from dict                        | `MAL m "a"` → `del m["a"]`                |
-| **NIN**   | Negated membership test                 | `NIN r x arr` → `r = (x not in arr)`      |
-| **PAR**   | Parallel assignment                     | `PAR a b x y` → `a, b = x, y`             |
-| **PNT**   | Print a value (or newline)              | `PNT x`                                   |
-| **RANGE** | Loop over a range of integers           | `RANGE i 1 5 … RNE → for i in 1..4`       |
-| **RET**   | Return from SUB (default 0 if no value) | `RET y`                                   |
-| **ROW**   | Create tuple                            | `ROW t 1 2 3` → `t = (1,2,3)`             |
-| **SUB**   | Define a subroutine                     | `SUB add a b ... RET a+b SBE`             |
-| **VEC**   | Create list                             | `VEC v 1 2 3` → `v = [1,2,3]`             |
+| Command | Purpose                                 | Example                                   |
+| ------- | --------------------------------------- | ----------------------------------------- |
+| **CMP** | Compare values and store boolean result | `CMP r a == b`                            |
+| **DEC** | Decrement a variable                    | `DEC x` → `x = x - 1`                     |
+| **GOS** | Call function, store result             | `GOS z add x y`                           |
+| **IGL** | Create frozenset                        | `IGL s 1 2 3` → `s = frozenset({1,2,3})`  |
+| **IF**  | Conditional jump                        | `IF a < b loop_start`                     |
+| **IMP** | Import a module                         | `IMP "math"`                              |
+| **INC** | Increment a variable                    | `INC x` → `x = x + 1`                     |
+| **IN**  | Membership test                         | `IN r x arr` → `r = (x in arr)`           |
+| **INP** | Read from stdin                         | `INP name` → `name = input()`             |
+| **IS**  | Identity test                           | `IS r a b` → `r = (a is b)`               |
+| **NIS** | Negated identity test                   | `NIS r a b` → `r = (a is not b)`          |
+| **LBL** | Define a jump target                    | `LBL loop_start`                          |
+| **LET** | Assign value or expression              | `LET x 10`, `LET y a + b`                 |
+| **MAP** | Create dictionary with string keys      | `MAP m "a" 1 "b" 2` → `m = {"a":1,"b":2}` |
+| **MAD** | Insert into dict                        | `MAD m "c" 3` → `m["c"]=3`                |
+| **MAL** | Delete from dict                        | `MAL m "a"` → `del m["a"]`                |
+| **NIN** | Negated membership test                 | `NIN r x arr` → `r = (x not in arr)`      |
+| **PAR** | Parallel assignment                     | `PAR a b x y` → `a, b = x, y`             |
+| **PNT** | Print a value (or newline)              | `PNT x`                                   |
+| **RNG** | Loop over a range of integers           | `RNG i 1 5 … RNE → for i in 1..4`         |
+| **RET** | Return from SUB (default 0 if no value) | `RET y`                                   |
+| **ROW** | Create tuple                            | `ROW t 1 2 3` → `t = (1,2,3)`             |
+| **SUB** | Define a subroutine                     | `SUB add a b ... RET a+b SBE`             |
+| **VEC** | Create list                             | `VEC v 1 2 3` → `v = [1,2,3]`             |
