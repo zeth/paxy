@@ -306,8 +306,8 @@ class Parser:
         start_tok = args[1]
         end_tok = args[2]
 
-        # Collect tokens until RANGEEND (reuse your existing collector for SUB)
-        body_tokens = self._collect_tokens_until("RANGEEND")
+        # Collect tokens until RNE (reuse your existing collector for SUB)
+        body_tokens = self._collect_tokens_until("RNE")
         inner = Parser()  # nested parser for the block
         body_items = inner.parse_tokens(body_tokens)
 
@@ -351,17 +351,17 @@ class Parser:
         """
         Consume tokens from self._tok_iter and collect all tokens belonging to the
         current block until we see a line whose first NAME token matches `end_op`
-        (e.g. 'SBE' or 'RANGEEND'). The terminator line itself is consumed
+        (e.g. 'SBE' or 'RNE'). The terminator line itself is consumed
         (up to its NEWLINE) but not included. Supports nesting for matching pairs:
         SUB ... SBE
-        RANGE ... RANGEEND
+        RANGE ... RNE
         """
         if self._tok_iter is None:
             raise RuntimeError("internal: token iterator missing")
         it: Iterator[TokenInfo] = self._tok_iter  # narrow for type checker
 
         # For simple same-kind nesting: which opener corresponds to this closer?
-        opener_for: dict[str, str] = {"SBE": "SUB", "RANGEEND": "RANGE"}
+        opener_for: dict[str, str] = {"SBE": "SUB", "RNE": "RANGE"}
         opener = opener_for.get(end_op, None)
 
         collected: list[TokenInfo] = []

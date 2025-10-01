@@ -5,7 +5,7 @@ SUB fib5 n
   RANGE _ 1 n
     LET t last + next
     PAR last next  next  t
-  RANGEEND
+  RNE
   LBL ret
   RET next
 SBE

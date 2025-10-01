@@ -88,7 +88,7 @@ def test_range_body_with_unquoted_addition(tmp_path: Path):
         "LET total 0\n"
         "RANGE i 1 5\n"  # 1,2,3,4
         "  LET total total + i\n"  # unquoted +
-        "RANGEEND\n"
+        "RNE\n"
         "PNT total\n"
     )
     g, out = _run(src)

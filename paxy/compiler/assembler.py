@@ -122,7 +122,7 @@ class Assembler:
                 )
 
             elif isinstance(it, RangeBlock):
-                # Lower RANGE var start end ... RANGEEND into concrete loop skeleton,
+                # Lower RANGE var start end ... RNE into concrete loop skeleton,
                 # leaving the body items raw so later passes can still process them.
                 # range(start, end)
                 resolved.extend(self._lower_rangeblock_to_stream(it))

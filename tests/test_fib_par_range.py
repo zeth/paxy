@@ -13,7 +13,7 @@ def test_fib5_with_par_and_range(tmp_path, capsys):
         "  RANGE _ 1 n\n"
         '    LET t last "+" next\n'
         "    PAR last next  next  t\n"
-        "  RANGEEND\n"
+        "  RNE\n"
         "  LBL ret\n"
         "  RET next\n"
         "SBE\n"
