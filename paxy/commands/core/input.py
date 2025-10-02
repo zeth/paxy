@@ -96,7 +96,7 @@ class Input(Command):
     ## Would you like to know more?
 
     In those examples above, we saw an extra command used.
-    Let's look at [TIN](../commands/toint.md) next.
+    Let's look at [TIN](tin.md) next.
     """
 
     COMMAND = "INP"

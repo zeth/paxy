@@ -180,7 +180,7 @@ class Let(Command):
 
     ### Would you like to know more?
 
-    Let's look at [PNT](print.md).
+    Let's look at [PNT](pnt.md).
     """
 
     COMMAND = "LET"
