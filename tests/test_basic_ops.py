@@ -3,10 +3,10 @@ from pathlib import Path
 import bytecode
 from paxy.compiler.parser import Parser
 
-PROGRAM1 = "PNT 'hello'\nRETURN_CONST None\n"
-PROGRAM2 = "PNT 42\nRETURN_CONST None\n"
-PROGRAM3 = "PNT None\nRETURN_CONST None\n"
-PROGRAM4 = "PNT\nRETURN_CONST None\n"  # blank print() -> CALL 0
+PROGRAM1 = "PNT 'hello'\nLOAD_CONST None\nRETURN_VALUE\n"
+PROGRAM2 = "PNT 42\nLOAD_CONST None\nRETURN_VALUE\n"
+PROGRAM3 = "PNT None\nLOAD_CONST None\nRETURN_VALUE\n"
+PROGRAM4 = "PNT\nLOAD_CONST None\nRETURN_VALUE\n"  # blank print() -> CALL 0
 
 
 def as_pairs(instrs):
@@ -43,7 +43,7 @@ def canon_argless(pairs):
     """Normalize arg-less ops to a marker so comparisons are stable."""
     out = []
     for name, arg in pairs:
-        if name in {"PUSH_NULL", "POP_TOP"}:
+        if name in {"PUSH_NULL", "POP_TOP", "RETURN_VALUE"}:
             out.append((name, "<ARGLESS>" if is_unset_like(arg) else arg))
         else:
             out.append((name, arg))
@@ -60,7 +60,8 @@ def test_print_string(tmp_path: Path):
         ("LOAD_CONST", "hello"),
         ("CALL", 1),
         ("POP_TOP", "<ARGLESS>"),
-        ("RETURN_CONST", None),
+        ("LOAD_CONST", None),
+        ("RETURN_VALUE", "<ARGLESS>"),
     ]
 
 
@@ -74,7 +75,8 @@ def test_print_number(tmp_path: Path):
         ("LOAD_CONST", 42),
         ("CALL", 1),
         ("POP_TOP", "<ARGLESS>"),
-        ("RETURN_CONST", None),
+        ("LOAD_CONST", None),
+        ("RETURN_VALUE", "<ARGLESS>"),
     ]
 
 
@@ -89,7 +91,8 @@ def test_print_none_literal(tmp_path: Path):
         ("LOAD_CONST", None),
         ("CALL", 1),
         ("POP_TOP", "<ARGLESS>"),
-        ("RETURN_CONST", None),
+        ("LOAD_CONST", None),
+        ("RETURN_VALUE", "<ARGLESS>"),
     ]
 
 
@@ -103,5 +106,6 @@ def test_print_no_arg_blank_line(tmp_path: Path):
         ("PUSH_NULL", "<ARGLESS>"),
         ("CALL", 0),
         ("POP_TOP", "<ARGLESS>"),
-        ("RETURN_CONST", None),
+        ("LOAD_CONST", None),
+        ("RETURN_VALUE", "<ARGLESS>"),
     ]
