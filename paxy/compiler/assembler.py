@@ -1,7 +1,7 @@
 # paxy/assembler.py
 
 import os
-from typing import List, Dict, Tuple, Union, Any
+from typing import Union, Any
 
 from bytecode import Bytecode, Instr, Label, CompilerFlags
 from paxy.compiler.ir import (
@@ -22,7 +22,7 @@ from paxy.compiler.ir import (
 # What the resolver returns (only real bytecode items)
 ResolvedItem = Union[Instr, Label]
 # Internal placeholder tuple type (tagged unions used in the first pass)
-Placeholder = Tuple[Any, ...]
+Placeholder = tuple[Any, ...]
 
 
 class Assembler:
@@ -36,32 +36,32 @@ class Assembler:
     TAG_UJUMP = "__UJUMP__"  # ("__UJUMP__", opcode, JumpRef)
     TAG_NJUMP = "__NJUMP__"  # ("__NJUMP__", opcode, JumpRef)
 
-    def __init__(self, items: List[ParsedItem], *, in_function: bool = False) -> None:
-        self.items: List[ParsedItem] = items
+    def __init__(self, items: list[ParsedItem], *, in_function: bool = False) -> None:
+        self.items: list[ParsedItem] = items
         self._in_function: bool = in_function
 
         # discovery
-        self._label_positions: Dict[str, int] = {}
-        self._label_objects: Dict[str, Label] = {}
+        self._label_positions: dict[str, int] = {}
+        self._label_objects: dict[str, Label] = {}
 
         # first pass (rewritten stream)
-        self._resolved_stream: List[
+        self._resolved_stream: list[
             Union[Instr, Label, Placeholder, FuncDef, ReturnMarker]
         ] = []
-        self._decl_idx_to_resolved_idx: Dict[int, int] = {}
+        self._decl_idx_to_resolved_idx: dict[int, int] = {}
 
         # second pass (label/jump-patched stream)
-        self._patched: List[Union[Instr, Label, FuncDef, ReturnMarker]] = []
+        self._patched: list[Union[Instr, Label, FuncDef, ReturnMarker]] = []
 
         # final result (Instr/Label only)
-        self._final: List[ResolvedItem] = []
+        self._final: list[ResolvedItem] = []
 
         # name -> index in resolved stream where concrete Label lives
-        self._name_to_resolved_index: Dict[str, int] = {}
+        self._name_to_resolved_index: dict[str, int] = {}
 
     # ---------- Public API ----------
 
-    def resolve(self) -> List[ResolvedItem]:
+    def resolve(self) -> list[ResolvedItem]:
         """Run all passes and return a stream of Instr/Label only."""
         self._discover_declared_labels()
         self._build_label_objects()
@@ -99,8 +99,8 @@ class Assembler:
           - FuncDef / ReturnMarker are passed through for a later lowering pass
           - Other Instrs are kept as-is.
         """
-        resolved: List[Union[Instr, Label, Placeholder, FuncDef, ReturnMarker]] = []
-        decl_map: Dict[int, int] = {}
+        resolved: list[Union[Instr, Label, Placeholder, FuncDef, ReturnMarker]] = []
+        decl_map: dict[int, int] = {}
 
         for idx, it in enumerate(self.items):
             if isinstance(it, LabelDecl):
@@ -147,7 +147,7 @@ class Assembler:
 
     def _index_label_decls(self) -> None:
         """Map label names to their position in the resolved stream (where Label() lives)."""
-        name_to_resolved_index: Dict[str, int] = {}
+        name_to_resolved_index: dict[str, int] = {}
         for decl_idx, res_idx in self._decl_idx_to_resolved_idx.items():
             ld = self.items[decl_idx]
             if not isinstance(ld, LabelDecl):
@@ -161,7 +161,7 @@ class Assembler:
     # ---------- Pass 2: Patch label-related placeholders to real Instrs ----------
 
     def _second_pass_patch_jumps(self) -> None:
-        patched: List[Union[Instr, Label, FuncDef, ReturnMarker]] = []
+        patched: list[Union[Instr, Label, FuncDef, ReturnMarker]] = []
         for pos, entry in enumerate(self._resolved_stream):
             if isinstance(entry, tuple):
                 tag = entry[0]
@@ -347,7 +347,7 @@ class Assembler:
               * in module context -> error
               * in function context -> RETURN_VALUE or RETURN_CONST 0
         """
-        final: List[ResolvedItem] = []
+        final: list[ResolvedItem] = []
         for entry in self._patched:
             if isinstance(entry, FuncDef):
                 final.extend(self._lower_funcdef(entry))
