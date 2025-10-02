@@ -1,5 +1,6 @@
 from pathlib import Path
 import sys
+from paxy.compiler.opcoerce import normalize_push_null_for_calls_312_seq
 from paxy.compiler.parser import Parser
 
 
@@ -47,6 +48,7 @@ def test_import_runtime_populates_sys_modules(tmp_path: Path):
     src = tmp_path / "prog2.paxy"
     src.write_text("IMP 'time'\n")
     instrs = Parser().parse_file(src)
+    instrs = normalize_push_null_for_calls_312_seq(instrs)
 
     # Execute
     g = {"__name__": "__main__"}

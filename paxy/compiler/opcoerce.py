@@ -1,6 +1,7 @@
-from typing import Any
+import sys
+from typing import Any, Union
 from enum import IntEnum
-from bytecode import BinaryOp
+from bytecode import BinaryOp, Instr, Label
 from bytecode.instr import Compare
 
 
@@ -149,3 +150,38 @@ def coerce_contains_op(arg: Any) -> ContainsOp:
             raise SyntaxError(f"Invalid CONTAINS_OP code {arg}") from e
 
     raise SyntaxError("CONTAINS_OP expects a symbol/name or int")
+
+
+def normalize_push_null_for_calls_312_seq(
+    seq: list[Union[Instr, Label, object]],
+) -> list[Union[Instr, Label, object]]:
+    """Return a copy of seq where (<LOAD_*>, PUSH_NULL) is swapped to (PUSH_NULL, <LOAD_*>)
+    when a CALL is immediately ahead. Only active on Python 3.12."""
+    if sys.version_info >= (3, 13):
+        return list(seq)
+
+    out: list[Union[Instr, Label, object]] = []
+    i = 0
+    while i < len(seq):
+        a = seq[i]
+        b = seq[i + 1] if i + 1 < len(seq) else None
+
+        def is_callable_load(ins: object) -> bool:
+            return isinstance(ins, Instr) and ins.name in (
+                "LOAD_NAME",
+                "LOAD_GLOBAL",
+                "LOAD_ATTR",
+            )
+
+        if is_callable_load(a) and isinstance(b, Instr) and b.name == "PUSH_NULL":
+            ahead = seq[i + 2 : i + 6]
+            if any(isinstance(x, Instr) and x.name == "CALL" for x in ahead):
+                ln = getattr(b, "lineno", None) or getattr(a, "lineno", None)
+                out.append(Instr("PUSH_NULL", lineno=ln))
+                out.append(a)
+                i += 2
+                continue
+
+        out.append(a)
+        i += 1
+    return out

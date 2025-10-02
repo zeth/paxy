@@ -1,6 +1,7 @@
 # paxy/assembler.py
 
 import os
+import sys
 from typing import Union, Any
 
 from bytecode import Bytecode, Instr, Label, CompilerFlags
@@ -17,6 +18,7 @@ from paxy.compiler.ir import (
     COND_JUMP_OPS,
     UNCOND_JUMP_FIXED,
 )
+from paxy.compiler.opcoerce import normalize_push_null_for_calls_312_seq
 
 
 # What the resolver returns (only real bytecode items)
@@ -141,6 +143,7 @@ class Assembler:
                 resolved.append(it)
 
         self._resolved_stream = resolved
+        self._normalize_push_null_for_calls_312()
         self._decl_idx_to_resolved_idx = decl_map
 
     # ---------- Pass 1d: Build name -> resolved index map ----------
@@ -234,7 +237,8 @@ class Assembler:
         # 7) Emit loader sequence
         return [
             Instr("LOAD_CONST", bc_func.to_code(), lineno=func.lineno),
-            Instr("MAKE_FUNCTION", lineno=func.lineno),
+            # Instr("MAKE_FUNCTION", lineno=func.lineno),
+            Instr("MAKE_FUNCTION", 0, lineno=func.lineno),
             Instr("STORE_NAME", func.name, lineno=func.lineno),
         ]
 
@@ -515,3 +519,9 @@ class Assembler:
         #     ]
 
         return tmp
+
+    def _normalize_push_null_for_calls_312(self) -> None:
+        """On Py 3.12 only, make sure PUSH_NULL is *under* the callable."""
+        self._resolved_stream = normalize_push_null_for_calls_312_seq(
+            self._resolved_stream
+        )
