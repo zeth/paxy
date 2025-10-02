@@ -178,6 +178,11 @@ def _next_instr_idx(seq: list[Union[Instr, Label, object]], start: int) -> int |
 def normalize_push_null_for_calls_312_seq(
     seq: list[Union[Instr, Label, object]],
 ) -> list[Union[Instr, Label, object]]:
+    """For Python 3.12, canonicalize every CALL site to:
+      ..., PUSH_NULL, <callable>, <arg1>.. <argN>, CALL n
+    Also neutralize LOAD_GLOBAL’s with-null flag on the callable
+    and remove stray same-line PUSH_NULLs earlier on the line.
+    """
     if sys.version_info >= (3, 13):
         return list(seq)
 
@@ -189,42 +194,42 @@ def normalize_push_null_for_calls_312_seq(
             i += 1
             continue
 
-        # arg count
+        # 1) Get positional arg count
         try:
             nargs = int(ins.arg or 0)
         except Exception:
             nargs = 0
 
-        # find the nearest LOAD_* before CALL (label-aware, robust)
-        callable_ix: int | None = None
-        steps_left = max(nargs + 3, 4)
+        # 2) Walk back over exactly 'nargs' ARG pushes (skip labels and PUSH_NULL)
         cursor = i
-        while steps_left:
-            # walk to previous *instruction*
-            cursor = cursor - 1
-            while cursor >= 0 and not isinstance(s[cursor], Instr):
-                cursor -= 1
-            if cursor < 0:
+        remaining = nargs
+        while remaining:
+            cursor = _prev_instr_idx(s, cursor)
+            if cursor is None:
                 break
-            steps_left -= 1
-            obj = s[cursor]
-            if isinstance(obj, Instr) and obj.name in {
-                "LOAD_GLOBAL",
-                "LOAD_NAME",
-                "LOAD_FAST",
-                "LOAD_ATTR",
-                "LOAD_DEREF",
-            }:
-                callable_ix = cursor
-                break
+            if isinstance(s[cursor], Instr) and s[cursor].name == "PUSH_NULL":
+                # not an argument; ignore
+                continue
+            remaining -= 1
+        if cursor is None or remaining:
+            i += 1
+            continue  # couldn't robustly locate args
 
+        # 3) The callable is the previous non-label, non-PUSH_NULL instruction
+        callable_ix = _prev_instr_idx(s, cursor)
+        while (
+            callable_ix is not None
+            and isinstance(s[callable_ix], Instr)
+            and s[callable_ix].name == "PUSH_NULL"
+        ):
+            callable_ix = _prev_instr_idx(s, callable_ix)
         if callable_ix is None:
             i += 1
             continue
 
         callable_ins: Instr = s[callable_ix]  # type: ignore[assignment]
 
-        # NEW: if LOAD_GLOBAL has the with-NULL flag set, clear it (3.12 only).
+        # 3a) If it's a LOAD_GLOBAL with with-null flag set, turn it off
         if (
             callable_ins.name == "LOAD_GLOBAL"
             and isinstance(callable_ins.arg, tuple)
@@ -235,63 +240,73 @@ def normalize_push_null_for_calls_312_seq(
             name = callable_ins.arg[1]
             callable_ins.arg = (False, name)
 
-        # Build instruction-only window from callable .. before CALL
-        win_idxs: list[int] = []
-        j = callable_ix
-        while True:
-            win_idxs.append(j)
-            k = j + 1
-            while k < len(s) and not isinstance(s[k], Instr):
-                k += 1
-            if k >= i:
-                break
-            j = k
+        # 4) Ensure exactly one PUSH_NULL on this source line,
+        #    positioned immediately before the callable.
 
-        # Ensure exactly one PUSH_NULL immediately *before* the callable
-        nulls = [
-            ix
-            for ix in win_idxs
-            if isinstance(s[ix], Instr) and s[ix].name == "PUSH_NULL"
+        call_line = getattr(ins, "lineno", None)
+
+        # Find all PUSH_NULLs on the *same* line as the CALL that occur before CALL
+        same_line_nulls = [
+            j
+            for j in range(i)  # strictly before CALL
+            if isinstance(s[j], Instr)
+            and s[j].name == "PUSH_NULL"
+            and getattr(s[j], "lineno", None) == call_line
         ]
 
-        if not nulls:
-            ln = getattr(callable_ins, "lineno", None) or getattr(ins, "lineno", None)
-            s.insert(callable_ix, Instr("PUSH_NULL", lineno=ln))
-            i += 1
-        else:
-            keep = nulls[0]
-            # remove extras
-            for extra in reversed(nulls[1:]):
+        if same_line_nulls:
+            # Keep the one closest to CALL; drop the rest
+            keep = same_line_nulls[-1]
+
+            # Remove extras (descending so indices stay valid)
+            for extra in reversed(same_line_nulls[:-1]):
                 del s[extra]
                 if extra < i:
                     i -= 1
-            # move the kept NULL to just before callable
+                if extra < callable_ix:
+                    callable_ix -= 1
+
+            # Move the kept one to be immediately before the callable
             if keep != callable_ix - 1:
                 node = s.pop(keep)
-                if keep < callable_ix:
-                    callable_ix -= 1
-                s.insert(max(callable_ix - 1, 0), node)
+                # adjust indices after pop
                 if keep < i:
                     i -= 1
+                if keep < callable_ix:
+                    callable_ix -= 1
 
-        # --- NEW: remove any stray PUSH_NULL earlier on the SAME source line as this CALL.
-        # In your failing case, a NULL from line 2 leaked before a prior STORE_NAME on line 1.
-        # We keep the one at (callable_ix - 1) and delete any other PUSH_NULL with the same lineno.
-        call_line = getattr(ins, "lineno", None)
-        j = callable_ix - 2  # start one before the kept NULL
-        while j >= 0:
-            obj = s[j]
+                # Insert AT callable_ix so it lands just before it post-insert
+                insert_at = max(callable_ix, 0)
+                s.insert(insert_at, node)
+                if insert_at <= i:
+                    i += 1
+                callable_ix += 1  # callable shifted right by the insert
+
+        else:
+            # No same-line NULL exists: insert one right before callable
+            ln = getattr(callable_ins, "lineno", None) or call_line
+            s.insert(callable_ix, Instr("PUSH_NULL", lineno=ln))
+            if callable_ix <= i:
+                i += 1
+            callable_ix += 1
+
+        # Belt-and-braces: if any other same-line NULLs remain before CALL and
+        # are not immediately before the callable, remove them.
+        j = 0
+        while j < i:
             if (
-                isinstance(obj, Instr)
-                and obj.name == "PUSH_NULL"
-                and getattr(obj, "lineno", None) == call_line
+                isinstance(s[j], Instr)
+                and s[j].name == "PUSH_NULL"
+                and getattr(s[j], "lineno", None) == call_line
+                and j != (callable_ix - 1)
             ):
                 del s[j]
                 if j < i:
-                    i -= 1  # keep CALL index accurate
+                    i -= 1
                 if j < callable_ix:
-                    callable_ix -= 1  # callable shifts left if we removed before it
-            j -= 1
+                    callable_ix -= 1
+                continue
+            j += 1
 
         i += 1
 
