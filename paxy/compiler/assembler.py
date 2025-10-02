@@ -1,6 +1,6 @@
 # paxy/assembler.py
 
-import os
+import os, sys
 from typing import Union, Any
 
 from bytecode import Bytecode, Instr, Label, CompilerFlags
@@ -23,6 +23,13 @@ from paxy.compiler.ir import (
 ResolvedItem = Union[Instr, Label]
 # Internal placeholder tuple type (tagged unions used in the first pass)
 Placeholder = tuple[Any, ...]
+
+
+def _load_global_arg(name: str):
+    # 3.13+: tuple (from_globals, name); 3.12: just the name
+    if sys.version_info >= (3, 13):
+        return (True, name)
+    return name
 
 
 class Assembler:
@@ -279,7 +286,9 @@ class Assembler:
                     else:
                         # CPython 3.13: LOAD_GLOBAL requires (bool, name) tuple
                         out.append(
-                            Instr("LOAD_GLOBAL", (True, name), lineno=ins.lineno)
+                            Instr(
+                                "LOAD_GLOBAL", _load_global_arg(name), lineno=ins.lineno
+                            )
                         )
                     continue
 
@@ -448,7 +457,7 @@ class Assembler:
 
         # 1) Build iter(range(...))
         out.append(Instr("PUSH_NULL", lineno=it.lineno))
-        out.append(Instr("LOAD_GLOBAL", (True, "range"), lineno=it.lineno))
+        out.append(Instr("LOAD_GLOBAL", _load_global_arg("range"), lineno=it.lineno))
 
         # Collect start/end[/step]
         args: list[object] = [it.start, it.end]
