@@ -19,7 +19,7 @@ def strip_leading_resume(pairs):
 def norm_argless(pairs):
     out = []
     for n, a in pairs:
-        if n in {"PUSH_NULL", "POP_TOP"}:
+        if n in {"PUSH_NULL", "POP_TOP", "RETURN_VALUE"}:
             out.append((n, 0))  # canonicalize arg-less to 0
         else:
             out.append((n, a))
@@ -28,7 +28,7 @@ def norm_argless(pairs):
 
 def test_input_lowers_to_call_and_store(tmp_path: Path):
     src = tmp_path / "inp.paxy"
-    src.write_text("INP x\nRETURN_CONST None\n")
+    src.write_text("INP x\nLOAD_CONST None\nRETURN_VALUE\n")
 
     got = norm_argless(strip_leading_resume(as_pairs(Parser().parse_file(src))))
     assert got == [
@@ -36,7 +36,8 @@ def test_input_lowers_to_call_and_store(tmp_path: Path):
         ("PUSH_NULL", 0),
         ("CALL", 0),
         ("STORE_NAME", "x"),
-        ("RETURN_CONST", None),
+        ("LOAD_CONST", None),
+        ("RETURN_VALUE", 0),
     ]
 
 
