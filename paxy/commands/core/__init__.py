@@ -11,7 +11,7 @@ from paxy.commands.core.map import MapCommand
 from paxy.commands.core.mad import Mad
 from paxy.commands.core.par import Par
 from paxy.commands.core.pnt import Print
-from paxy.commands.core.input import Input
+from paxy.commands.core.inp import Input
 from paxy.commands.core.importer import ImportSimple
 from paxy.commands.core.gosub import Gosub
 from paxy.commands.core.label import LabelCommand, GotoCommand
