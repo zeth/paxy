@@ -240,10 +240,29 @@ def normalize_push_null_for_calls_312_seq(
             name = callable_ins.arg[1]
             callable_ins.arg = (False, name)
 
+        # 3b) Purge any PUSH_NULL strictly between the callable and the CALL.
+        #     In 3.12 this must not exist; it causes the CALL to grab NULL as callable.
+        j = callable_ix + 1
+        while j < i:
+            if isinstance(s[j], Instr) and s[j].name == "PUSH_NULL":
+                del s[j]
+                if j < i:
+                    i -= 1
+                # don't advance j; we just shifted
+                continue
+            j += 1
+
         # 4) Ensure exactly one PUSH_NULL on this source line,
         #    positioned immediately before the callable.
 
         call_line = getattr(ins, "lineno", None)
+
+        # If there is already a PUSH_NULL immediately before callable, remember it
+        has_immediate_null = (
+            callable_ix - 1 >= 0
+            and isinstance(s[callable_ix - 1], Instr)
+            and s[callable_ix - 1].name == "PUSH_NULL"
+        )
 
         # Find all PUSH_NULLs on the *same* line as the CALL that occur before CALL
         same_line_nulls = [
@@ -283,12 +302,14 @@ def normalize_push_null_for_calls_312_seq(
                 callable_ix += 1  # callable shifted right by the insert
 
         else:
-            # No same-line NULL exists: insert one right before callable
-            ln = getattr(callable_ins, "lineno", None) or call_line
-            s.insert(callable_ix, Instr("PUSH_NULL", lineno=ln))
-            if callable_ix <= i:
-                i += 1
-            callable_ix += 1
+            # No same-line NULL exists: insert one right before callable *only if*
+            # there isn't already a valid immediate NULL (even if on a different line).
+            if not has_immediate_null:
+                ln = getattr(callable_ins, "lineno", None) or call_line
+                s.insert(callable_ix, Instr("PUSH_NULL", lineno=ln))
+                if callable_ix <= i:
+                    i += 1
+                callable_ix += 1
 
         # Belt-and-braces: if any other same-line NULLs remain before CALL and
         # are not immediately before the callable, remove them.
