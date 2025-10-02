@@ -12,6 +12,6 @@ SBE
 
 PNT "Enter a number"
 INP n
-GOS n int n
+TIN n n
 GOS ans fib5 n
 PNT ans

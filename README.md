@@ -61,6 +61,15 @@ Then add your desired version of Python:
 
 5. To get Debug information, run with PAXY_DEBUG=1 and it will output information to /tmp/paxy_debug.txt
 
+### Rebuilding documentation
+
+- cd docs
+- make html
+
+### Make a package for PyPi
+
+- python -m build
+
 ## Commands
 
 When writing paxy files, you can use low-level Python bytecode names (as in the dis module). But we provide high level BASIC Commands:
