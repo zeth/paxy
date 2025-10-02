@@ -156,21 +156,40 @@ def normalize_push_null_for_calls_312_seq(
     seq: list[Union[Instr, Label, object]],
 ) -> list[Union[Instr, Label, object]]:
     """
-    Python 3.12 requires:
-        ..., PUSH_NULL, <callable>, <arg1>.. <argN>, CALL N
+    Python 3.12 requires (ignoring labels):
+        ..., PUSH_NULL, <callable>, <arg1>.. <argN>, CALL n
     For each CALL (3.12 only), enforce that shape by:
       • swapping (callable, PUSH_NULL) → (PUSH_NULL, callable)
-      • inserting PUSH_NULL if missing
+      • inserting PUSH_NULL immediately *before* the callable if it's missing
     """
     if sys.version_info >= (3, 13):
         return list(seq)
 
     s: list[Union[Instr, Label, object]] = list(seq)
 
-    def is_callable_load(x: object) -> bool:
-        return isinstance(x, Instr) and x.name in {
-            "LOAD_NAME",
+    def is_instr(ix: int) -> bool:
+        return 0 <= ix < len(s) and isinstance(s[ix], Instr)
+
+    def prev_instr_idx(ix: int) -> int | None:
+        j = ix - 1
+        while j >= 0:
+            if isinstance(s[j], Instr):
+                return j
+            j -= 1
+        return None
+
+    def next_instr_idx(ix: int) -> int | None:
+        j = ix + 1
+        while j < len(s):
+            if isinstance(s[j], Instr):
+                return j
+            j += 1
+        return None
+
+    def is_callable_load(obj: object) -> bool:
+        return isinstance(obj, Instr) and obj.name in {
             "LOAD_GLOBAL",
+            "LOAD_NAME",
             "LOAD_FAST",
             "LOAD_ATTR",
             "LOAD_DEREF",
@@ -178,54 +197,62 @@ def normalize_push_null_for_calls_312_seq(
 
     i = 0
     while i < len(s):
-        ins = s[i]
-        if isinstance(ins, Instr) and ins.name == "CALL":
+        if not is_instr(i):
+            i += 1
+            continue
+
+        call_ins = s[i]  # type: ignore[assignment]
+        if isinstance(call_ins, Instr) and call_ins.name == "CALL":
+            # Walk backwards over *instructions only* to find the callable:
             try:
-                nargs = int(ins.arg or 0)
+                nargs = int(call_ins.arg or 0)
             except Exception:
                 nargs = 0
 
-            # Positions just before CALL:
-            #   a_idx = i - (nargs + 2)   # either callable or PUSH_NULL
-            #   b_idx = i - (nargs + 1)   # either PUSH_NULL, callable, or first arg
-            a_idx = i - (nargs + 2)
-            b_idx = i - (nargs + 1)
+            # Step back over argN..arg1 and then the callable (nargs + 1 instructions)
+            steps = nargs + 1
+            j = i
+            while steps and (j := prev_instr_idx(j)) is not None:
+                steps -= 1
+            if steps or j is None:
+                i += 1
+                continue  # couldn't find callable robustly
 
-            if 0 <= a_idx < len(s) and 0 <= b_idx < len(s):
-                a = s[a_idx]
-                b = s[b_idx]
+            callable_ix = j
+            callable_ins = s[callable_ix]  # type: ignore[assignment]
+            if not is_callable_load(callable_ins):
+                i += 1
+                continue  # not a simple LOAD_* callable; leave it alone
 
-                # (callable, PUSH_NULL, args)  → swap
-                if (
-                    is_callable_load(a)
-                    and isinstance(b, Instr)
-                    and b.name == "PUSH_NULL"
-                ):
-                    s[a_idx], s[b_idx] = b, a
+            # Find immediate previous / next *instruction* neighbors of the callable
+            prev_ix = prev_instr_idx(callable_ix)
+            next_ix = next_instr_idx(callable_ix)
 
-                # (PUSH_NULL, callable, args) → already correct
-                elif (
-                    isinstance(a, Instr)
-                    and a.name == "PUSH_NULL"
-                    and is_callable_load(b)
-                ):
-                    pass
+            # If we have (callable, PUSH_NULL) → swap them
+            if next_ix is not None:
+                next_ins = s[next_ix]
+                if isinstance(next_ins, Instr) and next_ins.name == "PUSH_NULL":
+                    s[callable_ix], s[next_ix] = next_ins, callable_ins
+                    # CALL index unaffected in terms of *instruction* neighbors
+                    i += 1
+                    continue
 
-                # ( ?, callable, args ) → missing PUSH_NULL before callable → insert at a_idx
-                elif is_callable_load(b) and not (
-                    isinstance(a, Instr) and a.name == "PUSH_NULL"
-                ):
-                    ln = getattr(b, "lineno", None) or getattr(ins, "lineno", None)
-                    s.insert(a_idx, Instr("PUSH_NULL", lineno=ln))
-                    i += 1  # CALL shifted by insert
+            # Already correct if previous instr is PUSH_NULL
+            if prev_ix is not None:
+                prev_ins = s[prev_ix]
+                if isinstance(prev_ins, Instr) and prev_ins.name == "PUSH_NULL":
+                    i += 1
+                    continue
 
-                # ( callable, ?, args ) → missing PUSH_NULL after a callable → insert before callable
-                elif is_callable_load(a) and not (
-                    isinstance(b, Instr) and b.name == "PUSH_NULL"
-                ):
-                    ln = getattr(a, "lineno", None) or getattr(ins, "lineno", None)
-                    s.insert(a_idx, Instr("PUSH_NULL", lineno=ln))
-                    i += 1  # CALL shifted by insert
-        i += 1
+            # Otherwise, insert PUSH_NULL immediately *before* the callable
+            ln = getattr(callable_ins, "lineno", None) or getattr(
+                call_ins, "lineno", None
+            )
+            s.insert(callable_ix, Instr("PUSH_NULL", lineno=ln))
+            # Inserting before the callable shifts CALL one slot to the right overall;
+            # bump i so we don't reprocess the same CALL.
+            i += 1
+        else:
+            i += 1
 
     return s
