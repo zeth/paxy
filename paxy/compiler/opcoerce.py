@@ -155,33 +155,77 @@ def coerce_contains_op(arg: Any) -> ContainsOp:
 def normalize_push_null_for_calls_312_seq(
     seq: list[Union[Instr, Label, object]],
 ) -> list[Union[Instr, Label, object]]:
-    """Return a copy of seq where (<LOAD_*>, PUSH_NULL) is swapped to (PUSH_NULL, <LOAD_*>)
-    when a CALL is immediately ahead. Only active on Python 3.12."""
+    """
+    Python 3.12 requires:
+        ..., PUSH_NULL, <callable>, <arg1>.. <argN>, CALL N
+    For each CALL (3.12 only), enforce that shape by:
+      • swapping (callable, PUSH_NULL) → (PUSH_NULL, callable)
+      • inserting PUSH_NULL if missing
+    """
     if sys.version_info >= (3, 13):
         return list(seq)
 
-    out: list[Union[Instr, Label, object]] = []
+    s: list[Union[Instr, Label, object]] = list(seq)
+
+    def is_callable_load(x: object) -> bool:
+        return isinstance(x, Instr) and x.name in {
+            "LOAD_NAME",
+            "LOAD_GLOBAL",
+            "LOAD_FAST",
+            "LOAD_ATTR",
+            "LOAD_DEREF",
+        }
+
     i = 0
-    while i < len(seq):
-        a = seq[i]
-        b = seq[i + 1] if i + 1 < len(seq) else None
+    while i < len(s):
+        ins = s[i]
+        if isinstance(ins, Instr) and ins.name == "CALL":
+            try:
+                nargs = int(ins.arg or 0)
+            except Exception:
+                nargs = 0
 
-        def is_callable_load(ins: object) -> bool:
-            return isinstance(ins, Instr) and ins.name in (
-                "LOAD_NAME",
-                "LOAD_GLOBAL",
-                "LOAD_ATTR",
-            )
+            # Positions just before CALL:
+            #   a_idx = i - (nargs + 2)   # either callable or PUSH_NULL
+            #   b_idx = i - (nargs + 1)   # either PUSH_NULL, callable, or first arg
+            a_idx = i - (nargs + 2)
+            b_idx = i - (nargs + 1)
 
-        if is_callable_load(a) and isinstance(b, Instr) and b.name == "PUSH_NULL":
-            ahead = seq[i + 2 : i + 6]
-            if any(isinstance(x, Instr) and x.name == "CALL" for x in ahead):
-                ln = getattr(b, "lineno", None) or getattr(a, "lineno", None)
-                out.append(Instr("PUSH_NULL", lineno=ln))
-                out.append(a)
-                i += 2
-                continue
+            if 0 <= a_idx < len(s) and 0 <= b_idx < len(s):
+                a = s[a_idx]
+                b = s[b_idx]
 
-        out.append(a)
+                # (callable, PUSH_NULL, args)  → swap
+                if (
+                    is_callable_load(a)
+                    and isinstance(b, Instr)
+                    and b.name == "PUSH_NULL"
+                ):
+                    s[a_idx], s[b_idx] = b, a
+
+                # (PUSH_NULL, callable, args) → already correct
+                elif (
+                    isinstance(a, Instr)
+                    and a.name == "PUSH_NULL"
+                    and is_callable_load(b)
+                ):
+                    pass
+
+                # ( ?, callable, args ) → missing PUSH_NULL before callable → insert at a_idx
+                elif is_callable_load(b) and not (
+                    isinstance(a, Instr) and a.name == "PUSH_NULL"
+                ):
+                    ln = getattr(b, "lineno", None) or getattr(ins, "lineno", None)
+                    s.insert(a_idx, Instr("PUSH_NULL", lineno=ln))
+                    i += 1  # CALL shifted by insert
+
+                # ( callable, ?, args ) → missing PUSH_NULL after a callable → insert before callable
+                elif is_callable_load(a) and not (
+                    isinstance(b, Instr) and b.name == "PUSH_NULL"
+                ):
+                    ln = getattr(a, "lineno", None) or getattr(ins, "lineno", None)
+                    s.insert(a_idx, Instr("PUSH_NULL", lineno=ln))
+                    i += 1  # CALL shifted by insert
         i += 1
-    return out
+
+    return s
