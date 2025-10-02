@@ -12,8 +12,8 @@ from paxy.cli import compile_file
 
 PROGRAM = """\
 RESUME 0
-LOAD_NAME 'print'
 PUSH_NULL
+LOAD_NAME 'print'
 LOAD_CONST 'hello'
 CALL 1
 POP_TOP

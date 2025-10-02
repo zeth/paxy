@@ -38,6 +38,20 @@ def output_path_for(src: str | Path, *, optimization: int | None = None) -> Path
         return src.parent / f"{base}.pyc"
 
 
+def debug(code_dbg: CodeType) -> str:
+    if sys.version_info >= (3, 13):
+        # returns a str in Python 3.13 and above
+        return _dis.Bytecode(code_dbg).dis()
+    else:
+        # Handle Python 3.12
+        import io, contextlib
+
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            _dis.dis(code_dbg)
+        return buf.getvalue()
+
+
 def assemble_file(src_path: Path) -> CodeType:
     """
     Parse .paxy -> (ParsedItem stream) -> resolve labels -> Bytecode -> CodeType
@@ -56,7 +70,7 @@ def assemble_file(src_path: Path) -> CodeType:
         bc_dbg = Bytecode(resolved)
         code_dbg = bc_dbg.to_code()
         out.append("== DISASSEMBLY ==")
-        out.append(_dis.Bytecode(code_dbg).dis())  # returns a str in 3.13
+        out.append(debug(code_dbg))
         dbg_path = Path(os.getenv("PAXY_DEBUG_OUT", "/tmp/paxy_debug.txt"))
         dbg_path.write_text("\n".join(out))
         return code_dbg
