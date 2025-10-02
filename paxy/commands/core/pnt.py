@@ -99,7 +99,7 @@ class Print(Command):
     ## Would you like to know more?
 
     We saw how PNT sends information from the program to the human,
-    let's look at how to send text from the human to the program with the [INP](input.md) command.
+    let's look at how to send text from the human to the program with the [INP](inp.md) command.
 
     """
 
