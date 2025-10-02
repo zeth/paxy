@@ -1,7 +1,5 @@
 from __future__ import annotations
 from typing import Any
-
-from bytecode import Instr  # type: ignore[import-untyped]
 from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 
@@ -85,7 +83,7 @@ class ToInt(_ConvertBase):
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 2 or not isinstance(args[0], Ident):
             raise SyntaxError("TIN: usage: TIN <dst> <src>")
-        dst, src = args  # type: ignore[misc]
+        dst, src = args
         self.add_op("LOAD_GLOBAL", (True, "int"))
         self._emit_load_token(src)
         self.add_op("CALL", 1)
@@ -141,7 +139,7 @@ class ToFloat(_ConvertBase):
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 2 or not isinstance(args[0], Ident):
             raise SyntaxError("TFL: usage: TFL <dst> <src>")
-        dst, src = args  # type: ignore[misc]
+        dst, src = args
         self.add_op("LOAD_GLOBAL", (True, "float"))
         self._emit_load_token(src)
         self.add_op("CALL", 1)
@@ -194,7 +192,7 @@ class ToStr(_ConvertBase):
     def make_ops(self, args: list[Any]) -> None:
         if len(args) != 2 or not isinstance(args[0], Ident):
             raise SyntaxError("TST: usage: TST <dst> <src>")
-        dst, src = args  # type: ignore[misc]
+        dst, src = args
         self.add_op("LOAD_GLOBAL", (True, "str"))
         self._emit_load_token(src)
         self.add_op("CALL", 1)

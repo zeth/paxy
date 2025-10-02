@@ -1,13 +1,9 @@
 # paxy/assembler.py
 
 import os
-from pathlib import Path
 from typing import List, Dict, Tuple, Union, Any
-from types import CodeType
-import dis as _dis
 
 from bytecode import Bytecode, Instr, Label, CompilerFlags
-from paxy.compiler.parser import Parser
 from paxy.compiler.ir import (
     ParsedItem,
     FuncDef,
