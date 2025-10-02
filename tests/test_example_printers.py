@@ -17,13 +17,15 @@ PUSH_NULL
 LOAD_CONST 'hello'
 CALL 1
 POP_TOP
-RETURN_CONST None
+LOAD_CONST 0
+RETURN_VALUE
 """
 
 BASIC = """\
 RESUME 0
 PNT 'hello'
-RETURN_CONST None
+LOAD_CONST 0
+RETURN_VALUE
 """
 
 MINIMAL = """\
@@ -86,7 +88,8 @@ def test_basic_and_explicit_parse_to_same_lowered_sequence(tmp_path: Path):
             ("LOAD_CONST", "hello"),
             ("CALL", 1),
             ("POP_TOP", UNSET),
-            ("RETURN_CONST", None),
+            ("LOAD_CONST", 0),
+            ("RETURN_VALUE", UNSET),
         ]
     )
 
@@ -108,4 +111,4 @@ def test_minimal_is_auto_framed_and_runs(
     # (we don't assert exact positions; just that they were auto-added)
     dis_text = dis.Bytecode(code).dis()
     assert "RESUME" in dis_text
-    assert "RETURN_CONST" in dis_text
+    assert "RETURN_VALUE" in dis_text
