@@ -234,11 +234,15 @@ class Assembler:
         bc_func.flags |= CompilerFlags.OPTIMIZED | CompilerFlags.NEWLOCALS
         bc_func.first_lineno = func.lineno
 
+        if sys.version_info >= (3, 13):
+            maker = Instr("MAKE_FUNCTION", lineno=func.lineno)
+        else:
+            maker = Instr("MAKE_FUNCTION", 0, lineno=func.lineno)
+
         # 7) Emit loader sequence
         return [
             Instr("LOAD_CONST", bc_func.to_code(), lineno=func.lineno),
-            # Instr("MAKE_FUNCTION", lineno=func.lineno),
-            Instr("MAKE_FUNCTION", 0, lineno=func.lineno),
+            maker,
             Instr("STORE_NAME", func.name, lineno=func.lineno),
         ]
 
