@@ -428,65 +428,6 @@ class Assembler:
             return [Instr("LOAD_NAME", name, lineno=lineno)]
         return [Instr("LOAD_CONST", tok, lineno=lineno)]
 
-    # def _lower_rangeblock_to_stream(
-    #     self, it: RangeBlock
-    # ) -> List[Union[Instr, Label, Placeholder, FuncDef, ReturnMarker]]:
-    #     """
-    #     Expand a RNG block into concrete loop prologue/epilogue and recursively
-    #     lower any nested RangeBlock in the body.
-    #     """
-    #     out: List[Union[Instr, Label, Placeholder, FuncDef, ReturnMarker]] = []
-
-    #     # prologue: range(start, end) -> iter
-    #     out.append(Instr("LOAD_GLOBAL", (True, "range"), lineno=it.lineno))
-    #     out.extend(self._emit_token_load_instrs(it.start, it.lineno))
-    #     out.extend(self._emit_token_load_instrs(it.end, it.lineno))
-    #     out.append(Instr("CALL", 2, lineno=it.lineno))
-    #     out.append(Instr("GET_ITER", lineno=it.lineno))
-
-    #     l_loop = Label()
-    #     l_end = Label()
-    #     out.append(l_loop)
-    #     out.append(Instr("FOR_ITER", l_end, lineno=it.lineno))
-
-    #     # induction variable
-    #     store_op = "STORE_FAST" if self._in_function else "STORE_NAME"
-    #     out.append(Instr(store_op, self._as_name(it.var), lineno=it.lineno))
-
-    #     # body
-    #     for elt in it.body:
-    #         # Never inline a RESUME inside a loop body
-    #         if isinstance(elt, Instr) and elt.name == "RESUME":
-    #             continue
-    #         # Do not inline bare ReturnMarkers from the inner snippet
-    #         if isinstance(elt, ReturnMarker):
-    #             continue
-    #         # And guard against concrete returns sneaking in from snippet assembly
-    #         if isinstance(elt, Instr) and elt.name in ("RETURN_CONST", "RETURN_VALUE"):
-    #             continue
-
-    #         if isinstance(elt, RangeBlock):
-    #             out.extend(self._lower_rangeblock_to_stream(elt))
-    #         elif isinstance(elt, NamedJump):
-    #             out.append(
-    #                 (self.TAG_NJUMP, elt.opcode, JumpRef(elt.target_name, elt.lineno))
-    #             )
-    #         elif isinstance(elt, JumpRef):
-    #             out.append((self.TAG_JUMP, elt))
-    #         elif isinstance(elt, LabelDecl):
-    #             raise SyntaxError("LBL inside RNG block is not supported")
-    #         else:
-    #             # Instr / FuncDef — pass through; later passes will handle them
-    #             out.append(elt)
-
-    #     # epilogue
-    #     out.append(Instr("JUMP_BACKWARD", l_loop, lineno=it.lineno))
-    #     out.append(l_end)
-    #     out.append(Instr("END_FOR", lineno=it.lineno))
-    #     out.append(Instr("POP_TOP", lineno=it.lineno))
-
-    #     return out
-
     def _lower_rangeblock_to_stream(self, it: RangeBlock) -> list[ResolvedItem]:
         """
             RNG <var> <start> <end> [<step>]
