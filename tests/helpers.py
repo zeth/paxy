@@ -19,11 +19,25 @@ def as_pairs(instrs):
 
 def get_instrs(src: Path) -> list[ParsedItem]:
     instrs: list[ParsedItem] = Parser().parse_file(src)
-    return normalize_push_null_for_calls_312_seq(instrs)
+    # 3.12 call-site canonicalization
+    instrs = normalize_push_null_for_calls_312_seq(instrs)
+    return instrs
+
+
+def _dump_debug(instrs: list[ParsedItem], title: str = "== HELPER RESOLVED ==") -> None:
+    try:
+        with open("/tmp/paxy_debug.txt", "a", encoding="utf-8") as f:
+            f.write(f"{title}\n")
+            for idx, ins in enumerate(instrs):
+                f.write(f"{idx:03d}: {ins!r}\n")
+    except Exception:
+        pass  # never let debug crash tests
 
 
 def run_paxy_path(src: Path, *, filename: str = "<string>") -> dict[str, Any]:
-    instrs: list[ParsedItem] = get_instrs(src)
+    instrs = get_instrs(src)
+    # dump BEFORE exec so we can see what actually ran
+    _dump_debug(instrs, "== HELPER RESOLVED ==")
 
     bc = Bytecode(instrs)
     bc.filename = filename

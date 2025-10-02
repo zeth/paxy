@@ -10,7 +10,7 @@ description = "Paxy: a modern BASIC-like language that compiles to Python byteco
 authors = [{ name = "Zeth Green", email = "theology@gmail.com" }]
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 
 dependencies = [
   "bytecode>=0.17.0", # maintained library for building CodeType

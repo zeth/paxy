@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 from typing import Any, Union
 from enum import IntEnum
@@ -152,107 +154,145 @@ def coerce_contains_op(arg: Any) -> ContainsOp:
     raise SyntaxError("CONTAINS_OP expects a symbol/name or int")
 
 
+CallableLoads = {"LOAD_GLOBAL", "LOAD_NAME", "LOAD_FAST", "LOAD_ATTR", "LOAD_DEREF"}
+
+
+def _prev_instr_idx(seq: list[Union[Instr, Label, object]], start: int) -> int | None:
+    j = start - 1
+    while j >= 0:
+        if isinstance(seq[j], Instr):
+            return j
+        j -= 1
+    return None
+
+
+def _next_instr_idx(seq: list[Union[Instr, Label, object]], start: int) -> int | None:
+    j = start + 1
+    while j < len(seq):
+        if isinstance(seq[j], Instr):
+            return j
+        j += 1
+    return None
+
+
 def normalize_push_null_for_calls_312_seq(
     seq: list[Union[Instr, Label, object]],
 ) -> list[Union[Instr, Label, object]]:
-    """
-    Python 3.12 requires (ignoring labels):
-        ..., PUSH_NULL, <callable>, <arg1>.. <argN>, CALL n
-    For each CALL (3.12 only), enforce that shape by:
-      • swapping (callable, PUSH_NULL) → (PUSH_NULL, callable)
-      • inserting PUSH_NULL immediately *before* the callable if it's missing
-    """
     if sys.version_info >= (3, 13):
         return list(seq)
 
-    s: list[Union[Instr, Label, object]] = list(seq)
-
-    def is_instr(ix: int) -> bool:
-        return 0 <= ix < len(s) and isinstance(s[ix], Instr)
-
-    def prev_instr_idx(ix: int) -> int | None:
-        j = ix - 1
-        while j >= 0:
-            if isinstance(s[j], Instr):
-                return j
-            j -= 1
-        return None
-
-    def next_instr_idx(ix: int) -> int | None:
-        j = ix + 1
-        while j < len(s):
-            if isinstance(s[j], Instr):
-                return j
-            j += 1
-        return None
-
-    def is_callable_load(obj: object) -> bool:
-        return isinstance(obj, Instr) and obj.name in {
-            "LOAD_GLOBAL",
-            "LOAD_NAME",
-            "LOAD_FAST",
-            "LOAD_ATTR",
-            "LOAD_DEREF",
-        }
-
+    s = list(seq)
     i = 0
     while i < len(s):
-        if not is_instr(i):
+        ins = s[i]
+        if not isinstance(ins, Instr) or ins.name != "CALL":
             i += 1
             continue
 
-        call_ins = s[i]  # type: ignore[assignment]
-        if isinstance(call_ins, Instr) and call_ins.name == "CALL":
-            # Walk backwards over *instructions only* to find the callable:
-            try:
-                nargs = int(call_ins.arg or 0)
-            except Exception:
-                nargs = 0
+        # arg count
+        try:
+            nargs = int(ins.arg or 0)
+        except Exception:
+            nargs = 0
 
-            # Step back over argN..arg1 and then the callable (nargs + 1 instructions)
-            steps = nargs + 1
-            j = i
-            while steps and (j := prev_instr_idx(j)) is not None:
-                steps -= 1
-            if steps or j is None:
-                i += 1
-                continue  # couldn't find callable robustly
+        # find the nearest LOAD_* before CALL (label-aware, robust)
+        callable_ix: int | None = None
+        steps_left = max(nargs + 3, 4)
+        cursor = i
+        while steps_left:
+            # walk to previous *instruction*
+            cursor = cursor - 1
+            while cursor >= 0 and not isinstance(s[cursor], Instr):
+                cursor -= 1
+            if cursor < 0:
+                break
+            steps_left -= 1
+            obj = s[cursor]
+            if isinstance(obj, Instr) and obj.name in {
+                "LOAD_GLOBAL",
+                "LOAD_NAME",
+                "LOAD_FAST",
+                "LOAD_ATTR",
+                "LOAD_DEREF",
+            }:
+                callable_ix = cursor
+                break
 
-            callable_ix = j
-            callable_ins = s[callable_ix]  # type: ignore[assignment]
-            if not is_callable_load(callable_ins):
-                i += 1
-                continue  # not a simple LOAD_* callable; leave it alone
+        if callable_ix is None:
+            i += 1
+            continue
 
-            # Find immediate previous / next *instruction* neighbors of the callable
-            prev_ix = prev_instr_idx(callable_ix)
-            next_ix = next_instr_idx(callable_ix)
+        callable_ins: Instr = s[callable_ix]  # type: ignore[assignment]
 
-            # If we have (callable, PUSH_NULL) → swap them
-            if next_ix is not None:
-                next_ins = s[next_ix]
-                if isinstance(next_ins, Instr) and next_ins.name == "PUSH_NULL":
-                    s[callable_ix], s[next_ix] = next_ins, callable_ins
-                    # CALL index unaffected in terms of *instruction* neighbors
-                    i += 1
-                    continue
+        # NEW: if LOAD_GLOBAL has the with-NULL flag set, clear it (3.12 only).
+        if (
+            callable_ins.name == "LOAD_GLOBAL"
+            and isinstance(callable_ins.arg, tuple)
+            and len(callable_ins.arg) == 2
+            and isinstance(callable_ins.arg[0], bool)
+            and callable_ins.arg[0] is True
+        ):
+            name = callable_ins.arg[1]
+            callable_ins.arg = (False, name)
 
-            # Already correct if previous instr is PUSH_NULL
-            if prev_ix is not None:
-                prev_ins = s[prev_ix]
-                if isinstance(prev_ins, Instr) and prev_ins.name == "PUSH_NULL":
-                    i += 1
-                    continue
+        # Build instruction-only window from callable .. before CALL
+        win_idxs: list[int] = []
+        j = callable_ix
+        while True:
+            win_idxs.append(j)
+            k = j + 1
+            while k < len(s) and not isinstance(s[k], Instr):
+                k += 1
+            if k >= i:
+                break
+            j = k
 
-            # Otherwise, insert PUSH_NULL immediately *before* the callable
-            ln = getattr(callable_ins, "lineno", None) or getattr(
-                call_ins, "lineno", None
-            )
+        # Ensure exactly one PUSH_NULL immediately *before* the callable
+        nulls = [
+            ix
+            for ix in win_idxs
+            if isinstance(s[ix], Instr) and s[ix].name == "PUSH_NULL"
+        ]
+
+        if not nulls:
+            ln = getattr(callable_ins, "lineno", None) or getattr(ins, "lineno", None)
             s.insert(callable_ix, Instr("PUSH_NULL", lineno=ln))
-            # Inserting before the callable shifts CALL one slot to the right overall;
-            # bump i so we don't reprocess the same CALL.
             i += 1
         else:
-            i += 1
+            keep = nulls[0]
+            # remove extras
+            for extra in reversed(nulls[1:]):
+                del s[extra]
+                if extra < i:
+                    i -= 1
+            # move the kept NULL to just before callable
+            if keep != callable_ix - 1:
+                node = s.pop(keep)
+                if keep < callable_ix:
+                    callable_ix -= 1
+                s.insert(max(callable_ix - 1, 0), node)
+                if keep < i:
+                    i -= 1
+
+        # --- NEW: remove any stray PUSH_NULL earlier on the SAME source line as this CALL.
+        # In your failing case, a NULL from line 2 leaked before a prior STORE_NAME on line 1.
+        # We keep the one at (callable_ix - 1) and delete any other PUSH_NULL with the same lineno.
+        call_line = getattr(ins, "lineno", None)
+        j = callable_ix - 2  # start one before the kept NULL
+        while j >= 0:
+            obj = s[j]
+            if (
+                isinstance(obj, Instr)
+                and obj.name == "PUSH_NULL"
+                and getattr(obj, "lineno", None) == call_line
+            ):
+                del s[j]
+                if j < i:
+                    i -= 1  # keep CALL index accurate
+                if j < callable_ix:
+                    callable_ix -= 1  # callable shifts left if we removed before it
+            j -= 1
+
+        i += 1
 
     return s

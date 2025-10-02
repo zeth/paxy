@@ -27,6 +27,12 @@ ResolvedItem = Union[Instr, Label]
 Placeholder = tuple[Any, ...]
 
 
+def _lg(name: str) -> tuple[bool, str]:
+    if sys.version_info >= (3, 13):
+        return (True, name)
+    return (False, name)
+
+
 class Assembler:
     """Resolves placeholders (labels and named jumps) into real bytecode items,
     and lowers function placeholders into LOAD_CONST/MAKE_FUNCTION/STORE_NAME.
@@ -231,7 +237,9 @@ class Assembler:
         bc_func = Bytecode(lowered_body)
         bc_func.argcount = len(func.params)
         bc_func.argnames = list(func.params)
-        bc_func.flags |= CompilerFlags.OPTIMIZED | CompilerFlags.NEWLOCALS
+        bc_func.flags |= (
+            CompilerFlags.OPTIMIZED | CompilerFlags.NEWLOCALS | CompilerFlags.NOFREE
+        )
         bc_func.first_lineno = func.lineno
 
         if sys.version_info >= (3, 13):
@@ -286,9 +294,7 @@ class Assembler:
                         out.append(Instr("LOAD_FAST", name, lineno=ins.lineno))
                     else:
                         # CPython 3.13: LOAD_GLOBAL requires (bool, name) tuple
-                        out.append(
-                            Instr("LOAD_GLOBAL", (True, name), lineno=ins.lineno)
-                        )
+                        out.append(Instr("LOAD_GLOBAL", _lg(name), lineno=ins.lineno))
                     continue
 
                 if nm == "STORE_NAME":
@@ -341,7 +347,7 @@ class Assembler:
             if ins.name == "STORE_NAME" and isinstance(ins.arg, str):
                 out.append(Instr("STORE_GLOBAL", ins.arg, lineno=ins.lineno))
             elif ins.name == "LOAD_NAME" and isinstance(ins.arg, str):
-                out.append(Instr("LOAD_GLOBAL", ins.arg, lineno=ins.lineno))
+                out.append(Instr("LOAD_GLOBAL", _lg(ins.arg), lineno=ins.lineno))
             else:
                 out.append(ins)
 
@@ -456,7 +462,7 @@ class Assembler:
 
         # 1) Build iter(range(...))
         out.append(Instr("PUSH_NULL", lineno=it.lineno))
-        out.append(Instr("LOAD_GLOBAL", (True, "range"), lineno=it.lineno))
+        out.append(Instr("LOAD_GLOBAL", _lg("range"), lineno=it.lineno))
 
         # Collect start/end[/step]
         args: list[object] = [it.start, it.end]
@@ -493,8 +499,11 @@ class Assembler:
         # 4) Loop end + cleanup (tests want POP_TOP present)
         out.append(l_end)
         out.append(Instr("END_FOR", lineno=it.lineno))
-        out.append(Instr("POP_TOP", lineno=it.lineno))
-
+        if sys.version_info >= (3, 13):
+            out.append(Instr("POP_TOP", lineno=it.lineno))
+        else:
+            if not self._in_function:
+                out.append(Instr("POP_TOP", lineno=it.lineno))
         return out
 
     def _sanitize_function_body(self, body: list[ResolvedItem]) -> list[ResolvedItem]:
