@@ -8,6 +8,10 @@ from paxy.compiler.parser import Parser
 Pair: TypeAlias = Tuple[str, Any]
 PairList: TypeAlias = List[Pair]
 
+from bytecode.instr import _UNSET as _UNSET_CTOR
+
+UNSET = _UNSET_CTOR()
+
 
 def as_pairs(instrs: Iterable[Any]) -> PairList:
     return [(str(i.name), getattr(i, "arg", None)) for i in instrs]
@@ -22,7 +26,8 @@ def test_row_empty(tmp_path: Path) -> None:
         ("RESUME", 0),
         ("LOAD_CONST", ()),
         ("STORE_NAME", "r"),
-        ("RETURN_CONST", 0),
+        ("LOAD_CONST", 0),
+        ("RETURN_VALUE", UNSET),
     ]
 
 
@@ -35,7 +40,8 @@ def test_row_literals(tmp_path: Path) -> None:
         ("RESUME", 0),
         ("LOAD_CONST", (1, "x", True, None)),
         ("STORE_NAME", "r"),
-        ("RETURN_CONST", 0),
+        ("LOAD_CONST", 0),
+        ("RETURN_VALUE", UNSET),
     ]
 
 
@@ -58,7 +64,8 @@ def test_row_with_identifiers_falls_back_to_builder(tmp_path: Path) -> None:
         ("LOAD_NAME", "b"),
         ("BUILD_TUPLE", 3),
         ("STORE_NAME", "r"),
-        ("RETURN_CONST", 0),
+        ("LOAD_CONST", 0),
+        ("RETURN_VALUE", UNSET),
     ]
 
 

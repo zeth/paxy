@@ -211,11 +211,16 @@ class Assembler:
 
         # 4) Ensure *some* return exists (only if none at all after sanitize)
         has_any_return = any(
-            isinstance(ins, Instr) and ins.name in ("RETURN_VALUE", "RETURN_CONST")
+            isinstance(ins, Instr) and ins.name == "RETURN_VALUE"
             for ins in lowered_body
         )
         if not has_any_return:
-            lowered_body.append(Instr("RETURN_CONST", 0, lineno=func.lineno))
+            lowered_body.extend(
+                [
+                    Instr("LOAD_CONST", 0, lineno=func.lineno),
+                    Instr("RETURN_VALUE", lineno=func.lineno),
+                ]
+            )
 
         # 5) (optional) debug
         if os.getenv("PAXY_DEBUG") == "1":
@@ -359,7 +364,12 @@ class Assembler:
                 if entry.has_value:
                     final.append(Instr("RETURN_VALUE", lineno=entry.lineno))
                 else:
-                    final.append(Instr("RETURN_CONST", 0, lineno=entry.lineno))
+                    final.extend(
+                        [
+                            Instr("LOAD_CONST", 0, lineno=entry.lineno),
+                            Instr("RETURN_VALUE", lineno=entry.lineno),
+                        ]
+                    )
 
             else:
                 # Instr or Label
@@ -418,59 +428,65 @@ class Assembler:
             return [Instr("LOAD_NAME", name, lineno=lineno)]
         return [Instr("LOAD_CONST", tok, lineno=lineno)]
 
-    def _lower_rangeblock_to_stream(
-        self, it: RangeBlock
-    ) -> List[Union[Instr, Label, Placeholder, FuncDef, ReturnMarker]]:
+    def _lower_rangeblock_to_stream(self, it: RangeBlock) -> list[ResolvedItem]:
         """
-        Expand a RNG block into concrete loop prologue/epilogue and recursively
-        lower any nested RangeBlock in the body.
+            RNG <var> <start> <end> [<step>]
+            <body>
+            RNE
+            -->
+            PUSH_NULL
+            LOAD_GLOBAL range
+            <load args>
+            CALL nargs
+            GET_ITER
+        loop:
+            FOR_ITER end
+            STORE_NAME <var>
+            <body without per-line bookends/sentinels>
+            JUMP_BACKWARD loop
+        end:
+            END_FOR
+            POP_TOP
         """
-        out: List[Union[Instr, Label, Placeholder, FuncDef, ReturnMarker]] = []
+        out: list[ResolvedItem] = []
 
-        # prologue: range(start, end) -> iter
+        # 1) Build iter(range(...))
+        out.append(Instr("PUSH_NULL", lineno=it.lineno))
         out.append(Instr("LOAD_GLOBAL", (True, "range"), lineno=it.lineno))
-        out.extend(self._emit_token_load_instrs(it.start, it.lineno))
-        out.extend(self._emit_token_load_instrs(it.end, it.lineno))
-        out.append(Instr("CALL", 2, lineno=it.lineno))
+
+        # Collect start/end[/step]
+        args: list[object] = [it.start, it.end]
+        step = getattr(it, "step", None)
+        if step is not None:
+            args.append(step)
+
+        for tok in args:
+            out.extend(self._emit_token_load_instrs(tok, it.lineno))
+
+        out.append(Instr("CALL", len(args), lineno=it.lineno))
         out.append(Instr("GET_ITER", lineno=it.lineno))
 
+        # 2) Loop skeleton
         l_loop = Label()
         l_end = Label()
         out.append(l_loop)
         out.append(Instr("FOR_ITER", l_end, lineno=it.lineno))
+        out.append(Instr("STORE_NAME", it.var, lineno=it.lineno))
 
-        # induction variable
-        store_op = "STORE_FAST" if self._in_function else "STORE_NAME"
-        out.append(Instr(store_op, self._as_name(it.var), lineno=it.lineno))
+        # 3) Splice body, dropping line bookends and the sentinel LOAD_CONST 0
+        DROP_NAMES = {"RESUME", "RETURN_VALUE", "RETURN_CONST"}
+        for ins in it.body:
+            if isinstance(ins, Instr):
+                if ins.name in DROP_NAMES:
+                    continue
+                # Filter the sentinel that precedes implicit returns in single-line lowering
+                if ins.name == "LOAD_CONST" and ins.arg == 0:
+                    continue
+            out.append(ins)
 
-        # body
-        for elt in it.body:
-            # Never inline a RESUME inside a loop body
-            if isinstance(elt, Instr) and elt.name == "RESUME":
-                continue
-            # Do not inline bare ReturnMarkers from the inner snippet
-            if isinstance(elt, ReturnMarker):
-                continue
-            # And guard against concrete returns sneaking in from snippet assembly
-            if isinstance(elt, Instr) and elt.name in ("RETURN_CONST", "RETURN_VALUE"):
-                continue
-
-            if isinstance(elt, RangeBlock):
-                out.extend(self._lower_rangeblock_to_stream(elt))
-            elif isinstance(elt, NamedJump):
-                out.append(
-                    (self.TAG_NJUMP, elt.opcode, JumpRef(elt.target_name, elt.lineno))
-                )
-            elif isinstance(elt, JumpRef):
-                out.append((self.TAG_JUMP, elt))
-            elif isinstance(elt, LabelDecl):
-                raise SyntaxError("LBL inside RNG block is not supported")
-            else:
-                # Instr / FuncDef — pass through; later passes will handle them
-                out.append(elt)
-
-        # epilogue
         out.append(Instr("JUMP_BACKWARD", l_loop, lineno=it.lineno))
+
+        # 4) Loop end + cleanup (tests want POP_TOP present)
         out.append(l_end)
         out.append(Instr("END_FOR", lineno=it.lineno))
         out.append(Instr("POP_TOP", lineno=it.lineno))
@@ -491,15 +507,15 @@ class Assembler:
             else:
                 tmp.append(ins)
 
-        # If there is any explicit RETURN_VALUE, remove all RETURN_CONST
-        has_explicit_return = any(
-            isinstance(ins, Instr) and ins.name == "RETURN_VALUE" for ins in tmp
-        )
-        if has_explicit_return:
-            tmp = [
-                ins
-                for ins in tmp
-                if not (isinstance(ins, Instr) and ins.name == "RETURN_CONST")
-            ]
+        # # If there is any explicit RETURN_VALUE, remove all RETURN_CONST
+        # has_explicit_return = any(
+        #     isinstance(ins, Instr) and ins.name == "RETURN_VALUE" for ins in tmp
+        # )
+        # if has_explicit_return:
+        #     tmp = [
+        #         ins
+        #         for ins in tmp
+        #         if not (isinstance(ins, Instr) and ins.name == "RETURN_CONST")
+        #     ]
 
         return tmp

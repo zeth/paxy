@@ -17,7 +17,7 @@ def strip_leading_resume(pairs):
 def canon_argless(pairs):
     out = []
     for n, a in pairs:
-        if n in {"PUSH_NULL", "POP_TOP"}:
+        if n in {"PUSH_NULL", "POP_TOP", "RETURN_VALUE"}:
             out.append((n, 0))
         else:
             out.append((n, a))
@@ -26,7 +26,7 @@ def canon_argless(pairs):
 
 def test_import_lowers_via___import__(tmp_path: Path):
     src = tmp_path / "prog.paxy"
-    src.write_text("IMP 'time'\nRETURN_CONST None\n")
+    src.write_text("IMP 'time'\nLOAD_CONST None\nRETURN_VALUE\n")
     got = canon_argless(strip_leading_resume(as_pairs(Parser().parse_file(src))))
     assert got == [
         ("LOAD_NAME", "__import__"),
@@ -34,7 +34,8 @@ def test_import_lowers_via___import__(tmp_path: Path):
         ("LOAD_CONST", "time"),
         ("CALL", 1),
         ("POP_TOP", 0),
-        ("RETURN_CONST", None),
+        ("LOAD_CONST", None),
+        ("RETURN_VALUE", 0),
     ]
 
 

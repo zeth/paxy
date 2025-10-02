@@ -114,7 +114,11 @@ class Emitter:
         instrs = self.sink
         if not instrs:
             instrs.extend(
-                [Instr("RESUME", 0, lineno=1), Instr("RETURN_CONST", 0, lineno=1)]
+                [
+                    Instr("RESUME", 0, lineno=1),
+                    Instr("LOAD_CONST", 0, lineno=1),
+                    Instr("RETURN_VALUE", lineno=1),
+                ]
             )
             return
 
@@ -125,9 +129,14 @@ class Emitter:
             ln = getattr(instrs[0], "lineno", 1) or 1
             instrs.insert(0, Instr("RESUME", 0, lineno=ln))
 
-        if _iname(instrs[-1]) not in {"RETURN_CONST", "RETURN_VALUE"}:
+        if _iname(instrs[-1]) != "RETURN_VALUE":
             ln = getattr(instrs[-1], "lineno", 1) or 1
-            instrs.append(Instr("RETURN_CONST", 0, lineno=ln))
+            instrs.extend(
+                [
+                    Instr("LOAD_CONST", 0, lineno=ln),
+                    Instr("RETURN_VALUE", lineno=ln),
+                ]
+            )
 
 
 # -------------------------------- Parser --------------------------------

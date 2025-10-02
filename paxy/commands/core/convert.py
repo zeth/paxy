@@ -77,7 +77,7 @@ class ToInt(_ConvertBase):
     ### Would you like to know more?
 
     We turned text into numbers,
-    now let's go the other way with [TST](../commands/tostr.md) next.
+    now let's go the other way with [TST](../commands/tst.md) next.
     """
 
     COMMAND = "TIN"
@@ -93,7 +93,7 @@ class ToInt(_ConvertBase):
 
 
 class ToFloat(_ConvertBase):
-    """Convert a value to a floating‑point number (decimal).
+    """Convert a value to a floating point number (decimal).
 
     **Syntax:**
 
@@ -185,7 +185,7 @@ class ToStr(_ConvertBase):
 
     ## Would you like to know more?
 
-    We have another command that follows a similar idea: [TFL](../commands/tofloat.md).
+    We have another command that follows a similar idea: [TFL](../commands/tfl.md).
 
     """
 

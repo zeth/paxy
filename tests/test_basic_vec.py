@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any, Iterable, List, Tuple, TypeAlias
 import pytest
 from paxy.compiler.parser import Parser
+from tests.helpers import UNSET
 
 Pair: TypeAlias = Tuple[str, Any]
 PairList: TypeAlias = List[Pair]
@@ -20,7 +21,8 @@ def test_vec_empty(tmp_path: Path) -> None:
         ("RESUME", 0),
         ("BUILD_LIST", 0),
         ("STORE_NAME", "xs"),
-        ("RETURN_CONST", 0),
+        ("LOAD_CONST", 0),
+        ("RETURN_VALUE", UNSET),
     ]
 
 
@@ -36,7 +38,8 @@ def test_vec_constants(tmp_path: Path) -> None:
         ("LOAD_CONST", None),
         ("BUILD_LIST", 4),
         ("STORE_NAME", "xs"),
-        ("RETURN_CONST", 0),
+        ("LOAD_CONST", 0),
+        ("RETURN_VALUE", UNSET),
     ]
 
 
@@ -55,5 +58,6 @@ def test_vec_with_identifiers(tmp_path: Path) -> None:
         ("LOAD_NAME", "b"),
         ("BUILD_LIST", 3),
         ("STORE_NAME", "xs"),
-        ("RETURN_CONST", 0),
+        ("LOAD_CONST", 0),
+        ("RETURN_VALUE", UNSET),
     ]

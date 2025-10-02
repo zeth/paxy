@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paxy"
-version = "0.1.0"
+version = "0.2.0"
 description = "Paxy: a modern BASIC-like language that compiles to Python bytecode (.pyc)."
 authors = [{ name = "Zeth Green", email = "theology@gmail.com" }]
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.13.7"
+requires-python = ">=3.13"
 
 dependencies = [
   "bytecode>=0.17.0", # maintained library for building CodeType
@@ -22,6 +22,7 @@ classifiers = [
   "Intended Audience :: Developers",
   "Programming Language :: Python",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Software Development :: Compilers",
   "Topic :: Education",
   "Topic :: Utilities",

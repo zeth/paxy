@@ -5,6 +5,11 @@ from typing import Any, Iterable, List, Tuple, TypeAlias
 import pytest
 from paxy.compiler.parser import Parser
 
+# 3.14: RETURN_VALUE carries bytecode.instr._UNSET() when there's no explicit value
+from bytecode.instr import _UNSET as _UNSET_CTOR
+
+UNSET = _UNSET_CTOR()
+
 Pair: TypeAlias = Tuple[str, Any]
 PairList: TypeAlias = List[Pair]
 
@@ -19,7 +24,7 @@ def test_igl_empty(tmp_path: Path) -> None:
     src.write_text("IGL s\n")
     got = as_pairs(Parser().parse_file(src))
     assert got[0] == ("RESUME", 0)
-    assert got[-1] == ("RETURN_CONST", 0)
+    assert got[-1] == ("RETURN_VALUE", UNSET)
     op, val = got[1]
     assert op == "LOAD_CONST" and isinstance(val, frozenset) and len(val) == 0
     assert got[2] == ("STORE_NAME", "s")
@@ -31,7 +36,7 @@ def test_igl_literals_fast_path(tmp_path: Path) -> None:
     src.write_text("IGL s 1 'x' True None\n")
     got = as_pairs(Parser().parse_file(src))
     assert got[0] == ("RESUME", 0)
-    assert got[-1] == ("RETURN_CONST", 0)
+    assert got[-1] == ("RETURN_VALUE", UNSET)
     op, val = got[1]
     assert op == "LOAD_CONST" and isinstance(val, frozenset)
     assert {1, "x", True, None}.issubset(val)
@@ -59,7 +64,8 @@ def test_igl_with_identifiers_falls_back_to_call(tmp_path: Path) -> None:
         ("BUILD_TUPLE", 3),
         ("CALL", 1),
         ("STORE_NAME", "s"),
-        ("RETURN_CONST", 0),
+        ("LOAD_CONST", 0),
+        ("RETURN_VALUE", UNSET),
     ]
 
 

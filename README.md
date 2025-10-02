@@ -30,17 +30,21 @@ paxy filename.paxy will compile and run the paxy file.
 
 ## Install for development
 
-1. You need Python 3.17.3 exactly.
+1. You need Python 3.13 or Python 3.14.
 
-I use pyenv: https://github.com/pyenv/pyenv
+We might go back and support Python 3.12, but we haven't yet.
+Older Python versions are untested and unlikely to ever be supported.
+
+I use pyenv to use multiple Python versions on my computer: https://github.com/pyenv/pyenv
 
 - Linux: curl -fsSL https://pyenv.run | bash
 - Mac: brew install pyenv
 - Win: https://github.com/pyenv-win/pyenv-win/blob/master/docs/installation.md
 
-Then add that version of Python:
+Then add your desired version of Python:
 
-- pyenv install 3.17.3
+- pyenv install 3.13.7
+- pyenv local 3.13.7
 
 2. Create virtual environment:
 
