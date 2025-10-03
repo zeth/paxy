@@ -1,32 +1,46 @@
-# paxy/cli.py (or wherever your CLI entry lives)
-
 from __future__ import annotations
 from pathlib import Path
 from types import CodeType
 from typing import Dict, Optional
+import argparse
 
+from importlib._bootstrap_external import (
+    MAGIC_NUMBER,
+    _pack_uint32 as pack,
+    _code_to_timestamp_pyc as code_to_timestamp_pyc,
+    _write_atomic as write_atomic,
+)
+from importlib.util import source_hash
+import marshal
+import struct
+import sys
 from bytecode import Bytecode, Instr, CompilerFlags
 from paxy.compiler.parser import Parser
 from paxy.compiler.assembler import Assembler
 from paxy.compiler.twelve import transpile_for_twelve
 from paxy.compiler.debug import debug_dump, emit_debugdis
 
-import importlib._bootstrap_external as _be
-import marshal
-import sys
-import time
-
 
 class PaxyCompiler:
-    """Single-source compiler pipeline: parse -> assemble -> bytecode -> code."""
+    """Single-source compiler pipeline:
+    parse -> assemble -> bytecode -> code (+ optional .pyc cache)."""
 
-    def __init__(self, path: Path, *, verbose: bool = False, no_cache=False) -> None:
+    def __init__(
+        self, path: Path, *, verbose: bool = False, no_cache: bool = False
+    ) -> None:
         self.path = Path(path)
         self.verbose = verbose
         self.no_cache = no_cache
 
     # ---------- core ----------
     def assemble(self) -> CodeType:
+        # Try cache first (unless disabled)
+        if not self.no_cache:
+            cached = self._load_from_cache()
+            if cached is not None:
+                return cached
+
+        # Compile fresh
         parsed = Parser().parse_file(self.path)
         resolved = Assembler(parsed).resolve()
         debug_dump(resolved)
@@ -36,7 +50,7 @@ class PaxyCompiler:
         bc.name = "<module>"
         bc.flags |= CompilerFlags.NOFREE
 
-        # First lineno, if present
+        # first_lineno if present
         first_instr = next(
             (i for i in resolved if isinstance(i, Instr) and i.lineno), None
         )
@@ -45,96 +59,136 @@ class PaxyCompiler:
 
         code = transpile_for_twelve(bc)
         emit_debugdis(code)
+
+        # Write cache unless disabled
+        if not self.no_cache:
+            self._write_cache(code)
+
         return code
 
-    # ---------- .pyc I/O (optional helpers) ----------
+    # ---------- .pyc paths ----------
     def pyc_path(self, *, optimization: Optional[int] = None) -> Path:
         tag = sys.implementation.cache_tag or "cpython"
         opt = f".opt-{optimization}" if optimization else ""
-        return (
-            self.path.with_suffix("")
-            .with_name(f"{self.path.stem}.{tag}{opt}.pyc")
-            .with_suffix(".pyc")
-            .with_name(f"{self.path.stem}.{tag}{opt}.pyc")
-            .parent
-            / "__pycache__"
-            / f"{self.path.stem}.{tag}{opt}.pyc"
-        )
+        cache_dir = self.path.parent / "__pycache__"
+        return cache_dir / f"{self.path.stem}.{tag}{opt}.pyc"
+
+    # ---------- cache I/O ----------
+    def _source_hash(self) -> bytes:
+        # Hash of the *paxy* source bytes
+        return source_hash(self.path.read_bytes())
+
+    def _write_cache(
+        self, code: CodeType, *, optimization: Optional[int] = None
+    ) -> None:
+        """Write a PEP 552 hash-based pyc (checked=True)."""
+        out = self.pyc_path(optimization=optimization)
+        out.parent.mkdir(parents=True, exist_ok=True)
+
+        h = self._source_hash()
+        # MAGIC (4) + FLAGS (4) + HASH (8) + marshal(code)
+        data = bytearray(MAGIC_NUMBER)
+        flags = 0b1 | (1 << 1)  # hash-based + checked
+        data.extend(pack(flags))
+        data.extend(h)
+        data.extend(marshal.dumps(code))
+        write_atomic(str(out), data, mode=0o644)
+
+    def _load_from_cache(
+        self, *, optimization: Optional[int] = None
+    ) -> Optional[CodeType]:
+        """Return cached CodeType if a hash-based pyc matches current source hash."""
+        pyc = self.pyc_path(optimization=optimization)
+        if not pyc.is_file():
+            return None
+
+        try:
+            data = memoryview(pyc.read_bytes())
+            # Basic sanity on MAGIC
+            if bytes(data[:4]) != MAGIC_NUMBER:
+                return None
+
+            word = struct.unpack("<I", data[4:8])[0]
+            if word & 0b1:
+                # hash-based header: FLAGS + HASH
+                cached_hash = bytes(data[8:16])
+                if cached_hash != self._source_hash():
+                    return None
+                code = marshal.loads(data[16:])
+                return code  # cache hit
+
+            # timestamp-based header (we don't write these, but be forgiving)
+            # MAGIC + TIMESTAMP (4) + SIZE (4)
+            mtime = word
+            size = struct.unpack("<I", data[8:12])[0]
+            st = self.path.stat()
+            if int(st.st_mtime) != mtime or st.st_size != size:
+                return None
+            code = marshal.loads(data[12:])
+            return code
+        except Exception:
+            return None
+
+    # ---------- helpers for tests / scripts ----------
+    def run(self, g: Optional[Dict[str, object]] = None) -> None:
+        g = {"__name__": "__main__"} if g is None else g
+        exec(self.assemble(), g)
 
     def compile_pyc(
-        self, *, hash_based: bool = False, optimization: Optional[int] = None
+        self, *, hash_based: bool = True, optimization: Optional[int] = None
     ) -> Path:
+        """Explicit compiler to .pyc; default is hash-based (PEP 552)."""
         code = self.assemble()
         out = self.pyc_path(optimization=optimization)
         out.parent.mkdir(parents=True, exist_ok=True)
 
         if hash_based:
-            src_bytes = self.path.read_bytes()
-            # Hash-based pyc (checked=True)
-            h = _be._source_hash(src_bytes)
-            data = bytearray(_be.MAGIC_NUMBER)
-            flags = 0b1 | (1 << 1)  # hash-based + checked
-            data.extend(_be._pack_uint32(flags))
-            data.extend(h)
-            data.extend(marshal.dumps(code))
+            self._write_cache(code, optimization=optimization)
         else:
-            # Timestamp-based pyc (mtime=now, size=0 since we don’t have a .py)
-            ts = int(time.time())
-            data = _be._code_to_timestamp_pyc(code, ts, 0)
-
-        _be._write_atomic(str(out), data, mode=0o644)
+            # timestamp-based for completeness
+            st = self.path.stat()
+            data = code_to_timestamp_pyc(code, int(st.st_mtime), st.st_size)
+            write_atomic(str(out), data, mode=0o644)
         return out
-
-    # ---------- run helpers ----------
-    def run(self, g: Optional[Dict[str, object]] = None) -> None:
-        g = {"__name__": "__main__"} if g is None else g
-        exec(self.assemble(), g)
-
-    def run_pyc(self, pyc: Path, g: Optional[Dict[str, object]] = None) -> None:
-        g = {"__name__": "__main__"} if g is None else g
-        # Very small reader for hash- or timestamp-based pyc
-        with open(pyc, "rb") as f:
-            data = f.read()
-        # Skip header and load; importlib handles validation when importing modules,
-        # but here we just trust the file we wrote.
-        # MAGIC (4) + flags/timestamp (4) + hash/size (8) = 16 bytes header.
-        code = marshal.loads(memoryview(data)[16:])
-        exec(code, g)
 
 
 # ---------- tiny wrappers to keep existing tests working ----------
-def assemble_file(path: Path) -> CodeType:
-    return PaxyCompiler(path).assemble()
+def assemble_file(path: Path, *, no_cache: bool = False) -> CodeType:
+    """Tests can pass no_cache=True to force a fresh compile and avoid writing a pyc."""
+    return PaxyCompiler(path, no_cache=no_cache).assemble()
 
 
-def compile_paxy_to_pyc(path: Path, *, hash_based: bool = False) -> Path:
+def compile_paxy_to_pyc(path: Path, *, hash_based: bool = True) -> Path:
     return PaxyCompiler(path).compile_pyc(hash_based=hash_based)
 
 
-def run_paxy_path(path: Path) -> None:
-    PaxyCompiler(path).run()
+def run_paxy_path(path: Path, *, no_cache: bool = False) -> None:
+    PaxyCompiler(path, no_cache=no_cache).run()
 
 
 # ---------- main stays slim ----------
 def main(argv: Optional[list[str]] = None) -> int:
-    import argparse
-
     ap = argparse.ArgumentParser(prog="paxy")
     ap.add_argument("source", help="Path to .paxy program")
     ap.add_argument("--compile-only", action="store_true")
-    ap.add_argument("--hash-based", action="store_true")
+    ap.add_argument(
+        "--hash-based", action="store_true", help="Write hash-based pyc (default)"
+    )
     ap.add_argument("-O", dest="optlevel", type=int, default=None)
     ap.add_argument("-v", "--verbose", action="store_true")
+    ap.add_argument(
+        "--no-cache", action="store_true", help="Bypass cache and do not write .pyc"
+    )
     args = ap.parse_args(argv)
 
-    c = PaxyCompiler(Path(args.source), verbose=args.verbose)
+    c = PaxyCompiler(Path(args.source), verbose=args.verbose, no_cache=args.no_cache)
+
     if args.compile_only:
         out = c.compile_pyc(hash_based=args.hash_based, optimization=args.optlevel)
         if args.verbose:
             print(out)
         return 0
 
-    # Run directly (no caching) to match test expectations
     c.run()
     return 0
 
