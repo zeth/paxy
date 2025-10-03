@@ -1,5 +1,3 @@
-# debug.py (add this)
-
 from pathlib import Path
 import os, sys, io, dis
 from contextlib import redirect_stdout

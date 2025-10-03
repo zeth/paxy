@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paxy"
-version = "0.2.0"
+version = "0.3.0"
 description = "Paxy: a modern BASIC-like language that compiles to Python bytecode (.pyc)."
 authors = [{ name = "Zeth Green", email = "theology@gmail.com" }]
 readme = "README.md"
