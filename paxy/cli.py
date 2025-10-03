@@ -1,6 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
-from types import CodeType
+from types import CodeType, ModuleType
 from typing import Dict, Optional
 import argparse
 
@@ -133,10 +133,35 @@ class PaxyCompiler:
             # truncated/invalid data or wrong type.
             return None
 
-    # ---------- helpers for tests / scripts ----------
-    def run(self, g: Optional[Dict[str, object]] = None) -> None:
-        g = {"__name__": "__main__"} if g is None else g
-        exec(self.assemble(), g)
+    def _exec_globals(self, g: Optional[dict[str, object]] = None) -> dict[str, object]:
+        """
+        Create or merge an execution globals dict with import-style metadata:
+        __name__, __file__, __package__, __spec__, __loader__.
+
+        If no dict is provided, build a proper __main__ module and register it
+        in sys.modules. If a dict is provided, only fill missing fields—don’t
+        overwrite anything the caller set.
+        """
+        if g is None:
+            mod = ModuleType("__main__")
+            mod.__file__ = str(self.path)
+            mod.__package__ = None
+            mod.__spec__ = None
+            mod.__loader__ = None
+            sys.modules["__main__"] = mod
+            return mod.__dict__
+
+        # Merge defaults without clobbering caller-provided values.
+        g.setdefault("__name__", "__main__")
+        g.setdefault("__file__", str(self.path))
+        g.setdefault("__package__", None)
+        g.setdefault("__spec__", None)
+        g.setdefault("__loader__", None)
+        return g
+
+    def run(self, g: Optional[dict[str, object]] = None) -> None:
+        """Assemble and execute the program."""
+        exec(self.assemble(), self._exec_globals(g))
 
     def compile_pyc(
         self, *, hash_based: bool = True, optimization: Optional[int] = None
