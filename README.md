@@ -30,9 +30,8 @@ paxy filename.paxy will compile and run the paxy file.
 
 ## Install for development
 
-1. You need Python 3.13 or Python 3.14.
+1. You need Python 3.12, 3.13 or 3.14.
 
-We might go back and support Python 3.12, but we haven't yet.
 Older Python versions are untested and unlikely to ever be supported.
 
 I use pyenv to use multiple Python versions on my computer: https://github.com/pyenv/pyenv

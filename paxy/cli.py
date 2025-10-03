@@ -9,11 +9,15 @@ from pathlib import Path
 import importlib._bootstrap_external as _be
 from typing import List
 from types import CodeType
-import dis as _dis
+import dis
 
 from bytecode import Bytecode, Instr, CompilerFlags
 from paxy.compiler.assembler import Assembler
+from paxy.compiler.debug import debug_dump, emit_debugdis
 from paxy.compiler.ir import ParsedItem
+from paxy.compiler.twelve import (
+    poptop_for_twelve,
+)
 from paxy.compiler.parser import Parser
 
 
@@ -46,20 +50,7 @@ def assemble_file(src_path: Path) -> CodeType:
     parsed: List[ParsedItem] = parser.parse_file(src_path)
 
     resolved = Assembler(parsed).resolve()
-
-    # Optional debug dump
-    if os.getenv("PAXY_DEBUG") == "1":
-        out: List[str] = []
-        out.append("== RESOLVED ==")
-        for i, obj in enumerate(resolved):
-            out.append(f"{i:03d}: {obj!r}")
-        bc_dbg = Bytecode(resolved)
-        code_dbg = bc_dbg.to_code()
-        out.append("== DISASSEMBLY ==")
-        out.append(_dis.Bytecode(code_dbg).dis())  # returns a str in 3.13
-        dbg_path = Path(os.getenv("PAXY_DEBUG_OUT", "/tmp/paxy_debug.txt"))
-        dbg_path.write_text("\n".join(out))
-        return code_dbg
+    debug_dump(resolved)  # <- one quiet line
 
     # Build final bytecode object
     bc = Bytecode(resolved)
@@ -73,12 +64,9 @@ def assemble_file(src_path: Path) -> CodeType:
         if first is not None and first.lineno:
             bc.first_lineno = first.lineno
 
-    code = bc.to_code()
+    code = poptop_for_twelve(bc)
 
-    if os.getenv("PAXY_DEBUG") == "1":
-        print("== DISASSEMBLY ==")
-        _dis.dis(code)
-
+    emit_debugdis(code)  # <- one quiet line to stderr (only if PAXY_DEBUG)
     return code
 
 

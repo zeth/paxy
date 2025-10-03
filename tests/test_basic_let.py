@@ -5,6 +5,7 @@ from typing import Any, Iterable, List, Tuple, TypeAlias
 import bytecode
 import pytest
 from paxy.compiler.parser import Parser
+from tests.helpers import run_paxy_path
 
 UNSET = bytecode.instr._UNSET()
 
@@ -113,21 +114,7 @@ def test_let_with_print_in_same_file(
 ) -> None:
     src = tmp_path / "p4.paxy"
     src.write_text("LET x 1\nPNT 'hello'\n")
-    instrs = Parser().parse_file(src)
-
-    # Execute quickly using bytecode → code object
-    from bytecode import Bytecode, CompilerFlags  # type: ignore[import-not-found]
-
-    bc = Bytecode(instrs)
-    bc.filename = str(src)
-    bc.name = "<module>"
-    # first instruction lineno (Parser ensures a RESUME first)
-    bc.first_lineno = instrs[0].lineno or 1  # type: ignore[attr-defined]
-    bc.flags |= CompilerFlags.NOFREE
-    code = bc.to_code()
-
-    g = {"__name__": "__main__"}
-    exec(code, g)
+    run_paxy_path(src)
     out = capsys.readouterr().out
     assert out == "hello\n"
 

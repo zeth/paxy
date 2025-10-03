@@ -1,6 +1,7 @@
 # paxy/assembler.py
 
 import os
+import sys
 from typing import Union, Any
 
 from bytecode import Bytecode, Instr, Label, CompilerFlags
@@ -17,12 +18,22 @@ from paxy.compiler.ir import (
     COND_JUMP_OPS,
     UNCOND_JUMP_FIXED,
 )
+from paxy.compiler.twelve import (
+    normalize_push_null_for_calls_312_seq,
+    try_func_to_code_with_endfor_fix,
+)
 
 
 # What the resolver returns (only real bytecode items)
 ResolvedItem = Union[Instr, Label]
 # Internal placeholder tuple type (tagged unions used in the first pass)
 Placeholder = tuple[Any, ...]
+
+
+def _lg(name: str) -> tuple[bool, str]:
+    if sys.version_info >= (3, 13):
+        return (True, name)
+    return (False, name)
 
 
 class Assembler:
@@ -141,6 +152,7 @@ class Assembler:
                 resolved.append(it)
 
         self._resolved_stream = resolved
+        self._normalize_push_null_for_calls_312()
         self._decl_idx_to_resolved_idx = decl_map
 
     # ---------- Pass 1d: Build name -> resolved index map ----------
@@ -228,13 +240,22 @@ class Assembler:
         bc_func = Bytecode(lowered_body)
         bc_func.argcount = len(func.params)
         bc_func.argnames = list(func.params)
-        bc_func.flags |= CompilerFlags.OPTIMIZED | CompilerFlags.NEWLOCALS
+        bc_func.flags |= (
+            CompilerFlags.OPTIMIZED | CompilerFlags.NEWLOCALS | CompilerFlags.NOFREE
+        )
         bc_func.first_lineno = func.lineno
+
+        if sys.version_info >= (3, 13):
+            maker = Instr("MAKE_FUNCTION", lineno=func.lineno)
+            func_code = bc_func.to_code()
+        else:
+            maker = Instr("MAKE_FUNCTION", 0, lineno=func.lineno)
+            func_code = try_func_to_code_with_endfor_fix(bc_func)
 
         # 7) Emit loader sequence
         return [
-            Instr("LOAD_CONST", bc_func.to_code(), lineno=func.lineno),
-            Instr("MAKE_FUNCTION", lineno=func.lineno),
+            Instr("LOAD_CONST", func_code, lineno=func.lineno),
+            maker,
             Instr("STORE_NAME", func.name, lineno=func.lineno),
         ]
 
@@ -278,9 +299,7 @@ class Assembler:
                         out.append(Instr("LOAD_FAST", name, lineno=ins.lineno))
                     else:
                         # CPython 3.13: LOAD_GLOBAL requires (bool, name) tuple
-                        out.append(
-                            Instr("LOAD_GLOBAL", (True, name), lineno=ins.lineno)
-                        )
+                        out.append(Instr("LOAD_GLOBAL", _lg(name), lineno=ins.lineno))
                     continue
 
                 if nm == "STORE_NAME":
@@ -333,7 +352,7 @@ class Assembler:
             if ins.name == "STORE_NAME" and isinstance(ins.arg, str):
                 out.append(Instr("STORE_GLOBAL", ins.arg, lineno=ins.lineno))
             elif ins.name == "LOAD_NAME" and isinstance(ins.arg, str):
-                out.append(Instr("LOAD_GLOBAL", ins.arg, lineno=ins.lineno))
+                out.append(Instr("LOAD_GLOBAL", _lg(ins.arg), lineno=ins.lineno))
             else:
                 out.append(ins)
 
@@ -448,7 +467,7 @@ class Assembler:
 
         # 1) Build iter(range(...))
         out.append(Instr("PUSH_NULL", lineno=it.lineno))
-        out.append(Instr("LOAD_GLOBAL", (True, "range"), lineno=it.lineno))
+        out.append(Instr("LOAD_GLOBAL", _lg("range"), lineno=it.lineno))
 
         # Collect start/end[/step]
         args: list[object] = [it.start, it.end]
@@ -485,6 +504,7 @@ class Assembler:
         # 4) Loop end + cleanup (tests want POP_TOP present)
         out.append(l_end)
         out.append(Instr("END_FOR", lineno=it.lineno))
+        # if sys.version_info >= (3, 13):
         out.append(Instr("POP_TOP", lineno=it.lineno))
 
         return out
@@ -515,3 +535,9 @@ class Assembler:
         #     ]
 
         return tmp
+
+    def _normalize_push_null_for_calls_312(self) -> None:
+        """On Py 3.12 only, make sure PUSH_NULL is *under* the callable."""
+        self._resolved_stream = normalize_push_null_for_calls_312_seq(
+            self._resolved_stream
+        )
