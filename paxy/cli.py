@@ -68,6 +68,18 @@ class PaxyCompiler:
 
     # ---------- .pyc paths ----------
     def pyc_path(self, *, optimization: Optional[int] = None) -> Path:
+        """
+        Where to write/read the .pyc for this .paxy source.
+
+        - If a sibling hello.py exists => use PEP 3147 layout:
+                __pycache__/hello.<tag>[.opt-N].pyc
+        - Otherwise (sourceless) => write a top-level hello.pyc
+            so the import system can find it by name.
+        """
+        src_py = self.path.with_suffix(".py")
+        if not src_py.exists():  # sourceless case
+            return self.path.with_suffix(".pyc")  # top-level hello.pyc
+
         tag = sys.implementation.cache_tag or "cpython"
         opt = f".opt-{optimization}" if optimization else ""
         cache_dir = self.path.parent / "__pycache__"
