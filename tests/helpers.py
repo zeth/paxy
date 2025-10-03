@@ -7,7 +7,7 @@ from types import CodeType
 
 from paxy.compiler.parser import Parser
 from paxy.compiler.ir import ParsedItem
-from paxy.compiler.opcoerce import normalize_push_null_for_calls_312_seq
+from paxy.compiler.twelve import normalize_push_null_for_calls_312_seq
 
 
 UNSET = _UNSET_CTOR()

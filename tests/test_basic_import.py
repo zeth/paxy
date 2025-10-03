@@ -1,6 +1,5 @@
 from pathlib import Path
 import sys
-from paxy.compiler.opcoerce import normalize_push_null_for_calls_312_seq
 from paxy.compiler.parser import Parser
 from tests.helpers import run_paxy_path
 

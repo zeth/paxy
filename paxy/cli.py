@@ -9,12 +9,15 @@ from pathlib import Path
 import importlib._bootstrap_external as _be
 from typing import List
 from types import CodeType
-import dis as _dis
+import dis
 
 from bytecode import Bytecode, Instr, CompilerFlags
 from paxy.compiler.assembler import Assembler
+from paxy.compiler.debug import debug_dump, emit_debugdis
 from paxy.compiler.ir import ParsedItem
-from paxy.compiler.opcoerce import normalize_push_null_for_calls_312_seq
+from paxy.compiler.twelve import (
+    poptop_for_twelve,
+)
 from paxy.compiler.parser import Parser
 
 
@@ -39,38 +42,6 @@ def output_path_for(src: str | Path, *, optimization: int | None = None) -> Path
         return src.parent / f"{base}.pyc"
 
 
-def debug(code_dbg: CodeType) -> str:
-    if sys.version_info >= (3, 13):
-        # returns a str in Python 3.13 and above
-        return _dis.Bytecode(code_dbg).dis()
-    else:
-        # Handle Python 3.12
-        import io, contextlib
-
-        buf = io.StringIO()
-        with contextlib.redirect_stdout(buf):
-            _dis.dis(code_dbg)
-        return buf.getvalue()
-
-
-def _safe_disassemble(resolved_items) -> str:
-    """
-    Best-effort disassembly used only when PAXY_DEBUG=1.
-    - For 3.12, normalize CALL/PUSH_NULL order first (no-op on 3.13+).
-    - Never let disassembly crash compilation; return a message instead.
-    """
-    try:
-        seq = normalize_push_null_for_calls_312_seq(list(resolved_items))
-    except Exception:
-        seq = list(resolved_items)
-
-    try:
-        bc_dbg = Bytecode(seq)
-        return debug(bc_dbg.to_code())
-    except Exception as exc:
-        return f"<disassembly skipped: {exc}>"
-
-
 def assemble_file(src_path: Path) -> CodeType:
     """
     Parse .paxy -> (ParsedItem stream) -> resolve labels -> Bytecode -> CodeType
@@ -79,17 +50,7 @@ def assemble_file(src_path: Path) -> CodeType:
     parsed: List[ParsedItem] = parser.parse_file(src_path)
 
     resolved = Assembler(parsed).resolve()
-
-    # Optional debug dump
-    if os.getenv("PAXY_DEBUG") == "1":
-        out: List[str] = []
-        out.append("== RESOLVED ==")
-        for i, obj in enumerate(resolved):
-            out.append(f"{i:03d}: {obj!r}")
-        out.append("== DISASSEMBLY ==")
-        out.append(_safe_disassemble(resolved))
-        dbg_path = Path(os.getenv("PAXY_DEBUG_OUT", "/tmp/paxy_debug.txt"))
-        dbg_path.write_text("\n".join(out))
+    debug_dump(resolved)  # <- one quiet line
 
     # Build final bytecode object
     bc = Bytecode(resolved)
@@ -103,12 +64,9 @@ def assemble_file(src_path: Path) -> CodeType:
         if first is not None and first.lineno:
             bc.first_lineno = first.lineno
 
-    code = bc.to_code()
+    code = poptop_for_twelve(bc)
 
-    if os.getenv("PAXY_DEBUG") == "1":
-        print("== DISASSEMBLY ==")
-        _dis.dis(code)
-
+    emit_debugdis(code)  # <- one quiet line to stderr (only if PAXY_DEBUG)
     return code
 
 
