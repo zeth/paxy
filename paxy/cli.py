@@ -158,11 +158,11 @@ def assemble_file(path: Path, *, no_cache: bool = False) -> CodeType:
     return PaxyCompiler(path, no_cache=no_cache).assemble()
 
 
-def compile_paxy_to_pyc(path: Path, *, hash_based: bool = True) -> Path:
+def compile_file(path: Path, *, hash_based: bool = True) -> Path:
     return PaxyCompiler(path).compile_pyc(hash_based=hash_based)
 
 
-def run_paxy_path(path: Path, *, no_cache: bool = False) -> None:
+def run_pyc(path: Path, *, no_cache: bool = False) -> None:
     PaxyCompiler(path, no_cache=no_cache).run()
 
 
