@@ -126,7 +126,11 @@ class PaxyCompiler:
                 return None
             code = marshal.loads(data[12:])
             return code
-        except Exception:
+        except (OSError, EOFError, ValueError, TypeError, struct.error):
+            # OSError: file disappeared between is_file() and read_bytes() or stat race.
+            # struct.error: header too short / malformed.
+            # EOFError, ValueError, TypeError: marshal.loads on
+            # truncated/invalid data or wrong type.
             return None
 
     # ---------- helpers for tests / scripts ----------
