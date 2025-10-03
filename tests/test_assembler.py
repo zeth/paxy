@@ -36,7 +36,8 @@ def test_compile_file_writes_pyc_and_is_importable(
 
     pyc_path = compile_file(src)
     assert pyc_path.exists()
-    assert pyc_path.name == "hello.pyc"
+    expected = {"hello.pyc", f"hello.{sys.implementation.cache_tag}.pyc"}
+    assert pyc_path.name in expected
 
     monkeypatch.syspath_prepend(str(tmp_path))
     sys.modules.pop("hello", None)

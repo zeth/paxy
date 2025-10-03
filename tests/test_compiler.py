@@ -20,7 +20,12 @@ def test_sourceless_writes_name_pyc_and_is_importable(monkeypatch, tmp_path):
     monkeypatch.syspath_prepend(str(tmp_path))  # <-- make tmp_path importable
 
     pyc_path = compiler.compile_file(src)
-    assert pyc_path == tmp_path / "hello.pyc"
+    expected = {
+        tmp_path / "hello.pyc",
+        tmp_path / "__pycache__" / f"hello.{sys.implementation.cache_tag}.pyc",
+    }
+    assert pyc_path in expected
+
     assert pyc_path.exists()
 
     sys.modules.pop("hello", None)
