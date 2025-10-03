@@ -1,5 +1,8 @@
 from pathlib import Path
-import os, sys, io, dis
+import os
+import sys
+import io
+import dis
 from contextlib import redirect_stdout
 from types import CodeType
 from bytecode import Bytecode

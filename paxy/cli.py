@@ -4,12 +4,11 @@ import os
 import sys
 import importlib.util
 from importlib.machinery import SourcelessFileLoader
-import sys, time
+import importlib._bootstrap_external as bootstrap
+import time
 from pathlib import Path
-import importlib._bootstrap_external as _be
 from typing import List
 from types import CodeType
-import dis
 
 from bytecode import Bytecode, Instr, CompilerFlags
 from paxy.compiler.assembler import Assembler
@@ -36,10 +35,12 @@ def output_path_for(src: str | Path, *, optimization: int | None = None) -> Path
     if py_sibling.exists():
         tag = sys.implementation.cache_tag  # e.g. 'cpython-313'
         opt = f".opt-{optimization}" if optimization else ""
-        return src.parent / "__pycache__" / f"{base}.{tag}{opt}.pyc"
+        path = src.parent / "__pycache__" / f"{base}.{tag}{opt}.pyc"
     else:
         # sourceless import path that the importer will actually check
-        return src.parent / f"{base}.pyc"
+        path = src.parent / f"{base}.pyc"
+
+    return path
 
 
 def assemble_file(src_path: Path) -> CodeType:
@@ -89,11 +90,11 @@ def compile_file(
     try:
         dest_p.parent.mkdir(parents=True, exist_ok=True)
         if hash_based:
-            pyc = _be._code_to_hash_pyc(code, checked_hash=None)
+            pyc = bootstrap._code_to_hash_pyc(code, checked_hash=None)
         else:
             ts = int(time.time()) if mtime is None else int(mtime)
-            pyc = _be._code_to_timestamp_pyc(code, ts, 0)  # size=0 for sourceless
-        _be._write_atomic(str(dest_p), pyc, mode=mode)
+            pyc = bootstrap._code_to_timestamp_pyc(code, ts, 0)  # size=0 for sourceless
+        bootstrap._write_atomic(str(dest_p), pyc, mode=mode)
     except Exception as exc:
         raise PaxyCompileError(f"writing .pyc failed for {dest_p}: {exc}") from exc
 

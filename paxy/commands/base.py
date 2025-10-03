@@ -3,7 +3,7 @@
 from typing import Any, TypeAlias, Union
 from bytecode import Instr, BinaryOp
 from paxy.compiler.opcoerce import coerce_binary_op
-from paxy.compiler.ir import ReturnMarker, LabelDecl, JumpRef, NamedJump
+from paxy.compiler.ir import ReturnMarker, LabelDecl, JumpRef, NamedJump, Ident
 
 _NOARG = object()
 
@@ -56,8 +56,6 @@ class Command:
         raise NotImplementedError
 
     def _emit_load_for(self, value: Any) -> None:
-        from paxy.compiler.ir import Ident
-
         if isinstance(value, Ident):
             self.add_op("LOAD_NAME", str(value))
         else:
