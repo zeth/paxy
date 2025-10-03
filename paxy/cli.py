@@ -14,6 +14,7 @@ import dis as _dis
 from bytecode import Bytecode, Instr, CompilerFlags
 from paxy.compiler.assembler import Assembler
 from paxy.compiler.ir import ParsedItem
+from paxy.compiler.opcoerce import normalize_push_null_for_calls_312_seq
 from paxy.compiler.parser import Parser
 
 
@@ -52,6 +53,24 @@ def debug(code_dbg: CodeType) -> str:
         return buf.getvalue()
 
 
+def _safe_disassemble(resolved_items) -> str:
+    """
+    Best-effort disassembly used only when PAXY_DEBUG=1.
+    - For 3.12, normalize CALL/PUSH_NULL order first (no-op on 3.13+).
+    - Never let disassembly crash compilation; return a message instead.
+    """
+    try:
+        seq = normalize_push_null_for_calls_312_seq(list(resolved_items))
+    except Exception:
+        seq = list(resolved_items)
+
+    try:
+        bc_dbg = Bytecode(seq)
+        return debug(bc_dbg.to_code())
+    except Exception as exc:
+        return f"<disassembly skipped: {exc}>"
+
+
 def assemble_file(src_path: Path) -> CodeType:
     """
     Parse .paxy -> (ParsedItem stream) -> resolve labels -> Bytecode -> CodeType
@@ -67,13 +86,10 @@ def assemble_file(src_path: Path) -> CodeType:
         out.append("== RESOLVED ==")
         for i, obj in enumerate(resolved):
             out.append(f"{i:03d}: {obj!r}")
-        bc_dbg = Bytecode(resolved)
-        code_dbg = bc_dbg.to_code()
         out.append("== DISASSEMBLY ==")
-        out.append(debug(code_dbg))
+        out.append(_safe_disassemble(resolved))
         dbg_path = Path(os.getenv("PAXY_DEBUG_OUT", "/tmp/paxy_debug.txt"))
         dbg_path.write_text("\n".join(out))
-        return code_dbg
 
     # Build final bytecode object
     bc = Bytecode(resolved)

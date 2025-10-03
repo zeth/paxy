@@ -501,9 +501,7 @@ class Assembler:
         out.append(Instr("END_FOR", lineno=it.lineno))
         if sys.version_info >= (3, 13):
             out.append(Instr("POP_TOP", lineno=it.lineno))
-        else:
-            if not self._in_function:
-                out.append(Instr("POP_TOP", lineno=it.lineno))
+
         return out
 
     def _sanitize_function_body(self, body: list[ResolvedItem]) -> list[ResolvedItem]:
