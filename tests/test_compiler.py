@@ -15,7 +15,11 @@ def test_sourceless_writes_name_pyc_and_is_importable(monkeypatch, tmp_path):
     src = tmp_path / "hello.paxy"
     src.write_text("")
 
-    monkeypatch.setattr(compiler, "assemble_file", lambda path: _stub_code(str(path)))
+    monkeypatch.setattr(
+        compiler.PaxyCompiler,
+        "assemble",
+        lambda self: _stub_code(str(self.path)),
+    )
     monkeypatch.chdir(tmp_path)
     monkeypatch.syspath_prepend(str(tmp_path))  # <-- make tmp_path importable
 
@@ -41,7 +45,14 @@ def test_with_py_exists_writes_cpython_cache_path(monkeypatch, tmp_path):
     src.write_text("")
     (tmp_path / "hello.py").write_text("print('source present')\n")
 
-    monkeypatch.setattr(compiler, "assemble_file", lambda path: _stub_code(str(path)))
+    # After the refactor, compile_file() calls PaxyCompiler(...).assemble(),
+    # so stub that method to return our tiny code object.
+    monkeypatch.setattr(
+        compiler.PaxyCompiler,
+        "assemble",
+        lambda self: _stub_code(str(self.path)),
+    )
+
     monkeypatch.chdir(tmp_path)
     monkeypatch.syspath_prepend(str(tmp_path))  # <-- ensure tmp_path is on sys.path
 
