@@ -20,7 +20,7 @@ class _ConvertBase(Command):
     def _emit_store_name(self, ident: Ident) -> None:
         self.add_op("STORE_NAME", str(ident))
 
-    def make_ops(self, args: list[Any]) -> None:
+    def make_ops(self, op_args: list[Any]) -> None:
         pass
 
 
@@ -83,10 +83,10 @@ class ToInt(_ConvertBase):
 
     COMMAND = "TIN"
 
-    def make_ops(self, args: list[Any]) -> None:
-        if len(args) != 2 or not isinstance(args[0], Ident):
+    def make_ops(self, op_args: list[Any]) -> None:
+        if len(op_args) != 2 or not isinstance(op_args[0], Ident):
             raise SyntaxError("TIN: usage: TIN <dst> <src>")
-        dst, src = args
+        dst, src = op_args
         self.add_op("LOAD_GLOBAL", (True, "int"))
         self._emit_load_token(src)
         self.add_op("CALL", 1)
@@ -139,10 +139,10 @@ class ToFloat(_ConvertBase):
 
     COMMAND = "TFL"
 
-    def make_ops(self, args: list[Any]) -> None:
-        if len(args) != 2 or not isinstance(args[0], Ident):
+    def make_ops(self, op_args: list[Any]) -> None:
+        if len(op_args) != 2 or not isinstance(op_args[0], Ident):
             raise SyntaxError("TFL: usage: TFL <dst> <src>")
-        dst, src = args
+        dst, src = op_args
         self.add_op("LOAD_GLOBAL", (True, "float"))
         self._emit_load_token(src)
         self.add_op("CALL", 1)
@@ -192,10 +192,10 @@ class ToStr(_ConvertBase):
 
     COMMAND = "TST"
 
-    def make_ops(self, args: list[Any]) -> None:
-        if len(args) != 2 or not isinstance(args[0], Ident):
+    def make_ops(self, op_args: list[Any]) -> None:
+        if len(op_args) != 2 or not isinstance(op_args[0], Ident):
             raise SyntaxError("TST: usage: TST <dst> <src>")
-        dst, src = args
+        dst, src = op_args
         self.add_op("LOAD_GLOBAL", (True, "str"))
         self._emit_load_token(src)
         self.add_op("CALL", 1)

@@ -10,10 +10,10 @@ class Compare(Command):
 
     COMMAND = "CMP"
 
-    def make_ops(self, args: list[Any]) -> None:
-        if len(args) != 4 or not isinstance(args[0], Ident):
+    def make_ops(self, op_args: list[Any]) -> None:
+        if len(op_args) != 4 or not isinstance(op_args[0], Ident):
             raise SyntaxError("CMP expects: CMP <dst> <lhs> <cmp> <rhs>")
-        dst, lhs, cmpop, rhs = args
+        dst, lhs, cmpop, rhs = op_args
         self._emit_load_for(lhs)
         self._emit_load_for(rhs)
         self.add_op("COMPARE_OP", coerce_compare_op(cmpop))

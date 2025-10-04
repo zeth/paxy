@@ -8,10 +8,10 @@ class InCommand(Command):
 
     COMMAND = "IN"
 
-    def make_ops(self, args: list[Any]) -> None:
-        if len(args) != 3 or not isinstance(args[0], Ident):
+    def make_ops(self, op_args: list[Any]) -> None:
+        if len(op_args) != 3 or not isinstance(op_args[0], Ident):
             raise SyntaxError("IN expects: IN <dst> <needle> <haystack>")
-        dst, needle, hay = args
+        dst, needle, hay = op_args
         self._emit_load_for(needle)
         self._emit_load_for(hay)
         self.add_op("CONTAINS_OP", 0)  # 0 -> IN
@@ -23,10 +23,10 @@ class NotInCommand(Command):
 
     COMMAND = "NIN"
 
-    def make_ops(self, args: list[Any]) -> None:
-        if len(args) != 3 or not isinstance(args[0], Ident):
+    def make_ops(self, op_args: list[Any]) -> None:
+        if len(op_args) != 3 or not isinstance(op_args[0], Ident):
             raise SyntaxError("NIN expects: NIN <dst> <needle> <haystack>")
-        dst, needle, hay = args
+        dst, needle, hay = op_args
         self._emit_load_for(needle)
         self._emit_load_for(hay)
         self.add_op("CONTAINS_OP", 1)  # 1 -> NOT_IN

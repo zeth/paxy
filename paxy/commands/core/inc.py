@@ -9,10 +9,10 @@ class Inc(Command):
 
     COMMAND = "INC"
 
-    def make_ops(self, args: list[Any]) -> None:
-        if len(args) != 1 or not isinstance(args[0], Ident):
+    def make_ops(self, op_args: list[Any]) -> None:
+        if len(op_args) != 1 or not isinstance(op_args[0], Ident):
             raise SyntaxError("INC expects: INC <name>")
-        name = str(args[0])
+        name = str(op_args[0])
         self.add_op("LOAD_NAME", name)
         self.add_op("LOAD_CONST", 1)
         self.add_op("BINARY_OP", coerce_binary_op("+"))

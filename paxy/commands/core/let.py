@@ -185,8 +185,8 @@ class Let(Command):
 
     COMMAND = "LET"
 
-    def make_ops(self, args: list[Any]) -> None:
-        dst_ident, rest = self._parse_head(args)
+    def make_ops(self, op_args: list[Any]) -> None:
+        dst_ident, rest = self._parse_head(op_args)
 
         if len(rest) == 1:
             self._emit_simple_assignment(dst_ident, rest[0])

@@ -12,12 +12,12 @@ class ReturnCommand(Command):
 
     COMMAND = "RET"
 
-    def make_ops(self, args: list[Any]) -> None:
-        if len(args) == 0:
+    def make_ops(self, op_args: list[Any]) -> None:
+        if len(op_args) == 0:
             self.ops.append(ReturnMarker(has_value=False, lineno=self.lineno))
             return
-        if len(args) == 1:
-            self._emit_load_for(args[0])
+        if len(op_args) == 1:
+            self._emit_load_for(op_args[0])
             self.ops.append(ReturnMarker(has_value=True, lineno=self.lineno))
             return
         raise SyntaxError("RET takes at most one argument")

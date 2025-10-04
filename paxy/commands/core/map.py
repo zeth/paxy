@@ -26,13 +26,13 @@ class MapCommand(Command):
 
     COMMAND = "MAP"
 
-    def make_ops(self, args: list[Any]) -> None:
-        if not args or not isinstance(args[0], Ident):
+    def make_ops(self, op_args: list[Any]) -> None:
+        if not op_args or not isinstance(op_args[0], Ident):
             raise SyntaxError(
                 "MAP expects: MAP <name> [k v ...] (name must be an identifier)"
             )
-        dst_ident = str(args[0])
-        rest = args[1:]
+        dst_ident = str(op_args[0])
+        rest = op_args[1:]
 
         if len(rest) % 2 != 0:
             raise SyntaxError("MAP expects an even number of key/value arguments")

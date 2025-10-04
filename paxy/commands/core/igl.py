@@ -116,11 +116,11 @@ class Igloo(Command):
 
     COMMAND = "IGL"
 
-    def make_ops(self, args: list[Any]) -> None:
-        if not args or not isinstance(args[0], Ident):
+    def make_ops(self, op_args: list[Any]) -> None:
+        if not op_args or not isinstance(op_args[0], Ident):
             raise SyntaxError("IGL expects: IGL <name> [elem ...]")
-        dst_ident = str(args[0])
-        elems = args[1:]
+        dst_ident = str(op_args[0])
+        elems = op_args[1:]
 
         # Fast path: all literals and hashable
         if all(not isinstance(e, Ident) for e in elems):

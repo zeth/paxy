@@ -8,10 +8,10 @@ class IsCommand(Command):
 
     COMMAND = "IS"
 
-    def make_ops(self, args: list[Any]) -> None:
-        if len(args) != 3 or not isinstance(args[0], Ident):
+    def make_ops(self, op_args: list[Any]) -> None:
+        if len(op_args) != 3 or not isinstance(op_args[0], Ident):
             raise SyntaxError("IS expects: IS <dst> <lhs> <rhs>")
-        dst, lhs, rhs = args
+        dst, lhs, rhs = op_args
         self._emit_load_for(lhs)
         self._emit_load_for(rhs)
         self.add_op("IS_OP", 0)  # 0 -> IS
@@ -23,10 +23,10 @@ class IsNotCommand(Command):
 
     COMMAND = "NIS"
 
-    def make_ops(self, args: list[Any]) -> None:
-        if len(args) != 3 or not isinstance(args[0], Ident):
+    def make_ops(self, op_args: list[Any]) -> None:
+        if len(op_args) != 3 or not isinstance(op_args[0], Ident):
             raise SyntaxError("NIS expects: NIS <dst> <lhs> <rhs>")
-        dst, lhs, rhs = args
+        dst, lhs, rhs = op_args
         self._emit_load_for(lhs)
         self._emit_load_for(rhs)
         self.add_op("IS_OP", 1)  # 1 -> IS_NOT

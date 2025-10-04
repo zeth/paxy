@@ -19,11 +19,11 @@ class IfOp(Command):
 
     COMMAND = "IF"
 
-    def make_ops(self, args: list[Any]) -> None:
-        if len(args) != 4:
+    def make_ops(self, op_args: list[Any]) -> None:
+        if len(op_args) != 4:
             raise SyntaxError("IF expects: IF <lhs> <cmp> <rhs> <label>")
 
-        lhs, cmpop, rhs, label = args
+        lhs, cmpop, rhs, label = op_args
 
         if not isinstance(label, Ident):
             raise SyntaxError("IF expects a label identifier as the fourth argument")

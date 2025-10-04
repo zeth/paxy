@@ -18,11 +18,11 @@ class VecCommand(Command):
 
     COMMAND = "VEC"
 
-    def make_ops(self, args: list[Any]) -> None:
-        if not args or not isinstance(args[0], Ident):
+    def make_ops(self, op_args: list[Any]) -> None:
+        if not op_args or not isinstance(op_args[0], Ident):
             raise SyntaxError("VEC expects: VEC <name> [elem ...]")
-        dst = str(args[0])
-        elems = args[1:]
+        dst = str(op_args[0])
+        elems = op_args[1:]
 
         for e in elems:
             self._emit_load_for(e)
@@ -39,10 +39,10 @@ class VAppendCommand(Command):
 
     COMMAND = "VAP"
 
-    def make_ops(self, args: list[Any]) -> None:
-        if len(args) != 2:
+    def make_ops(self, op_args: list[Any]) -> None:
+        if len(op_args) != 2:
             raise SyntaxError("VAP expects: VAP <vec> <elem>")
-        vec, elem = args
+        vec, elem = op_args
         self.add_op("LOAD_NAME", str(vec))
         self._emit_load_for(elem)
         self.add_op("LIST_APPEND", 1)
@@ -57,10 +57,10 @@ class VPopCommand(Command):
 
     COMMAND = "VOP"
 
-    def make_ops(self, args: list[Any]) -> None:
-        if len(args) not in (2, 3):
+    def make_ops(self, op_args: list[Any]) -> None:
+        if len(op_args) not in (2, 3):
             raise SyntaxError("VOP expects: VOP <dst> <vec> [index]")
-        dst, vec, *opt_index = args
+        dst, vec, *opt_index = op_args
         self.add_op("LOAD_NAME", str(vec))
         if opt_index:
             self._emit_load_for(opt_index[0])
@@ -79,10 +79,10 @@ class VRemoveCommand(Command):
 
     COMMAND = "VEM"
 
-    def make_ops(self, args: list[Any]) -> None:
-        if len(args) != 2:
+    def make_ops(self, op_args: list[Any]) -> None:
+        if len(op_args) != 2:
             raise SyntaxError("VEM expects: VEM <vec> <elem>")
-        vec, elem = args
+        vec, elem = op_args
         self.add_op("LOAD_NAME", str(vec))
         self._emit_load_for(elem)
         self.add_op("CALL_METHOD", ("remove", 1))
@@ -97,10 +97,10 @@ class VReverseCommand(Command):
 
     COMMAND = "VER"
 
-    def make_ops(self, args: list[Any]) -> None:
-        if len(args) != 1:
+    def make_ops(self, op_args: list[Any]) -> None:
+        if len(op_args) != 1:
             raise SyntaxError("VER expects: VER <vec>")
-        vec = args[0]
+        vec = op_args[0]
         self.add_op("LOAD_NAME", str(vec))
         self.add_op("CALL_METHOD", ("reverse", 0))
 
@@ -114,10 +114,10 @@ class LenCommand(Command):
 
     COMMAND = "LEN"
 
-    def make_ops(self, args: list[Any]) -> None:
-        if len(args) != 2:
+    def make_ops(self, op_args: list[Any]) -> None:
+        if len(op_args) != 2:
             raise SyntaxError("LEN expects: LEN <dst> <vec>")
-        dst, vec = args
+        dst, vec = op_args
         self.add_op("LOAD_GLOBAL", (True, "len"))
         self.add_op("LOAD_NAME", str(vec))
         self.add_op("CALL", 1)
