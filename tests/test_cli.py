@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 import paxy.cli as cli
+import paxy.compiler.compile as compile
 
 
 def _fake_compile_pyc_factory(tmp_path, expected_opt=None):
@@ -47,8 +48,8 @@ def test_compile_only_calls_compile_not_run(monkeypatch, tmp_path: Path):
     fake_compile, compile_calls = _fake_compile_pyc_factory(tmp_path)
     fake_run, run_calls = _fake_run_method_factory()
 
-    monkeypatch.setattr(cli.PaxyCompiler, "compile_pyc", fake_compile)
-    monkeypatch.setattr(cli.PaxyCompiler, "run", fake_run)
+    monkeypatch.setattr(compile.PaxyCompiler, "compile_pyc", fake_compile)
+    monkeypatch.setattr(compile.PaxyCompiler, "run", fake_run)
 
     monkeypatch.setattr(sys, "argv", ["paxy", "--compile-only", str(src)])
 
@@ -69,8 +70,8 @@ def test_default_compile_then_run(monkeypatch, tmp_path: Path):
     fake_run, run_calls = _fake_run_method_factory()
 
     monkeypatch.setattr(sys, "argv", ["paxy", str(src)])
-    monkeypatch.setattr(cli.PaxyCompiler, "compile_pyc", fake_compile)
-    monkeypatch.setattr(cli.PaxyCompiler, "run", fake_run)
+    monkeypatch.setattr(compile.PaxyCompiler, "compile_pyc", fake_compile)
+    monkeypatch.setattr(compile.PaxyCompiler, "run", fake_run)
 
     cli.main()
 
@@ -85,7 +86,7 @@ def test_verbose_output(
     src.write_text("")
 
     fake_run, _ = _fake_run_method_factory()
-    monkeypatch.setattr(cli.PaxyCompiler, "run", fake_run)
+    monkeypatch.setattr(compile.PaxyCompiler, "run", fake_run)
 
     # New CLI doesn't print bespoke verbose banners; we just ensure it runs without error.
     monkeypatch.setattr(sys, "argv", ["paxy", "-v", str(src)])
@@ -101,7 +102,7 @@ def test_optlevel_passed_through(monkeypatch, tmp_path: Path):
     src.write_text("")
 
     fake_compile, compile_calls = _fake_compile_pyc_factory(tmp_path, expected_opt=2)
-    monkeypatch.setattr(cli.PaxyCompiler, "compile_pyc", fake_compile)
+    monkeypatch.setattr(compile.PaxyCompiler, "compile_pyc", fake_compile)
 
     # Optlevel is only used when we do --compile-only
     monkeypatch.setattr(sys, "argv", ["paxy", "--compile-only", "-O", "2", str(src)])

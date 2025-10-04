@@ -3,7 +3,7 @@ from pathlib import Path
 import types
 import pytest
 
-from paxy.cli import assemble_file
+from tests.helpers import assemble_file
 
 
 def _run(src_text: str) -> tuple[dict, str]:

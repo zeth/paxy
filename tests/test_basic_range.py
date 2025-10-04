@@ -9,7 +9,7 @@ import pytest
 from paxy.compiler.parser import Parser
 from paxy.compiler.ir import RangeBlock
 from paxy.compiler.assembler import Assembler
-from paxy.cli import assemble_file
+from tests.helpers import assemble_file
 
 
 def _instr_names(resolved):

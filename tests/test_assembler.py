@@ -5,8 +5,8 @@ import importlib.util
 import sys
 import pytest
 
-from paxy.cli import assemble_file
-from paxy.cli import compile_file
+from tests.helpers import assemble_file
+from tests.helpers import compile_file
 
 
 def test_assemble_file_returns_codeobject(tmp_path: Path):

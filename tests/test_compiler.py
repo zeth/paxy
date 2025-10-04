@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 import pytest
 import paxy.cli as compiler
+from tests.helpers import compile_file
 
 
 def _stub_code(filename: str):
@@ -23,7 +24,7 @@ def test_sourceless_writes_name_pyc_and_is_importable(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     monkeypatch.syspath_prepend(str(tmp_path))  # <-- make tmp_path importable
 
-    pyc_path = compiler.compile_file(src)
+    pyc_path = compile_file(src)
     expected = {
         tmp_path / "hello.pyc",
         tmp_path / "__pycache__" / f"hello.{sys.implementation.cache_tag}.pyc",
@@ -56,7 +57,7 @@ def test_with_py_exists_writes_cpython_cache_path(monkeypatch, tmp_path):
     monkeypatch.chdir(tmp_path)
     monkeypatch.syspath_prepend(str(tmp_path))  # <-- ensure tmp_path is on sys.path
 
-    pyc_path = compiler.compile_file(src)
+    pyc_path = compile_file(src)
     tag = sys.implementation.cache_tag
     expected = tmp_path / "__pycache__" / f"hello.{tag}.pyc"
     assert pyc_path == expected

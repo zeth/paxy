@@ -1,6 +1,6 @@
 from pathlib import Path
 import types, builtins
-from paxy.cli import assemble_file
+from tests.helpers import assemble_file
 
 
 def test_fib5_with_par_and_range(tmp_path, capsys):

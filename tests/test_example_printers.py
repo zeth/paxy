@@ -5,7 +5,7 @@ import bytecode
 import pytest
 
 from paxy.compiler.parser import Parser
-from paxy.cli import assemble_file
+from tests.helpers import assemble_file
 
 UNSET = bytecode.instr._UNSET()
 

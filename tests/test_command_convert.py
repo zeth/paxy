@@ -1,6 +1,6 @@
 import types
 from pathlib import Path
-from paxy.cli import assemble_file
+from tests.helpers import assemble_file
 
 
 def _run(src: str):

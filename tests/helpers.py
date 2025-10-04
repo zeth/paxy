@@ -5,6 +5,7 @@ from bytecode.instr import _UNSET as _UNSET_CTOR
 from typing import Any
 from types import CodeType
 
+from paxy.compiler.compile import PaxyCompiler
 from paxy.compiler.parser import Parser
 from paxy.compiler.ir import ParsedItem
 from paxy.compiler.twelve import normalize_push_null_for_calls_312_seq
@@ -49,3 +50,17 @@ def run_paxy_path(src: Path, *, filename: str = "<string>") -> dict[str, Any]:
     g: dict[str, Any] = {"__name__": "__main__"}
     exec(code, g)
     return g
+
+
+# ---------- tiny wrappers for tests ----------
+def assemble_file(path: Path, *, no_cache: bool = False) -> CodeType:
+    """Tests can pass no_cache=True to force a fresh compile and avoid writing a pyc."""
+    return PaxyCompiler(path, no_cache=no_cache).assemble()
+
+
+def compile_file(path: Path, *, hash_based: bool = True) -> Path:
+    return PaxyCompiler(path).compile_pyc(hash_based=hash_based)
+
+
+def run_pyc(path: Path, *, no_cache: bool = False) -> None:
+    PaxyCompiler(path, no_cache=no_cache).run()

@@ -6,8 +6,8 @@ import importlib
 
 import pytest
 
-from paxy.cli import assemble_file
-from paxy.cli import compile_file
+from tests.helpers import assemble_file
+from tests.helpers import compile_file
 
 
 PROGRAM = """\

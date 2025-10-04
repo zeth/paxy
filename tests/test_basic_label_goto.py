@@ -2,7 +2,7 @@
 
 from pathlib import Path
 import pytest
-from paxy.cli import assemble_file
+from tests.helpers import assemble_file
 
 
 def test_label_forward_goto_executes(
