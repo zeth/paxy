@@ -76,12 +76,13 @@ def normalize_push_null_for_calls_312_seq(
 
         # 3) Find the callable: previous non-label, non-PUSH_NULL instruction
         callable_ix = _prev_instr_idx(s, cursor_idx)
-        while (
-            callable_ix is not None
-            and isinstance(s[callable_ix], Instr)
-            and s[callable_ix].name == "PUSH_NULL"
-        ):
-            callable_ix = _prev_instr_idx(s, callable_ix)
+        while callable_ix is not None:
+            _cobj = s[callable_ix]
+            if isinstance(_cobj, Instr) and _cobj.name == "PUSH_NULL":
+                callable_ix = _prev_instr_idx(s, callable_ix)
+            continue
+        break
+
         if callable_ix is None:
             i += 1
             continue
@@ -116,22 +117,22 @@ def normalize_push_null_for_calls_312_seq(
         call_line = getattr(ins, "lineno", None)
 
         # Is there already one immediately before?
-        tmp_immed = s[callable_ix - 1]
-        has_immediate_null = (
-            callable_ix - 1 >= 0
-            and isinstance(tmp_immed, Instr)
-            and tmp_immed.name == "PUSH_NULL"
-        )
+        has_immediate_null = False
+        if callable_ix - 1 >= 0:
+            _im = s[callable_ix - 1]
+            has_immediate_null = isinstance(_im, Instr) and _im.name == "PUSH_NULL"
 
         if call_line is not None:
             # We can safely use same-line cleanup
-            same_line_nulls = [
-                j
-                for j in range(i)  # strictly before CALL
-                if isinstance(s[j], Instr)
-                and s[j].name == "PUSH_NULL"
-                and getattr(s[j], "lineno", None) == call_line
-            ]
+            same_line_nulls: list[int] = []
+            for j in range(i):  # strictly before CALL
+                _sj = s[j]
+                if (
+                    isinstance(_sj, Instr)
+                    and _sj.name == "PUSH_NULL"
+                    and getattr(_sj, "lineno", None) == call_line
+                ):
+                    same_line_nulls.append(j)
 
             if same_line_nulls:
                 keep = same_line_nulls[-1]
@@ -166,11 +167,13 @@ def normalize_push_null_for_calls_312_seq(
                 callable_ix += 1
 
         # Final belt-and-braces: if there’s still no immediate NULL, insert one now.
-        has_immediate_null = (
-            callable_ix - 1 >= 0
-            and isinstance(s[callable_ix - 1], Instr)
-            and s[callable_ix - 1].name == "PUSH_NULL"
-        )
+        has_immediate_null = False
+        if callable_ix - 1 >= 0:
+            _prev_im = s[callable_ix - 1]
+            has_immediate_null = (
+                isinstance(_prev_im, Instr) and _prev_im.name == "PUSH_NULL"
+            )
+
         if not has_immediate_null:
             ln = getattr(callable_ins, "lineno", None) or getattr(ins, "lineno", None)
             s.insert(callable_ix, Instr("PUSH_NULL", lineno=ln))
@@ -196,24 +199,20 @@ def try_func_to_code_with_endfor_fix(bc_func: Bytecode) -> CodeType:
             raise
         # Heuristic: in some 3.12 builds, END_FOR already balances stack;
         # a trailing POP_TOP causes the negative pre-delta.
-        instrs = list(bc_func)
-        fixed = []
+        instrs: list[Union[Instr, Label]] = list(bc_func)
+        fixed: list[Union[Instr, Label]] = []
         i = 0
         removed = 0
+
         while i < len(instrs):
             cur = instrs[i]
-            if (
-                isinstance(cur, Instr)
-                and cur.name == "END_FOR"
-                and i + 1 < len(instrs)
-                and isinstance(instrs[i + 1], Instr)
-                and instrs[i + 1].name == "POP_TOP"
-            ):
-                fixed.append(cur)  # keep END_FOR
-                # skip the POP_TOP
-                i += 2
-                removed += 1
-                continue
+            if isinstance(cur, Instr) and cur.name == "END_FOR" and i + 1 < len(instrs):
+                nxt = instrs[i + 1]
+                if isinstance(nxt, Instr) and nxt.name == "POP_TOP":
+                    fixed.append(cur)  # keep END_FOR
+                    i += 2  # skip POP_TOP
+                    removed += 1
+                    continue
             fixed.append(cur)
             i += 1
 
@@ -247,23 +246,20 @@ def transpile_for_twelve(bc: Bytecode) -> CodeType:
         if "stacksize" not in str(e):
             raise
 
-        instrs = list(bc)
-        fixed = []
+        instrs: list[Union[Instr, Label]] = list(bc)
+        fixed: list[Union[Instr, Label]] = []
         i = 0
         removed = 0
+
         while i < len(instrs):
             cur = instrs[i]
-            if (
-                isinstance(cur, Instr)
-                and cur.name == "END_FOR"
-                and i + 1 < len(instrs)
-                and isinstance(instrs[i + 1], Instr)
-                and instrs[i + 1].name == "POP_TOP"
-            ):
-                fixed.append(cur)  # keep END_FOR
-                i += 2  # skip POP_TOP
-                removed += 1
-                continue
+            if isinstance(cur, Instr) and cur.name == "END_FOR" and i + 1 < len(instrs):
+                nxt = instrs[i + 1]
+                if isinstance(nxt, Instr) and nxt.name == "POP_TOP":
+                    fixed.append(cur)  # keep END_FOR
+                    i += 2  # skip POP_TOP
+                    removed += 1
+                    continue
             fixed.append(cur)
             i += 1
 
