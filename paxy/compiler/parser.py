@@ -4,9 +4,9 @@ from typing import Any, Callable, Optional, Dict, Iterable, Iterator
 from pathlib import Path
 from tokenize import tokenize, TokenInfo
 from token import tok_name
-from bytecode import Instr
 import ast
 import re
+from bytecode import Instr
 
 from paxy.commands import is_command, command, is_command_name
 from paxy.compiler.opcoerce import (

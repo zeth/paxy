@@ -126,7 +126,7 @@ class Igloo(Command):
         if all(not isinstance(e, Ident) for e in elems):
             try:
                 konst = frozenset(elems)
-            except TypeError as exc:
+            except TypeError:
                 # unhashable literal (e.g., list) — must use fallback
                 konst = None
             if konst is not None:

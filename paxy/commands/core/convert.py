@@ -46,7 +46,9 @@ class ToInt(_ConvertBase):
     - `42` is an integer (whole number).
     - `3.14` is a float (decimal number).
 
-    Sometimes we need to convert between them. For example, `INP` always gives you a string, but if you want to do arithmetic, you need an integer.
+    Sometimes we need to convert between them.
+    For example, `INP` always gives you a string,
+    but if you want to do arithmetic, you need an integer.
 
     ---
 

@@ -23,6 +23,9 @@ from paxy.compiler.twelve import (
 )
 
 
+DROP_NAMES = {"RESUME", "RETURN_VALUE", "RETURN_CONST"}
+
+
 # What the resolver returns (only real bytecode items)
 ResolvedItem = Union[Instr, Label]
 # Internal placeholder tuple type (tagged unions used in the first pass)
@@ -492,7 +495,6 @@ class Assembler:
         out.append(Instr("STORE_NAME", it.var, lineno=it.lineno))
 
         # 3) Splice body, dropping line bookends and the sentinel LOAD_CONST 0
-        DROP_NAMES = {"RESUME", "RETURN_VALUE", "RETURN_CONST"}
         for ins in it.body:
             if isinstance(ins, Instr):
                 if ins.name in DROP_NAMES:

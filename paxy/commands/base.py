@@ -2,27 +2,11 @@
 
 from typing import Any, TypeAlias, Union
 from bytecode import Instr, BinaryOp
-from paxy.compiler.opcoerce import coerce_binary_op
+from paxy.compiler.opcoerce import coerce_binary_op, BINARY_SYMBOL_MAP
 from paxy.compiler.ir import ReturnMarker, LabelDecl, JumpRef, NamedJump, Ident
 
 _NOARG = object()
 
-# Names should match bytecode's BinaryOp (3.12/3.13)
-BINARY_SYMBOL_MAP: dict[str, str] = {
-    "+": "ADD",
-    "-": "SUBTRACT",
-    "*": "MULTIPLY",
-    "/": "TRUE_DIVIDE",
-    "//": "FLOOR_DIVIDE",
-    "%": "REMAINDER",
-    "**": "POWER",
-    "<<": "LSHIFT",
-    ">>": "RSHIFT",
-    "|": "OR",
-    "&": "AND",
-    "^": "XOR",
-    "@": "MATRIX_MULTIPLY",
-}
 
 # What BASIC ops may emit
 BasicItem = Union[Instr, LabelDecl, JumpRef, NamedJump, ReturnMarker]
