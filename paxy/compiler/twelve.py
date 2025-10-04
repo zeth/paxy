@@ -56,22 +56,26 @@ def normalize_push_null_for_calls_312_seq(
             nargs = 0
 
         # 2) Backtrack over exactly 'nargs' argument pushes (skip labels & PUSH_NULL)
-        cursor = i
+        cursor_idx: int = i
         remaining = nargs
+
         while remaining:
-            cursor = _prev_instr_idx(s, cursor)
-            if cursor is None:
+            prev = _prev_instr_idx(s, cursor_idx)
+            if prev is None:
                 break
-            if isinstance(s[cursor], Instr) and s[cursor].name == "PUSH_NULL":
+            tmp_prev = s[prev]
+            if isinstance(tmp_prev, Instr) and tmp_prev.name == "PUSH_NULL":
                 # not an argument
+                cursor_idx = prev
                 continue
             remaining -= 1
-        if cursor is None or remaining:
+            cursor_idx = prev
+        if prev is None or remaining:
             i += 1
             continue  # couldn't robustly locate args
 
         # 3) Find the callable: previous non-label, non-PUSH_NULL instruction
-        callable_ix = _prev_instr_idx(s, cursor)
+        callable_ix = _prev_instr_idx(s, cursor_idx)
         while (
             callable_ix is not None
             and isinstance(s[callable_ix], Instr)
@@ -82,7 +86,9 @@ def normalize_push_null_for_calls_312_seq(
             i += 1
             continue
 
-        callable_ins: Instr = s[callable_ix]  # type: ignore[assignment]
+        callable_obj = s[callable_ix]
+        assert isinstance(callable_obj, Instr), "prev_instr_idx must return an Instr"
+        callable_ins: Instr = callable_obj
 
         # 3a) If it's LOAD_GLOBAL with (True, name), flip the flag to False
         if (
@@ -98,7 +104,8 @@ def normalize_push_null_for_calls_312_seq(
         # 3b) Remove PUSH_NULLs strictly between callable and CALL (those are always wrong)
         j = callable_ix + 1
         while j < i:
-            if isinstance(s[j], Instr) and s[j].name == "PUSH_NULL":
+            tmp = s[j]
+            if isinstance(tmp, Instr) and tmp.name == "PUSH_NULL":
                 del s[j]
                 if j < i:
                     i -= 1
@@ -109,10 +116,11 @@ def normalize_push_null_for_calls_312_seq(
         call_line = getattr(ins, "lineno", None)
 
         # Is there already one immediately before?
+        tmp_immed = s[callable_ix - 1]
         has_immediate_null = (
             callable_ix - 1 >= 0
-            and isinstance(s[callable_ix - 1], Instr)
-            and s[callable_ix - 1].name == "PUSH_NULL"
+            and isinstance(tmp_immed, Instr)
+            and tmp_immed.name == "PUSH_NULL"
         )
 
         if call_line is not None:
