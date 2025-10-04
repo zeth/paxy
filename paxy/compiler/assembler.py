@@ -2,7 +2,7 @@
 
 import os
 import sys
-from typing import Union, Any
+from typing import Union, Any, TypeAlias
 
 from bytecode import Bytecode, Instr, Label, CompilerFlags
 from paxy.compiler.ir import (
@@ -27,6 +27,9 @@ from paxy.compiler.twelve import (
 ResolvedItem = Union[Instr, Label]
 # Internal placeholder tuple type (tagged unions used in the first pass)
 Placeholder = tuple[Any, ...]
+# First-pass stream must accept anything we temporarily carry
+# and must match normalize_push_null_for_calls_312_seq's parameter/return type.
+StreamItem: TypeAlias = Union[Instr, Label, object]
 
 
 def _lg(name: str) -> tuple[bool, str]:
@@ -55,9 +58,7 @@ class Assembler:
         self._label_objects: dict[str, Label] = {}
 
         # first pass (rewritten stream)
-        self._resolved_stream: list[
-            Union[Instr, Label, Placeholder, FuncDef, ReturnMarker]
-        ] = []
+        self._resolved_stream: list[StreamItem] = []
         self._decl_idx_to_resolved_idx: dict[int, int] = {}
 
         # second pass (label/jump-patched stream)
@@ -109,7 +110,7 @@ class Assembler:
           - FuncDef / ReturnMarker are passed through for a later lowering pass
           - Other Instrs are kept as-is.
         """
-        resolved: list[Union[Instr, Label, Placeholder, FuncDef, ReturnMarker]] = []
+        resolved: list[StreamItem] = []
         decl_map: dict[int, int] = {}
 
         for idx, it in enumerate(self.items):
@@ -191,7 +192,12 @@ class Assembler:
                 else:
                     raise RuntimeError(f"unknown placeholder {tag!r}")
             else:
-                patched.append(entry)
+                if isinstance(entry, (Instr, Label, FuncDef, ReturnMarker)):
+                    patched.append(entry)
+                else:
+                    raise RuntimeError(
+                        f"unexpected item in resolved stream: {type(entry)!r}"
+                    )
 
         self._patched = patched
 
@@ -440,7 +446,7 @@ class Assembler:
             return [Instr("LOAD_NAME", name, lineno=lineno)]
         return [Instr("LOAD_CONST", tok, lineno=lineno)]
 
-    def _lower_rangeblock_to_stream(self, it: RangeBlock) -> list[ResolvedItem]:
+    def _lower_rangeblock_to_stream(self, it: RangeBlock) -> list[StreamItem]:
         """
             RNG <var> <start> <end> [<step>]
             <body>
@@ -460,7 +466,7 @@ class Assembler:
             END_FOR
             POP_TOP
         """
-        out: list[ResolvedItem] = []
+        out: list[StreamItem] = []
 
         # 1) Build iter(range(...))
         out.append(Instr("PUSH_NULL", lineno=it.lineno))

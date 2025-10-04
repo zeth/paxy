@@ -129,7 +129,7 @@ class PaxyCompiler:
                 cached_hash = bytes(data[8:16])
                 if cached_hash != self._source_hash():
                     return None
-                code = marshal.loads(data[16:])
+                code: CodeType = marshal.loads(data[16:])
                 return code  # cache hit
 
             # timestamp-based header (we don't write these, but be forgiving)
