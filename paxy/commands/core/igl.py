@@ -6,6 +6,7 @@ Fallback: mixed -> LOAD_NAME 'frozenset'; LOAD_*...; BUILD_TUPLE N; CALL 1
 """
 
 from typing import Any
+
 from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 

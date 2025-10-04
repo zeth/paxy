@@ -1,10 +1,10 @@
 # paxy/basic/ifjump.py
 
 from typing import Any
+
 from paxy.commands.base import Command
+from paxy.compiler.ir import Ident, NamedJump
 from paxy.compiler.opcoerce import coerce_compare_op
-from paxy.compiler.ir import Ident
-from paxy.compiler.ir import NamedJump
 
 
 class IfOp(Command):

@@ -1,4 +1,5 @@
 from typing import Any
+
 from paxy.commands.base import Command
 
 

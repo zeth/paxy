@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 from typing import Any
+
 from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 

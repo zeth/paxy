@@ -1,10 +1,10 @@
 # paxy/compiler/twelve.py
 import os
 import sys
-from typing import Union
 from types import CodeType
-from bytecode import Bytecode, Instr, Label
+from typing import Union
 
+from bytecode import Bytecode, Instr, Label
 
 CallableLoads = {"LOAD_GLOBAL", "LOAD_NAME", "LOAD_FAST", "LOAD_ATTR", "LOAD_DEREF"}
 

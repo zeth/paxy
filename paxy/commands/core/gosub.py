@@ -9,6 +9,7 @@ Rationale:
 """
 
 from typing import Any
+
 from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 

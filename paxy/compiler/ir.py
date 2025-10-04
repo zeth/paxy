@@ -26,6 +26,7 @@ explicit: parser → IR → assembler → bytecode.
 """
 from dataclasses import dataclass
 from typing import List, Union
+
 from bytecode import Instr
 
 

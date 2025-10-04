@@ -2,26 +2,15 @@
 
 import os
 import sys
-from typing import Union, Any, TypeAlias
+from typing import Any, TypeAlias, Union
 
-from bytecode import Bytecode, Instr, Label, CompilerFlags
-from paxy.compiler.ir import (
-    ParsedItem,
-    FuncDef,
-    ReturnMarker,
-    Ident,
-    LabelDecl,
-    JumpRef,
-    NamedJump,
-    RangeBlock,
-    COND_JUMP_OPS,
-    UNCOND_JUMP_FIXED,
-)
-from paxy.compiler.twelve import (
-    normalize_push_null_for_calls_312_seq,
-    try_func_to_code_with_endfor_fix,
-)
+from bytecode import Bytecode, CompilerFlags, Instr, Label
 
+from paxy.compiler.ir import (COND_JUMP_OPS, UNCOND_JUMP_FIXED, FuncDef, Ident,
+                              JumpRef, LabelDecl, NamedJump, ParsedItem,
+                              RangeBlock, ReturnMarker)
+from paxy.compiler.twelve import (normalize_push_null_for_calls_312_seq,
+                                  try_func_to_code_with_endfor_fix)
 
 DROP_NAMES = {"RESUME", "RETURN_VALUE", "RETURN_CONST"}
 

@@ -1,16 +1,15 @@
-from pathlib import Path
+import dis
+import io
 import os
 import sys
-import io
-import dis
 from contextlib import redirect_stdout
+from pathlib import Path
 from types import CodeType
 from typing import Iterable, Sequence, Union
+
 from bytecode import Bytecode, Instr, Label
 
-from paxy.compiler.twelve import (
-    normalize_push_null_for_calls_312_seq,
-)
+from paxy.compiler.twelve import normalize_push_null_for_calls_312_seq
 
 
 def _dbg_enabled() -> bool:

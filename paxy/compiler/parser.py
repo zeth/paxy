@@ -1,29 +1,19 @@
 # paxy/parser.py
 
-from typing import Any, Callable, Optional, Dict, Iterable, Iterator
-from pathlib import Path
-from tokenize import tokenize, TokenInfo
-from token import tok_name
 import ast
 import re
+from pathlib import Path
+from token import tok_name
+from tokenize import TokenInfo, tokenize
+from typing import Any, Callable, Dict, Iterable, Iterator, Optional
+
 from bytecode import Instr
 
-from paxy.commands import is_command, command, is_command_name
-from paxy.compiler.opcoerce import (
-    coerce_binary_op,
-    coerce_compare_op,
-    coerce_contains_op,
-    coerce_is_op,
-)
-from paxy.compiler.ir import (
-    NamedJump,
-    FuncDef,
-    Ident,
-    ParsedItem,
-    RangeBlock,
-    COND_JUMP_OPS,
-    UNCOND_JUMP_FIXED,
-)
+from paxy.commands import command, is_command, is_command_name
+from paxy.compiler.ir import (COND_JUMP_OPS, UNCOND_JUMP_FIXED, FuncDef, Ident,
+                              NamedJump, ParsedItem, RangeBlock)
+from paxy.compiler.opcoerce import (coerce_binary_op, coerce_compare_op,
+                                    coerce_contains_op, coerce_is_op)
 
 IDENT_RE = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 

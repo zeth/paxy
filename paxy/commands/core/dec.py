@@ -2,7 +2,9 @@
 
 # paxy/basic/dec.py
 from typing import Any
+
 from bytecode import BinaryOp
+
 from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 

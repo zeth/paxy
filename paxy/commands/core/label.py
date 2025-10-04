@@ -1,7 +1,7 @@
 from typing import Any
+
 from paxy.commands.base import Command
-from paxy.compiler.ir import Ident
-from paxy.compiler.ir import LabelDecl, JumpRef
+from paxy.compiler.ir import Ident, JumpRef, LabelDecl
 
 
 class LabelCommand(Command):

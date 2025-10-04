@@ -1,9 +1,11 @@
 # paxy/basic/base.py
 
 from typing import Any, TypeAlias, Union
-from bytecode import Instr, BinaryOp
-from paxy.compiler.opcoerce import coerce_binary_op, BINARY_SYMBOL_MAP
-from paxy.compiler.ir import ReturnMarker, LabelDecl, JumpRef, NamedJump, Ident
+
+from bytecode import BinaryOp, Instr
+
+from paxy.compiler.ir import Ident, JumpRef, LabelDecl, NamedJump, ReturnMarker
+from paxy.compiler.opcoerce import BINARY_SYMBOL_MAP, coerce_binary_op
 
 _NOARG = object()
 

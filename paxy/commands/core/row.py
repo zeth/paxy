@@ -7,6 +7,7 @@ Fallback: mixed idents/literals -> LOAD_*...; BUILD_TUPLE N
 
 
 from typing import Any
+
 from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 

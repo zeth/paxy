@@ -1,23 +1,23 @@
 from __future__ import annotations
+
+import marshal
+import struct
+import sys
+from importlib import _bootstrap_external as bootstrap
+from importlib._bootstrap_external import \
+    _code_to_timestamp_pyc as code_to_timestamp_pyc
+from importlib._bootstrap_external import _write_atomic as write_atomic
+from importlib.util import source_hash
 from pathlib import Path
 from types import CodeType, ModuleType
 from typing import Optional
 
-from importlib._bootstrap_external import (
-    _code_to_timestamp_pyc as code_to_timestamp_pyc,
-    _write_atomic as write_atomic,
-)
-from importlib import _bootstrap_external as bootstrap
-from importlib.util import source_hash
-import marshal
-import struct
-import sys
-from bytecode import Bytecode, Instr, CompilerFlags
-from paxy.compiler.parser import Parser
-from paxy.compiler.assembler import Assembler
-from paxy.compiler.twelve import transpile_for_twelve
-from paxy.compiler.debug import debug_dump, emit_debugdis
+from bytecode import Bytecode, CompilerFlags, Instr
 
+from paxy.compiler.assembler import Assembler
+from paxy.compiler.debug import debug_dump, emit_debugdis
+from paxy.compiler.parser import Parser
+from paxy.compiler.twelve import transpile_for_twelve
 
 # These are injected in C so static analyzers can’t see them.
 MAGIC_NUMBER = getattr(bootstrap, "MAGIC_NUMBER")

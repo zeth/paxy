@@ -1,5 +1,6 @@
 # paxy/basic/inc.py
 from typing import Any
+
 from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
 from paxy.compiler.opcoerce import coerce_binary_op

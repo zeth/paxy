@@ -1,11 +1,10 @@
 # paxy/basic/__init__.py
 
-from typing import Any
 from dis import opmap
+from typing import Any
 
 from paxy.commands.base import BasicItem
 from paxy.commands.core import CORE_COMMANDS
-
 
 BLOCK_OPS = {"SUB", "SBE", "RNG", "RNE"}
 
