@@ -79,9 +79,11 @@ def normalize_push_null_for_calls_312_seq(
         while callable_ix is not None:
             _cobj = s[callable_ix]
             if isinstance(_cobj, Instr) and _cobj.name == "PUSH_NULL":
+                # Skip past leading PUSH_NULLs to the actual callable
                 callable_ix = _prev_instr_idx(s, callable_ix)
-            continue
-        break
+                continue
+            # Found a non-PUSH_NULL (Label or Instr) — stop scanning
+            break
 
         if callable_ix is None:
             i += 1
