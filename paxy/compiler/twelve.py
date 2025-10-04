@@ -58,19 +58,22 @@ def normalize_push_null_for_calls_312_seq(
         # 2) Backtrack over exactly 'nargs' argument pushes (skip labels & PUSH_NULL)
         cursor_idx: int = i
         remaining = nargs
+        prev_ix: int | None = None
 
         while remaining:
-            prev = _prev_instr_idx(s, cursor_idx)
-            if prev is None:
+            prev_ix = _prev_instr_idx(s, cursor_idx)
+            if prev_ix is None:
                 break
-            tmp_prev = s[prev]
+            tmp_prev = s[prev_ix]
             if isinstance(tmp_prev, Instr) and tmp_prev.name == "PUSH_NULL":
                 # not an argument
-                cursor_idx = prev
+                cursor_idx = prev_ix
                 continue
             remaining -= 1
-            cursor_idx = prev
-        if prev is None or remaining:
+            cursor_idx = prev_ix
+
+        # If we couldn't backtrack over all nargs, skip this CALL safely.
+        if remaining:
             i += 1
             continue  # couldn't robustly locate args
 
