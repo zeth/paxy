@@ -1,7 +1,6 @@
 # tests/test_basic_vec.py
 from pathlib import Path
 from typing import Any, Iterable, List, Tuple, TypeAlias
-import pytest
 from paxy.compiler.parser import Parser
 from tests.helpers import UNSET
 

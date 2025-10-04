@@ -12,7 +12,7 @@ from sphinx.highlighting import lexers
 EXT_DIR = (Path(__file__).parent / "_ext").resolve()
 sys.path.insert(0, str(EXT_DIR))  # now 'import paxy_lexer' works
 
-from paxy_lexer import PaxyLexer
+from paxy_lexer import PaxyLexer  # noqa: E402
 
 
 # Make the project importable and add our _ext/ to sys.path

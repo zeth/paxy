@@ -5,7 +5,6 @@ Fast path: all literals -> LOAD_CONST (tuple)
 Fallback: mixed idents/literals -> LOAD_*...; BUILD_TUPLE N
 """
 
-
 from typing import Any
 
 from paxy.commands.base import Command

@@ -2,8 +2,6 @@
 import importlib
 import importlib.util
 import sys
-from pathlib import Path
-import pytest
 import paxy.cli as compiler
 from tests.helpers import compile_file
 

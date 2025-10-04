@@ -19,9 +19,14 @@ from paxy.commands.core.par import Par
 from paxy.commands.core.pnt import Print
 from paxy.commands.core.returnstmt import ReturnCommand
 from paxy.commands.core.row import RowCommand
-from paxy.commands.core.vec import (LenCommand, VAppendCommand, VecCommand,
-                                    VPopCommand, VRemoveCommand,
-                                    VReverseCommand)
+from paxy.commands.core.vec import (
+    LenCommand,
+    VAppendCommand,
+    VecCommand,
+    VPopCommand,
+    VRemoveCommand,
+    VReverseCommand,
+)
 
 CORE_COMMANDS: CommandMap = {
     "PNT": Print,

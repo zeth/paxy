@@ -3,8 +3,7 @@
 from pathlib import Path
 import types
 
-from bytecode import Instr, Label
-import pytest
+from bytecode import Instr
 
 from paxy.compiler.parser import Parser
 from paxy.compiler.ir import RangeBlock

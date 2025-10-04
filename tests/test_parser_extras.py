@@ -1,6 +1,5 @@
 # tests/test_parser_extras.py
 from pathlib import Path
-import pytest
 import bytecode
 
 from paxy.compiler.parser import Parser

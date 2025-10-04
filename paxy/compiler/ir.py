@@ -24,6 +24,7 @@ This IR decouples parsing from assembly:
 `Instr` itself. Both parser and assembler share this alias to make the flow
 explicit: parser → IR → assembler → bytecode.
 """
+
 from dataclasses import dataclass
 from typing import List, Union
 

@@ -2,13 +2,15 @@
 
 from pathlib import Path
 from typing import Any, Iterable, List, Tuple, TypeAlias
+
+from bytecode.instr import _UNSET as _UNSET_CTOR
+
 import pytest
 from paxy.compiler.parser import Parser
 
 Pair: TypeAlias = Tuple[str, Any]
 PairList: TypeAlias = List[Pair]
 
-from bytecode.instr import _UNSET as _UNSET_CTOR
 
 UNSET = _UNSET_CTOR()
 

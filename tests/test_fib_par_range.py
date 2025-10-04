@@ -1,5 +1,5 @@
-from pathlib import Path
-import types, builtins
+import types
+import builtins
 from tests.helpers import assemble_file
 
 

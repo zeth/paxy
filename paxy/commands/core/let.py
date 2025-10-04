@@ -3,8 +3,12 @@ from typing import Any, Tuple
 
 from paxy.commands.base import Command
 from paxy.compiler.ir import Ident
-from paxy.compiler.opcoerce import (coerce_binary_op, coerce_compare_op,
-                                    coerce_contains_op, coerce_is_op)
+from paxy.compiler.opcoerce import (
+    coerce_binary_op,
+    coerce_compare_op,
+    coerce_contains_op,
+    coerce_is_op,
+)
 
 
 class Let(Command):

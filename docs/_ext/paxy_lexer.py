@@ -1,5 +1,5 @@
 # docs/_ext/paxy_lexer.py
-from pygments.lexer import RegexLexer, bygroups
+from pygments.lexer import RegexLexer
 from pygments.token import (
     Text,
     Comment,

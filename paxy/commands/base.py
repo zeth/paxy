@@ -15,7 +15,6 @@ BasicItem = Union[Instr, LabelDecl, JumpRef, NamedJump, ReturnMarker]
 
 
 class Command:
-
     COMMAND = "COMMAND"
     SUMMARY = "Base command, override and add description in subclass."
 

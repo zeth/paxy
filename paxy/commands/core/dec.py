@@ -10,7 +10,6 @@ from paxy.compiler.ir import Ident
 
 
 class Dec(Command):
-
     COMMAND = "DEC"
     SUMMARY = "Add description here."
 

@@ -27,7 +27,8 @@ def _run(src_text: str) -> tuple[dict, str]:
 
 
 def _write_tmp(text: str) -> str:
-    import tempfile, os
+    import tempfile
+    import os
 
     fd, path = tempfile.mkstemp(suffix=".paxy")
     os.close(fd)

@@ -7,7 +7,6 @@ from paxy.compiler.opcoerce import coerce_binary_op
 
 
 class Inc(Command):
-
     COMMAND = "INC"
 
     def make_ops(self, op_args: list[Any]) -> None:

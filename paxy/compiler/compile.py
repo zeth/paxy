@@ -4,8 +4,9 @@ import marshal
 import struct
 import sys
 from importlib import _bootstrap_external as bootstrap
-from importlib._bootstrap_external import \
-    _code_to_timestamp_pyc as code_to_timestamp_pyc
+from importlib._bootstrap_external import (
+    _code_to_timestamp_pyc as code_to_timestamp_pyc,
+)
 from importlib._bootstrap_external import _write_atomic as write_atomic
 from importlib.util import source_hash
 from pathlib import Path

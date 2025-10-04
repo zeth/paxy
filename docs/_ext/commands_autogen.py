@@ -168,9 +168,9 @@ def _generate_all_commands(_app=None) -> None:
     """
     Generate per-command pages + grouped index.
     """
-    collected: list[tuple[str, str, str, str]] = (
-        []
-    )  # (name, category, summary, details)
+    collected: list[
+        tuple[str, str, str, str]
+    ] = []  # (name, category, summary, details)
     for _, cls in _iter_command_classes():
         name = getattr(cls, "COMMAND", cls.__name__)
         category = _get_category(cls)

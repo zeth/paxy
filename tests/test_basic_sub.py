@@ -90,7 +90,6 @@ def test_end_to_end_sub_and_gosub(tmp_path: Path, capsys: pytest.CaptureFixture[
     code = assemble_file(src)
 
     # IMPORTANT: execute as a function-kind code object (your assembler emits function-ish flags)
-    import types
 
     g = {}
     types.FunctionType(code, g)()  # run “module” code

@@ -1,7 +1,6 @@
 # tests/test_parser.py
 from pathlib import Path
 import bytecode
-import pytest
 
 # Adjust this import to wherever your Parser class lives:
 # - if it's in paxy/parser.py -> from paxy.compiler.parser import Parser
