@@ -1,8 +1,10 @@
 # paxy/compiler/twelve.py
+import os
+import sys
 from typing import Union
-from bytecode import Bytecode, Instr, Label
 from types import CodeType
-import os, sys
+from bytecode import Bytecode, Instr, Label
+
 
 CallableLoads = {"LOAD_GLOBAL", "LOAD_NAME", "LOAD_FAST", "LOAD_ATTR", "LOAD_DEREF"}
 
@@ -224,7 +226,7 @@ def try_func_to_code_with_endfor_fix(bc_func: Bytecode) -> CodeType:
         return bc_func.to_code()
 
 
-def poptop_for_twelve(bc: Bytecode) -> CodeType:
+def transpile_for_twelve(bc: Bytecode) -> CodeType:
     """
     Compile module bytecode. If 3.12 stacksize computation fails because an
     END_FOR is immediately followed by POP_TOP, drop that POP_TOP and retry.

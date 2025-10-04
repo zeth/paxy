@@ -14,7 +14,6 @@ from paxy.compiler.ir import (
     JumpRef,
     NamedJump,
     RangeBlock,
-    ReturnMarker,
     COND_JUMP_OPS,
     UNCOND_JUMP_FIXED,
 )
@@ -416,9 +415,7 @@ class Assembler:
             # For real instructions, verify jump args are Labels
             if isinstance(obj, Instr):
                 if obj.name in (COND_JUMP_OPS | UNCOND_JUMP_FIXED):
-                    from bytecode import Label as _Lbl
-
-                    if not isinstance(obj.arg, _Lbl):
+                    if not isinstance(obj.arg, Label):
                         raise RuntimeError(f"jump still has non-Label arg: {obj!r}")
 
     def _lookup_target_index(self, name: str) -> int:

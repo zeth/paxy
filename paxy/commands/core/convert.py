@@ -20,6 +20,9 @@ class _ConvertBase(Command):
     def _emit_store_name(self, ident: Ident) -> None:
         self.add_op("STORE_NAME", str(ident))
 
+    def make_ops(self, args: list[Any]) -> None:
+        pass
+
 
 class ToInt(_ConvertBase):
     """Convert a value to an integer (whole number).

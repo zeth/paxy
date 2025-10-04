@@ -1,8 +1,8 @@
 # tests/test_assembler_integration.py
 from pathlib import Path
 from types import CodeType
-import importlib.util
 import sys
+import importlib
 
 import pytest
 
@@ -56,7 +56,8 @@ def test_compile_file_writes_pyc_and_is_importable(
     # Compile to sourceless pyc (should be <name>.pyc in the same dir)
     pyc_path = compile_file(src)
     assert pyc_path.exists()
-    assert pyc_path.name == "hello.pyc"
+    expected = {"hello.pyc", f"hello.{sys.implementation.cache_tag}.pyc"}
+    assert pyc_path.name in expected
 
     # Make tmp_path importable, clear any stale module
     monkeypatch.syspath_prepend(str(tmp_path))
