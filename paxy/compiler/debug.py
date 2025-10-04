@@ -5,7 +5,8 @@ import io
 import dis
 from contextlib import redirect_stdout
 from types import CodeType
-from bytecode import Bytecode
+from typing import Iterable, Sequence, Union
+from bytecode import Bytecode, Instr, Label
 
 from paxy.compiler.twelve import (
     normalize_push_null_for_calls_312_seq,
@@ -33,14 +34,18 @@ def debug(code_dbg: CodeType) -> str:
     return buf.getvalue()
 
 
-def safe_disassemble(resolved_items) -> str:
+def safe_disassemble(resolved_items: Iterable[Union[Instr, Label, object]]) -> str:
     try:
         seq = normalize_push_null_for_calls_312_seq(list(resolved_items))
     except Exception:
         seq = list(resolved_items)
 
     try:
-        bc_dbg = Bytecode(seq)
+        # Bytecode(...) requires Sequence[Instr|Label]; filter out placeholders/objects.
+        seq_bc: list[Union[Instr, Label]] = [
+            x for x in seq if isinstance(x, (Instr, Label))
+        ]
+        bc_dbg = Bytecode(seq_bc)
         return debug(bc_dbg.to_code())
     except Exception as exc:
         return f"<disassembly skipped: {exc}>"
@@ -54,7 +59,7 @@ def emit_debugdis(codeobj: CodeType, header: str = "== DISASSEMBLY ==") -> None:
     print(debug(codeobj), file=sys.stderr)
 
 
-def debug_dump(resolved) -> None:
+def debug_dump(resolved: Sequence[Union[Instr, Label, object]]) -> None:
     """
     Append a human-friendly dump of resolved instructions AND a safe disassembly
     to /tmp/paxy_debug.txt — but only when PAXY_DEBUG is set.
