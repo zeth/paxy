@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from typing import Any, Mapping, Iterable, Sequence, overload
+from typing import MutableSequence, Iterator, Union, Sequence, Optional
 from types import CodeType
 from enum import Enum, IntFlag
 
@@ -13,6 +16,8 @@ class Instr:
     def __init__(
         self, name: str, arg: Any | None = ..., *, lineno: int | None = ...
     ) -> None: ...
+
+Item = Union[Instr, Label]
 
 class BinaryOp(Enum):
     ADD: "BinaryOp"
@@ -44,7 +49,7 @@ class CompilerFlags(IntFlag):
     OPTIMIZED: CompilerFlags
     NEWLOCALS: CompilerFlags
 
-class Bytecode(Sequence[Instr]):
+class Bytecode(MutableSequence[Item]):
     # Attributes used by your assembler
     name: str
     argcount: int
@@ -53,14 +58,25 @@ class Bytecode(Sequence[Instr]):
     flags: CompilerFlags | int
     first_lineno: int
 
-    def __init__(self, instrs: Sequence[Instr | Label] | None = ...) -> None: ...
+    def __init__(self, seq: Optional[Sequence[Item]] = ...) -> None: ...
     def to_code(self) -> CodeType: ...
 
-    # Minimal Sequence/Mutation surface you likely use
-    def append(self, instr: Instr) -> None: ...
-    def extend(self, instrs: Iterable[Instr]) -> None: ...
+    # Element access
+    @overload
+    def __getitem__(self, index: int) -> Item: ...
+    @overload
+    def __getitem__(self, index: slice) -> list[Item]: ...
+    @overload
+    def __setitem__(self, index: int, value: Item) -> None: ...
+    @overload
+    def __setitem__(self, index: slice, value: Iterable[Item]) -> None: ...
+    def __delitem__(self, index: int | slice) -> None: ...
+    def insert(self, index: int, value: Item) -> None: ...
     def __len__(self) -> int: ...
-    @overload
-    def __getitem__(self, i: int) -> Instr: ...
-    @overload
-    def __getitem__(self, s: slice) -> list[Instr]: ...
+    def __iter__(self) -> Iterator[Item]: ...  # or omit to inherit
+
+    # IMPORTANT:
+    # Do NOT widen these. Either omit them (inherit from MutableSequence)
+    # or keep them EXACTLY as Item / Iterable[Item].
+    def append(self, value: Item) -> None: ...
+    def extend(self, values: Iterable[Item]) -> None: ...
